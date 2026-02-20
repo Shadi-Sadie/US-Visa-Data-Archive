@@ -1,0 +1,256 @@
+visa_type,program_type,eligibility_pathway,visa_description,Petition_Type,visa_program
+IR1,Family-based,Immediate family of US Citizen,Spouse or children,Principal (spouse),immigrant
+IR2,Family-based,Immediate family of US Citizen,Spouse or children,Principal (children),immigrant
+IR3,Family-based,Immediate family of US Citizen,Adopted Child,abroad ,immigrant
+IH3,Family-based,Immediate family of US Citizen,Adopted Child,abroad (Hague Convention),immigrant
+IR4,Family-based,Immediate family of US Citizen,Adopted Child,To be ,immigrant
+IH4,Family-based,Immediate family of US Citizen,Adopted Child,To be (Hague Convention),immigrant
+IR5,Family-based,Immediate family of US Citizen,Parent of U.S. citizen at Least 21 Years of Age,,immigrant
+CR1,Family-based,Immediate family of US Citizen,Conditional spouse or children,Principal (spouse),immigrant
+CR2,Family-based,Immediate family of US Citizen,Conditional spouse or children,Principal (children),immigrant
+IW,Family-based,Immediate family of US Citizen,Widow/widower,All,immigrant
+IW1,Family-based,Immediate family of US Citizen,Widow/widower,Principal,immigrant
+IW2,Family-based,Immediate family of US Citizen,Widow/widower,Derivative(child),immigrant
+IB1,Family-based,Immediate family of US Citizen,Abused spouse or children,Principal (spouse),immigrant
+IB2,Family-based,Immediate family of US Citizen,Abused spouse or children,Principal (children),immigrant
+IB3,Family-based,Immediate family of US Citizen,Abused spouse or children,Derivative(child),immigrant
+F21,Family-based,Family of green card holder,Spouse or children,Principal (spouse),immigrant
+F22,Family-based,Family of green card holder,Spouse or children,Principal (children),immigrant
+F23,Family-based,Family of green card holder,Spouse or children,Derivative(child),immigrant
+F24,Family-based,Family of green card holder,Unmarried adult child (21+),Principal,immigrant
+F25,Family-based,Family of green card holder,Unmarried adult child (21+),Derivative(child),immigrant
+F2,Family-based,Family of green card holder,Spouse or children and/or unmarried adult child,All,immigrant
+F2A,Family-based,Family of green card holder,Spouse or children,All,immigrant
+F2B,Family-based,Family of green card holder,Unmarried adult children (21+),All,immigrant
+C21,Family-based,Family of green card holder,Conditional spouse or children,Principal (spouse),immigrant
+C22,Family-based,Family of green card holder,Conditional spouse or children,Principal (children),immigrant
+C23,Family-based,Family of green card holder,Conditional spouse or children,Derivative(child),immigrant
+C24,Family-based,Family of green card holder,Conditional unmarried adult child,Principal,immigrant
+C25,Family-based,Family of green card holder,Conditional unmarried adult child,Derivative(child),immigrant
+C2A,Family-based,Family of green card holder,Conditional spouse or children,All,immigrant
+B21,Family-based,Family of green card holder,Abused spouse or children,Principal (spouse),immigrant
+B22,Family-based,Family of green card holder,Abused spouse or children,Principal (children),immigrant
+B23,Family-based,Family of green card holder,Abused spouse or children,Derivative(child),immigrant
+B24,Family-based,Family of green card holder,Abused unmarried adult child(21+),Principal,immigrant
+B25,Family-based,Family of green card holder,Abused unmarried adult child(21+),Derivative(child),immigrant
+B2A,Family-based,Family of green card holder,Abused spouse or children,All,immigrant
+B2B,Family-based,Family of green card holder,Abused unmarried adult child,All,immigrant
+BX1,Family-based,Family of green card holder,Abused spouse or children(exempt),Principal (spouse),immigrant
+BX2,Family-based,Family of green card holder,Abused spouse or children (exempt),Principal (children),immigrant
+BX3,Family-based,Family of green card holder,Abused spouse or children (exempt),Derivative(child),immigrant
+BX,Family-based,Family of green card holder,Abused spouse or children (exempt),All,immigrant
+CX,Family-based,Family of green card holder,Conditional spouse or children (exempt),All,immigrant
+CX1,Family-based,Family of green card holder,Conditional spouse or children (exempt),Principal (spouse),immigrant
+CX2,Family-based,Family of green card holder,Conditional spouse or children (exempt),Principal (children),immigrant
+CX3,Family-based,Family of green card holder,Conditional spouse or children (exempt),Derivative(child),immigrant
+F1,Family-based,Other family of U.S. citizen,Unmarried adult child and family,All,immigrant
+F11,Family-based,Other family of U.S. citizen,Unmarried adult child and family,Principal,immigrant
+F12,Family-based,Other family of U.S. citizen,Unmarried adult child and family,Derivative(child),immigrant
+F3,Family-based,Other family of U.S. citizen,married adult child and/or family,All,immigrant
+F31,Family-based,Other family of U.S. citizen,married adult child and/or family,Principal,immigrant
+F32,Family-based,Other family of U.S. citizen,married adult child and/or family,Derivative(spouse),immigrant
+F33,Family-based,Other family of U.S. citizen,married adult child and/or family,Derivative(child),immigrant
+F4,Family-based,Other family of U.S. citizen,Siblings and/or family,All,immigrant
+F41,Family-based,Other family of U.S. citizen,Siblings and/or family,Principal,immigrant
+F42,Family-based,Other family of U.S. citizen,Siblings and/or family,Derivative(spouse),immigrant
+F43,Family-based,Other family of U.S. citizen,Siblings and/or family,Derivative(child),immigrant
+FX,Family-based,Family of green card holder,Spouse or children(exempt),All,immigrant
+FX1,Family-based,Family of green card holder,Spouse or children(exempt),Principal (spouse),immigrant
+FX2,Family-based,Family of green card holder,Spouse or children(exempt),Principal (children),immigrant
+FX3,Family-based,Family of green card holder,Spouse or children(exempt),Derivative(child),immigrant
+E1,Employment-based,Priority Workers ,Priority worker,All,immigrant
+E11,Employment-based,Priority Workers ,Person with extraordinary ability,Principal,immigrant
+E12,Employment-based,Priority Workers ,Outstanding professor or researcher,Principal,immigrant
+E13,Employment-based,Priority Workers ,Multinational executive or manager,Principal,immigrant
+E14,Employment-based,Priority Workers ,Priority worker ,Derivative(spouse),immigrant
+E15,Employment-based,Priority Workers ,Priority worker ,Derivative(child),immigrant
+E2,Employment-based,Advanced degree/Exceptional ability,Professional with advanced degree ,All,immigrant
+E21,Employment-based,Advanced degree/Exceptional ability,Professional with advanced degree,Principal,immigrant
+E22,Employment-based,Advanced degree/Exceptional ability,Professional with advanced degree,Derivative(spouse),immigrant
+E23,Employment-based,Advanced degree/Exceptional ability,Professional with advanced degree,Derivative(child),immigrant
+E3,Employment-based,"Skilled workers,professionals, or unskilled",Skilled workers or professionals and/or family,All,immigrant
+E31,Employment-based,"Skilled workers,professionals, or unskilled",Skilled worker,Principal,immigrant
+E32,Employment-based,"Skilled workers,professionals, or unskilled",Professional with bachelor's degree,Principal,immigrant
+E34,Employment-based,"Skilled workers,professionals, or unskilled",Skilled workers or professionals spouse and children,Derivative(spouse),immigrant
+E35,Employment-based,"Skilled workers,professionals, or unskilled",Skilled workers or professionals spouse and children,Derivative(child),immigrant
+EW,Employment-based,"Skilled workers,professionals, or unskilled",Unskilled workers ,All,immigrant
+EW3,Employment-based,"Skilled workers,professionals, or unskilled",Unskilled workers,Principal,immigrant
+EW4,Employment-based,"Skilled workers,professionals, or unskilled",Unskilled workers spouse and children ,Derivative(spouse),immigrant
+EW5,Employment-based,"Skilled workers,professionals, or unskilled",Unskilled workers spouse and children ,Derivative(child),immigrant
+E4,Special immigrants,Special immigrants,Special immigrants,All,immigrant
+BC,Special immigrants,Broadcsters ,Broadcsters ,All,immigrant
+BC1,Special immigrants,Broadcsters ,Broadcsters ,Principal,immigrant
+BC2,Special immigrants,Broadcsters ,Broadcsters ,Derivative(spouse),immigrant
+BC3,Special immigrants,Broadcsters ,Broadcsters ,Derivative(child),immigrant
+SD,Special immigrants,religious worker,Ministers of religion ,All,immigrant
+SD1,Special immigrants,religious worker,Ministers of religion ,Principal,immigrant
+SD2,Special immigrants,religious worker,Ministers of religion ,Derivative(spouse),immigrant
+SD3,Special immigrants,religious worker,Ministers of religion ,Derivative(child),immigrant
+SR,Special immigrants,religious worker,Religious workers,All,immigrant
+SR1,Special immigrants,religious worker,Religious workers,Principal,immigrant
+SR2,Special immigrants,religious worker,Religious workers,Derivative(spouse),immigrant
+SR3,Special immigrants,religious worker,Religious workers,Derivative(child),immigrant
+R5,Employment-based,Immigrant investors,"Regional Center Program, Not in Targeted Area",All,immigrant
+R51,Employment-based,Immigrant investors,"Regional Center Program, Not in Targeted Area",Principal,immigrant
+R52,Employment-based,Immigrant investors,"Regional Center Program, Not in Targeted Area",Derivative(spouse),immigrant
+R53,Employment-based,Immigrant investors,"Regional Center Program, Not in Targeted Area",Derivative(child),immigrant
+NH,Employment-based,Immigrant investors,"Investor in Non-Regional Center, High Unemployment",All,immigrant
+NR,Employment-based,Immigrant investors,"Investor in Non-Regional Center, Rural
+
+",All,immigrant
+NU1,Employment-based,Immigrant investors,"Investor in Non-Regional Center, Unreserved",Principal,immigrant
+NU2,Employment-based,Immigrant investors,"Investor in Non-Regional Center, Unreserved ",Derivative,immigrant
+NU,Employment-based,Immigrant investors,"Investor in Non-Regional Center, Unreserved  ",All,immigrant
+RU,Employment-based,Immigrant investors,"Investor in Regional Center, Unreserved",All,immigrant
+RU1,Employment-based,Immigrant investors,"Investor in Regional Center, Unreserved",Principal,immigrant
+RU2,Employment-based,Immigrant investors,"Investor in Regional Center, Unreserved",Derivative(spouse),immigrant
+RU3,Employment-based,Immigrant investors,"Investor in Regional Center, Unreserved",Derivative(child),immigrant
+RR,Employment-based,Immigrant investors,"Investor in Regional Center, Rural ",All,immigrant
+RR1,Employment-based,Immigrant investors,"Investor in Regional Center, Rural ",Principal,immigrant
+RR2,Employment-based,Immigrant investors,"Investor in Regional Center, Rural",Derivative(spouse),immigrant
+RR3,Employment-based,Immigrant investors,"Investor in Regional Center, Rural",Derivative(child),immigrant
+RH,Employment-based,Immigrant investors,"Investor in Regional Center, High Unemployment",All,immigrant
+RH1,Employment-based,Immigrant investors,"Investor in Regional Center, High Unemployment",Principal,immigrant
+RH2,Employment-based,Immigrant investors,"Investor in Regional Center, High Unemployment",Derivative(spouse),immigrant
+RH3,Employment-based,Immigrant investors,"Investor in Regional Center, High Unemployment",Derivative(child),immigrant
+SE,Special immigrants,Employee of U.S. Government ,Certain U.S. government employees abroad ,All,immigrant
+SE1,Special immigrants,Employee of U.S. Government,Certain U.S. government employees abroad ,Principal,immigrant
+SE2,Special immigrants,Employee of U.S. Government,Certain U.S. government employees abroad ,Derivative(spouse),immigrant
+SE3,Special immigrants,Employee of U.S. Government,Certain U.S. government employees abroad ,Derivative(child),immigrant
+SK,Special immigrants,Retired International Organization Employee,Retired International organization employees,All,immigrant
+SK1,Special immigrants,Retired International Organization Employee,Retired International organization employees,Principal,immigrant
+SK2,Special immigrants,Retired International Organization Employee,Retired International organization employees,Derivative(spouse),immigrant
+SK3,Special immigrants,Retired International Organization Employee,Retired International organization employees,Derivative(child),immigrant
+SF,Special immigrants,Employee of U.S. Government,Former Employee of Panama Canal ,All,immigrant
+SG,Special immigrants,Employee of U.S. Government,Former Employee of Panama Canal ,All,immigrant
+SI,Special immigrants,Afghanistan or Iraq national,Iraqi/Afghan translators,All,immigrant
+SI1,Special immigrants,Afghanistan or Iraq national,Iraqi/Afghan translators,Principal,immigrant
+SI2,Special immigrants,Afghanistan or Iraq national,Iraqi/Afghan translators,Derivative(spouse),immigrant
+SI3,Special immigrants,Afghanistan or Iraq national,Iraqi/Afghan translators,Derivative(child),immigrant
+T5,Employment-based,Immigrant investors,Investors in targeted areas ,All,immigrant
+T51,Employment-based,Immigrant investors,Investors in targeted areas ,Principal,immigrant
+T52,Employment-based,Immigrant investors,Investors in targeted areas ,Derivative(spouse),immigrant
+T53,Employment-based,Immigrant investors,Investors in targeted areas ,Derivative(child),immigrant
+I5,Employment-based,Immigrant investors,Regional center investors Target Area,All,immigrant
+I51,Employment-based,Immigrant investors,Regional center investors Target Area,Principal,immigrant
+I52,Employment-based,Immigrant investors,Regional center investors Target Area,Derivative(spouse),immigrant
+I53,Employment-based,Immigrant investors,Regional center investors Target Area,Derivative(child),immigrant
+C5,Employment-based,Immigrant investors,"Employment Creation, Outside Targeted Area",All,immigrant
+C51,Employment-based,Immigrant investors,"Employment Creation, Outside Targeted Area",Principal,immigrant
+C52,Employment-based,Immigrant investors,"Employment Creation, Outside Targeted Area",Derivative(spouse),immigrant
+C53,Employment-based,Immigrant investors,"Employment Creation, Outside Targeted Area",Derivative(child),immigrant
+DV,Diversity lottery,Diversity lottery,Diversity lottery,All,immigrant
+DV1,Diversity lottery,Diversity lottery,Diversity lottery,Principal,immigrant
+DV2,Diversity lottery,Diversity lottery,Diversity lottery,Derivative(spouse),immigrant
+DV3,Diversity lottery,Diversity lottery,Diversity lottery,Derivative(child),immigrant
+SU,Other Immigrants,Crime victims,Crime victims,All,immigrant
+SU2,Other Immigrants,Crime victims,Crime victims,Derivative(spouse),immigrant
+SU3,Other Immigrants,Crime victims,Crime victims,Derivative(child),immigrant
+SU5,Other Immigrants,Crime victims,Crime victims,Derivative(parents),immigrant
+SB1,Other Immigrants,Returning lawful permanent resident,Returning lawful permanent resident,Principal,immigrant
+AM,Other Immigrants,Vietnamese Amerasians,Vietnamese Amerasians,All,immigrant
+AM1,Other Immigrants,Vietnamese Amerasians,Vietnamese Amerasians,Principal,immigrant
+AM2,Other Immigrants,Vietnamese Amerasians,Vietnamese Amerasians,Derivative(spouse),immigrant
+AM3,Other Immigrants,Vietnamese Amerasians,Vietnamese Amerasians,Derivative(child),immigrant
+CQ,Special immigrants,Afghanistan or Iraq national,Conditional Iraqi/Afghan translators,All,immigrant
+CQ1,Special immigrants,Afghanistan or Iraq national,Conditional Iraqi/Afghan translators,Principal,immigrant
+CQ2,Special immigrants,Afghanistan or Iraq national,Conditional Iraqi/Afghan translators,Derivative(spouse),immigrant
+CQ3,Special immigrants,Afghanistan or Iraq national,Conditional Iraqi/Afghan translators,Derivative(child),immigrant
+GV1,Special immigrants,Employee of U.S. Government,Certain U.S. government employee abroad,Principal,immigrant
+GV2,Special immigrants,Employee of U.S. Government,Certain U.S. government employee abroad,Derivative(spouse),immigrant
+GV3,Special immigrants,Employee of U.S. Government,Certain U.S. government employee abroad,Derivative(child),immigrant
+SSC,Special immigrants,Special immigrants,Special immigrants,Principal,immigrant
+SQ,Special immigrants,Afghanistan or Iraq national,Iraqi or Afghan Employed by US government,All,immigrant
+SQ1,Special immigrants,Afghanistan or Iraq national,Iraqi or Afghan Employed by US government,Principal,immigrant
+SQ2,Special immigrants,Afghanistan or Iraq national,Iraqi or Afghan Employed by US government,Derivative(spouse),immigrant
+SQ3,Special immigrants,Afghanistan or Iraq national,Iraqi or Afghan Employed by US government,Derivative(child),immigrant
+SW,Special immigrants,Afghanistan or Iraq national,Iraqi or Afghan Employed by US government,Principal(Surviving Spouse or child),immigrant
+A1,Diplomatic & Official,Foreign government officials,Ambassador or public minister or Immediate family,,nonimmigrant
+A2,Diplomatic & Official,Foreign government officials,Other foreign government official or Immediate family,,nonimmigrant
+A3,Diplomatic & Official,Foreign government officials,Attendant or employee or Immediate family,,nonimmigrant
+B1,Temporary visitor,Business,Temporary visitor for business,,nonimmigrant
+B2,Temporary visitor,Tourism,Temporary visitor for pleasure,,nonimmigrant
+B1/B2,Temporary visitor,Business/Tourism,Temporary visitor for business and pleasure,,nonimmigrant
+BBBCC,Temporary visitor,Business/Tourism,Border Crossing Card,,nonimmigrant
+BBBCV,Temporary visitor,Business/Tourism,Border Crossing Card,,nonimmigrant
+C1,Transit,Transit,Transit through U.S.,,nonimmigrant
+C2,Transit,Transit,Transit to United Nation Headquarters,,nonimmigrant
+C3,Transit,Transit,"Foreign Government Official, Immediate Family, Attendant, Servant or Personal Employee, in Transit",,nonimmigrant
+C4,Transit,Transit,ship-to-ship cargo transfer,,nonimmigrant
+C4/D3,Transit,Crew/Transit,Allows for both transit to and work on a lightering vessel. ,,nonimmigrant
+C1/D,Transit,Crew/Transit,Transit and crewmember combined visa,,nonimmigrant
+CW1,Temporary worker,Commonwealth of the Northern Mariana Islands ,Commonwealth of the Northern Mariana Islands Transitional Worker,Principal,nonimmigrant
+CW2,Temporary worker,Commonwealth of the Northern Mariana Islands ,Commonwealth of the Northern Mariana Islands Transitional Worker,Derivative(family),nonimmigrant
+D3,Transit,Crew,"crewmembers to transfer liquid cargo between vessels,",,nonimmigrant
+D,Transit,Crew,Sea or air crewmember,,nonimmigrant
+E1,Temporary worker,Treaty trader,Treaty trader,,nonimmigrant
+E2,Temporary worker,Treaty investor,Treaty investor,,nonimmigrant
+E2C,Temporary worker,Commonwealth of the Northern Mariana Islands ,"Investor, Spouse or Child",,nonimmigrant
+E3,Temporary worker,Specialty occupation (Australia),Australian specialty occupation worker,,nonimmigrant
+E3D,Temporary worker,Specialty occupation (Australia),Spouse or Child of Australian specialty occupation worker,,nonimmigrant
+E3R,Temporary worker,Specialty occupation (Australia),Returning Australian specialty occupation worker,,nonimmigrant
+F1,Study & Exchange ,Academic student,Academic or language student,,nonimmigrant
+F2,Study & Exchange ,Academic student,Spouse or child of F1,,nonimmigrant
+F3,Study & Exchange ,Academic student,Canadian/Mexican commuter student,,nonimmigrant
+G1,Diplomatic & Official,International organization representatives/Employee,Principal Representative or immediate family,,nonimmigrant
+G2,Diplomatic & Official,International organization representatives/Employee,Other Representative or immediate family,,nonimmigrant
+G3,Diplomatic & Official,International organization representatives/Employee,Nonmember Representative or immediate family,,nonimmigrant
+G4,Diplomatic & Official,International organization representatives/Employee,International organization employee and family,,nonimmigrant
+G5,Diplomatic & Official,International organization representatives/Employee,"Attendant, Servant, or Personal Employee of representative",,nonimmigrant
+H1B,Temporary worker,Specialty occupation,Specialty occupation worker,,nonimmigrant
+H1B1,Temporary worker,Specialty occupation,Chilean or Singaporean ,,nonimmigrant
+H1C,Temporary worker,Specialty occupation,Registered Nurse in Health Professional Shortage Area,,nonimmigrant
+H2A,Temporary worker,Agricultural worker,Agricultural temporary worker,,nonimmigrant
+H2B,Temporary worker,Non-agricultural worker,Temporary non-agricultural worker,,nonimmigrant
+H3,Temporary worker,Trainee,Trainee or special education exchange visitor,,nonimmigrant
+H4,Temporary worker,Dependent of H visa holder,Spouse or child of H worker,,nonimmigrant
+I,Temporary worker,Journalist,Foreign media representative,,nonimmigrant
+J1,Study & Exchange ,Exchange visitors,Exchange visitor,Principal,nonimmigrant
+J2,Study & Exchange ,Exchange visitors,Exchange visitors,Derivative,nonimmigrant
+K1,Family-based ,Fiancé(e) U.S. citizen,Fiancé(e) of U.S. citizen,,nonimmigrant
+K2,Family-based ,Fiancé(e) U.S. citizen,Child of Fiancé(e) of U.S. citizen,,nonimmigrant
+K3,Family-based ,Spouse of U.S. citizen ,Spouse of U.S. citizen awaiting immigrant visa,,nonimmigrant
+K4,Family-based ,Spouse of U.S. citizen ,Child of Spouse of US citizen,,nonimmigrant
+L1,Temporary worker,Intracompany transferee,Executive/manager/specialized knowledge employee,Principal,nonimmigrant
+L2,Temporary worker,Intracompany transferee,Spouse or child of L1,Derivative,nonimmigrant
+M1,Study & Exchange ,Vocational student,Vocational or nonacademic student,Principal,nonimmigrant
+M2,Study & Exchange ,Vocational student,Spouse or child of Vocational or nonacademic student,Derivative,nonimmigrant
+N8,Family-based ,Dependent of Certain Special Immigrants,"Parent of an SK3 or SN3
+
+",,nonimmigrant
+N9,Family-based ,Dependent of Certain Special Immigrants,"Child of N8 or SK1 or SN1
+",,nonimmigrant
+NATO1,Diplomatic & Official,NATO representative,NATO official representative,,nonimmigrant
+NATO2,Diplomatic & Official,NATO representative,Delegation Representative / Adviser,,nonimmigrant
+NATO3,Diplomatic & Official,NATO representative,Clerical Staff Accompanying NATO official representative,,nonimmigrant
+NATO4,Diplomatic & Official,NATO representative,Non-Principal Rank,,nonimmigrant
+NATO5,Diplomatic & Official,NATO representative,"Mission Personnel, Expert",,nonimmigrant
+NATO6,Diplomatic & Official,NATO representative,Civilian Component,,nonimmigrant
+NATO7,Diplomatic & Official,NATO representative,"Attendant, Servant, or Personal Employee ",,nonimmigrant
+O1,Temporary worker,Extraordinary ability,Extraordinary ability in sciences/arts/business/athletics,,nonimmigrant
+O2,Temporary worker,Extraordinary ability,Assistant to O1,,nonimmigrant
+O3,Temporary worker,Extraordinary ability,Spouse or child of O1/O2,,nonimmigrant
+P1,Temporary worker,"Performing athlete, artist, entertainer",Internationally recognized athlete or group,,nonimmigrant
+P2,Temporary worker,"Performing athlete, artist, entertainer",Artist in reciprocal exchange,,nonimmigrant
+P3,Temporary worker,"Performing athlete, artist, entertainer",Artist in culturally unique program,,nonimmigrant
+P4,Temporary worker,"Performing athlete, artist, entertainer",Spouse or child of P visa holder,,nonimmigrant
+Q1,Exchange visitor,Cultural exchange,International cultural exchange participant,,nonimmigrant
+R1,Temporary worker,Religious worker,Religious worker,,nonimmigrant
+R2,Temporary worker,Religious worker,Spouse or child of R1,,nonimmigrant
+S5,Humanitarian,Criminal informant,Informant on criminal organization,,nonimmigrant
+S6,Humanitarian,Terrorism informant,Informant on terrorism,,nonimmigrant
+S7,Humanitarian,Family Member of informant,Qualified Family Member of S5 or S6,,nonimmigrant
+T1,Humanitarian,Trafficking victim,Victim of trafficking,,nonimmigrant
+T2,Humanitarian,Trafficking victim,Spouse of Victim of trafficking,,nonimmigrant
+T3,Humanitarian,Trafficking victim,Child of victim of trafficking,,nonimmigrant
+T4,Humanitarian,Trafficking victim,Parent of trafficking victim under 21,,nonimmigrant
+T5,Humanitarian,Trafficking victim,Unmarried sibling Under 18 of trafficking victim,,nonimmigrant
+T6,Humanitarian,Trafficking victim,Adult or Minor Child of dependent of trafficking victim,,nonimmigrant
+TN,Temporary worker,Professionals from Canada/Mexico under USMCA ,Professional under USMCA,,nonimmigrant
+TD,Temporary worker,Professionals from Canada/Mexico under USMCA ,Spouse or child of TN,,nonimmigrant
+U1,Humanitarian,Crime victim,Victim of criminal activity,,nonimmigrant
+U2,Humanitarian,Crime victim,Spouse of crime victim ,,nonimmigrant
+U3,Humanitarian,Crime victim,Child of crime victim,,nonimmigrant
+U4,Humanitarian,Crime victim,Parent of crime victim under 21,,nonimmigrant
+U5,Humanitarian,Crime victim,Unmarried sibling Under 18 of crime victim,,nonimmigrant
+V1,Family-based,LPR waiting list spouse,Spouse of LPR awaiting immigrant visa,,nonimmigrant

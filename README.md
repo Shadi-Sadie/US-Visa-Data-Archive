@@ -1,135 +1,95 @@
 # US-Visa-Data-Archive
 
-This project converts monthly U.S. Department of State visa issuance reports (published as PDFs) into a clean, structured, and continuously updated dataset suitable for research and dashboarding.
+This project converts monthly U.S. Department of State visa issuance PDFs into a structured dataset for analysis and dashboarding.
 
-It automatically:
+## What it does
 
-- Scrapes new immigrant and nonimmigrant visa issuance PDFs
-
-- Extracts tables from PDF format
-
+- Scrapes immigrant and nonimmigrant visa PDF links from the official State Department pages
+- Downloads new PDFs
+- Extracts tabular data from each file
 - Standardizes country names
+- Parses month/year fields
+- Enriches visa classes using a reference codebook
+- Merges with existing processed data and re-aggregates to prevent duplicate inflation
+- Tracks processed source files
+- Publishes updates through GitHub Actions
 
-- Parses dates
+## Output
 
-- Merges visa metadata from a reference codebook
+- `data/processed/visa_data.csv`: final longitudinal dataset
+- `data/processed/processed_files.json`: source-file state tracker
 
-- Appends new data incrementally
+Main dataset columns include:
 
-- Tracks processed files to avoid duplication
+- `country`
+- `visa_type`
+- `visa_program` (`immigrant` or `nonimmigrant`)
+- `count`
+- `date`, `month`, `year`
+- visa metadata from `data/reference/visa_codebook.csv` (for example: `program_type`, `eligibility_pathway`, `visa_description`)
 
-- Runs automatically via GitHub Actions
+## Project structure
 
-## 📦  What This Project Produces
-
-data/processed/visa_data.csv
-
-A longitudinal dataset containing:
- Country  
-- Visa type  
-- Visa program (immigrant / nonimmigrant)  
-- Issuance count  
-- Month  
-- Year  
-- Visa metadata (program type, eligibility pathway, description)
-
----
-```
-## 🏗 Project Structure
-us-visa-data-builder/
-│
-├── run_pipeline.py
-│
+```text
+.
+├── build_visa_dataset.py
+├── requirements.txt
 ├── src/
-│   ├── scrape.py        # Finds and downloads new PDFs
-│   ├── extract.py       # Extracts tables from PDFs
-│   ├── transform.py     # Standardizes countries, dates, visa metadata
-│   └── tracker.py       # Tracks processed files
-│
+│   ├── scrape.py
+│   ├── extract.py
+│   ├── transform.py
+│   └── tracker.py
 ├── data/
-│   ├── raw/             # (temporary PDFs if needed)
+│   ├── raw/
 │   ├── reference/
 │   │   └── visa_codebook.csv
 │   └── processed/
 │       ├── visa_data.csv
 │       └── processed_files.json
-│
 └── .github/workflows/
     └── monthly_update.yml
- ```   
-## ▶️ To run the pipline locally 
+```
+
+## Run locally
 
 Install dependencies:
-``` bash
-pip install requests beautifulsoup4 pdfplumber pandas
-```
-Run:
+
 ```bash
-python run_pipeline.py
+pip install -r requirements.txt
 ```
 
-## 🔁 Automation
+Run the pipeline:
 
-This project uses GitHub Actions.
+```bash
+python build_visa_dataset.py
+```
 
-## The workflow:
+## Automation
 
-Runs automatically on the 1st of each month
+GitHub Actions workflow: `.github/workflows/monthly_update.yml`
 
-Can also be triggered manually
+- Scheduled run: day 1 of each month at `05:00 UTC`
+- Manual trigger: `workflow_dispatch`
+- Executes `python build_visa_dataset.py`
+- Commits updated `data/processed/visa_data.csv` and `data/processed/processed_files.json` back to the repository when changes exist
 
-Executes the pipeline
+For automated commits, repository Actions permissions must allow write access to contents.
 
-Commits updated data back to the repository
+## Data integrity behavior
 
-Workflow file:
+- Fails if visa codebook has duplicate `visa_type + visa_program` keys
+- Fails if extracted rows contain unmapped visa classes (writes `data/processed/unknown_visa_types.csv` for inspection)
+- Requires valid extractable rows per processed PDF in strict mode
+- Re-aggregates by business key (`date`, `visa_program`, `country`, `visa_type`) to avoid duplicate count inflation
 
-.github/workflows/monthly_update.yml
+## Data sources
 
-To enable automated commits:
+- [Monthly Immigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/monthly-immigrant-visa-issuances.html)
+- [Monthly Nonimmigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics/monthly-nonimmigrant-visa-issuances.html)
 
-Go to:
+Visa codebook reference was manually compiled from State Department visa classification resources.
 
-Settings → Actions → General → Workflow permissions
+## Why this exists
 
-Enable:
-
-Read and write permissions
-
-## 🔐 Data Integrity
-
-- Fails if unknown visa types are detected
-- Fails if duplicate visa metadata keys exist
-- Prevents re-processing of already ingested files
-- Ensures visa_type + migration_type are unique merge keys
-
-This prevents silent data corruption.
-
-## 📚 Data Sources
-
-U.S. Department of State:
-
-[Monthly Immigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/monthly-immigrant-visa-issuances.html)
-
-[Monthly Nonimmigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics/monthly-nonimmigrant-visa-issuances.html)
-
-The visa codebook is created manualy from the [Immigrant visa classifications](https://fam.state.gov/FAM/09FAM/09FAM050201.html) and [nonimmigrant Visa Classifications](https://fam.state.gov/FAM/09FAM/09FAM040201.html)
-
-All source data originates from publicly available government publications.
-
-##  Why This Exists
-
-Government data is often published in static PDF tables.
-
-This project transforms those static reports into:
-
-A structured dataset
-
-A research-ready format
-
-A continuously updated data archive
-
-It bridges the gap between government reporting and analytical infrastructure.
-
-
-
+The State Department publishes high-value visa statistics mostly as PDFs.  
+This project provides a reproducible pipeline to keep those data in analysis-ready CSV form.
