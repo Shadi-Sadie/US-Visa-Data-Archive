@@ -20,41 +20,22 @@ It automatically:
 
 - Runs automatically via GitHub Actions
 
-📦 What This Project Produces
+## 📦  What This Project Produces
 
 data/processed/visa_data.csv
 
 A longitudinal dataset containing:
+ Country  
+- Visa type  
+- Visa program (immigrant / nonimmigrant)  
+- Issuance count  
+- Month  
+- Year  
+- Visa metadata (program type, eligibility pathway, description)
 
-Country
-
-Visa type
-
-Visa program (immigrant / nonimmigrant)
-
-Year
-
-Month
-
-Issuance count
-
-Program category
-
-Eligibility pathway
-
-Visa description
-
-Designed for:
-
-Tableau dashboards
-
-Research analysis
-
-Visual essays
-
-Public policy data exploration
-
-🏗 Project Structure
+---
+```
+## 🏗 Project Structure
 us-visa-data-builder/
 │
 ├── run_pipeline.py
@@ -75,31 +56,23 @@ us-visa-data-builder/
 │
 └── .github/workflows/
     └── monthly_update.yml
-▶️ Running the Pipeline Locally
+ ```   
+## ▶️ To run the pipline locally 
 
 Install dependencies:
-
+``` bash
 pip install requests beautifulsoup4 pdfplumber pandas
-
+```
 Run:
-
+```bash
 python run_pipeline.py
+```
 
-The pipeline will:
-
-Detect new PDF files
-
-Process only new files
-
-Append data to the existing dataset
-
-Update the processed file tracker
-
-🔁 Automation
+## 🔁 Automation
 
 This project uses GitHub Actions.
 
-The workflow:
+## The workflow:
 
 Runs automatically on the 1st of each month
 
@@ -123,31 +96,28 @@ Enable:
 
 Read and write permissions
 
-🔐 Data Integrity
+## 🔐 Data Integrity
 
-The pipeline:
-
-Fails if unknown visa types are detected
-
-Fails if duplicate visa metadata keys exist
-
-Prevents re-processing of already ingested files
-
-Ensures visa_type + migration_type are unique merge keys
+- Fails if unknown visa types are detected
+- Fails if duplicate visa metadata keys exist
+- Prevents re-processing of already ingested files
+- Ensures visa_type + migration_type are unique merge keys
 
 This prevents silent data corruption.
 
-📚 Data Sources
+## 📚 Data Sources
 
 U.S. Department of State:
 
-Immigrant Visa Issuances (Monthly)
+[Monthly Immigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/monthly-immigrant-visa-issuances.html)
 
-Nonimmigrant Visa Issuances (Monthly)
+[Monthly Nonimmigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics/monthly-nonimmigrant-visa-issuances.html)
+
+The visa codebook is created manualy from the [Immigrant visa classifications](https://fam.state.gov/FAM/09FAM/09FAM050201.html) and [nonimmigrant Visa Classifications](https://fam.state.gov/FAM/09FAM/09FAM040201.html)
 
 All source data originates from publicly available government publications.
 
-🧠 Why This Exists
+##  Why This Exists
 
 Government data is often published in static PDF tables.
 
@@ -161,26 +131,5 @@ A continuously updated data archive
 
 It bridges the gap between government reporting and analytical infrastructure.
 
-📌 Future Extensions
 
-Possible enhancements:
 
-Historical backfill validation
-
-Logging & error reporting
-
-Dashboard auto-refresh integration
-
-Data quality checks
-
-Deployment to a public API
-
-If you want, I can now:
-
-Make a slightly more public-facing version
-
-Make a more technical version
-
-Or tailor it specifically for your portfolio site
-
-Just tell me the audience.
