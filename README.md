@@ -87,7 +87,7 @@ For automated commits, repository Actions permissions must allow write access to
 - [Monthly Immigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/monthly-immigrant-visa-issuances.html)
 - [Monthly Nonimmigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics/monthly-nonimmigrant-visa-issuances.html)
 
-Visa codebook reference was manually compiled from State Department visa classification resources.
+Visa codebook reference was manually compiled from State Department visa classification resources [1](https://fam.state.gov/FAM/09FAM/09FAM050201.html) and [2](https://fam.state.gov/FAM/09FAM/09FAM040201.html).
 
 ## Why this exists
 
