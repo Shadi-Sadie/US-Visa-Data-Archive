@@ -102,6 +102,7 @@ TERRITORY_MAP = {
   "Cook Islands": "New Zealand",
   "Curacao": "Netherlands",
   "Faroe Islands": "Denmark",
+  "Falkland Islands": "United Kingdom",
   "French Polynesia": "France",
   "Gibraltar": "United Kingdom",
   "Montserrat": "United Kingdom",
@@ -118,11 +119,12 @@ TERRITORY_MAP = {
   "Hong Kong-BNO": "Hong Kong",
   "Marshall Islands, Republic of the": "Marshall Islands",
   "Northern Ireland (DV only)": "United Kingdom",
-  "Pitcairn": "Pitcairn Islands",
+  "Pitcairn": "United Kingdom",
   "Republic of Palau": "Palau",
   "St Lucia": "Saint Lucia",
   "St. Vincent and The Grenadines": "Saint Vincent and the Grenadines",
-
+  "Wallis and Futuna": "France",
+  "Guadeloupe": "France"
 }
 
 
