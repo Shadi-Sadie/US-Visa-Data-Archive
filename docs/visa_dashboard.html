@@ -121,6 +121,28 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 .trends-main{display:flex;flex-direction:column;gap:10px;height:100%}
 .trends-side{display:flex;flex-direction:column;gap:10px;height:100%}
 
+/* ─── YEAR CHIPS ─── */
+.year-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.ychip{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--muted);transition:all .15s;user-select:none;display:flex;align-items:center;gap:3px}
+.ychip:hover{border-color:var(--text);color:var(--text)}
+.ychip.active{background:var(--teal);color:#07101C;border-color:var(--teal)}
+.partial-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.ychip.active .partial-dot{background:#07101C}
+
+/* ─── COUNTRY COMPARE ─── */
+.compare-bar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;min-height:26px}
+.compare-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.compare-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--amber-lo);border:1px solid rgba(255,180,0,.35);color:var(--amber)}
+.compare-pill-x{color:var(--muted);font-size:10px;cursor:pointer;margin-left:2px;line-height:1}
+.compare-pill-x:hover{color:var(--red)}
+.compare-add{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px dashed var(--border);color:var(--muted);cursor:pointer;transition:all .15s}
+.compare-add:hover{border-color:var(--teal);color:var(--teal)}
+.compare-search-wrap{position:relative}
+.compare-search{padding:4px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--teal);color:var(--text);font-size:11px;font-family:'Outfit',sans-serif;outline:none;width:160px}
+.compare-drop{position:absolute;top:calc(100% + 4px);left:0;background:#07101C;border:1px solid var(--border);border-radius:8px;padding:4px;z-index:200;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.compare-result{padding:5px 8px;font-size:11px;color:var(--muted);cursor:pointer;border-radius:4px}
+.compare-result:hover{background:var(--teal-lo);color:var(--teal)}
+
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 </style>
@@ -142,7 +164,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
   <div id="sb-overview">
     <div>
       <span class="filter-label">Selected Year</span>
-      <div class="r-options" id="year-opts"></div>
+      <div id="year-opts"></div>
     </div>
     <div id="prog-filter">
       <span class="filter-label">Visa Program</span>
@@ -243,6 +265,15 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
     <div class="back-btn" onclick="showDash()">← Back</div>
     <div class="c-name" id="d-country">—</div>
 
+    <div class="compare-bar">
+      <span class="compare-lbl">Compare with:</span>
+      <div id="compare-pill-wrap"></div>
+      <div class="compare-search-wrap" id="compare-search-wrap" style="display:none">
+        <input class="compare-search" id="compare-input" placeholder="Search country…" oninput="filterCompareSearch()" autocomplete="off">
+        <div class="compare-drop" id="compare-drop" style="display:none"></div>
+      </div>
+    </div>
+
     <div class="kpi-row kpi-row-6" style="margin-bottom:14px">
       <div class="kpi-card c-total">
         <div class="kpi-lbl">Total Visas</div>
@@ -310,7 +341,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 // ═══════════════════════════════════════════════════
 const S = {
   year: '2024', program: 'nonimmigrant', metric: 'count',
-  country: null,
+  country: null, compareCountry: null,
   view: 'overview',
   trendProg: 'nonimmigrant',
   trendCountries: ['Mexico', 'India', 'China', 'Philippines', 'United Kingdom', 'Brazil'],
@@ -477,29 +508,20 @@ async function init() {
 let PARTIAL_YEARS = new Set();
 
 function buildYears() {
-  // Detect partial years
   PARTIAL_YEARS = new Set();
   for (let i = 1; i < YEARS.length; i++) {
     const cur = DATA.totals_by_year[YEARS[i]]?.total || 0;
     const prv = DATA.totals_by_year[YEARS[i - 1]]?.total || 0;
     if (prv > 0 && cur < prv * 0.6) PARTIAL_YEARS.add(YEARS[i]);
   }
-
   const el = document.getElementById('year-opts');
-  el.innerHTML = '';
-  YEARS.forEach(y => {
-    const d = document.createElement('div');
-    d.className = 'r-item' + (y === S.year ? ' active' : '');
-    d.dataset.v = y;
-    const tag = PARTIAL_YEARS.has(y) ? ` <span style="font-size:8px;color:var(--amber);margin-left:2px">partial</span>` : '';
-    d.innerHTML = `<div class="r-dot"></div><span>${y}${tag}</span>`;
-    d.onclick = () => setYear(d);
-    el.appendChild(d);
-  });
+  el.innerHTML = '<div class="year-chips">' + YEARS.map(y =>
+    `<div class="ychip${y === S.year ? ' active' : ''}" data-v="${y}" onclick="setYear(this)">${y}${PARTIAL_YEARS.has(y) ? '<span class="partial-dot" title="Partial year data"></span>' : ''}</div>`
+  ).join('') + '</div>';
 }
 
 function setYear(el) {
-  document.querySelectorAll('#year-opts .r-item').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('#year-opts .ychip').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
   S.year = el.dataset.v;
   if (S.country) updateDetail();
@@ -865,6 +887,7 @@ function drawRankingChart() {
 // ═══════════════════════════════════════════════════
 function showCountry(name) {
   S.country = name;
+  S.compareCountry = null;
   S.rightPanel = 'comparison';
   S.selectedProgType = null;
   document.getElementById('d-country').textContent = name;
@@ -873,8 +896,67 @@ function showCountry(name) {
   document.getElementById('v-country').classList.remove('hidden');
   document.getElementById('sb-overview').style.display = '';
   document.getElementById('sb-trends').style.display = 'none';
+  renderComparePill();
   updateDetail();
 }
+
+// ─── COMPARE COUNTRY PICKER ───
+function renderComparePill() {
+  const pillWrap = document.getElementById('compare-pill-wrap');
+  if (S.compareCountry) {
+    pillWrap.innerHTML = `<div class="compare-pill"><span>${S.compareCountry}</span><span class="compare-pill-x" onclick="clearCompare()">✕</span></div>`;
+  } else {
+    pillWrap.innerHTML = `<div class="compare-add" onclick="openCompareSearch()">+ Add country</div>`;
+  }
+}
+
+function openCompareSearch() {
+  const wrap = document.getElementById('compare-search-wrap');
+  wrap.style.display = '';
+  document.getElementById('compare-pill-wrap').innerHTML = '';
+  const inp = document.getElementById('compare-input');
+  inp.value = '';
+  filterCompareSearch();
+  inp.focus();
+}
+
+function filterCompareSearch() {
+  const q = document.getElementById('compare-input').value.toLowerCase();
+  const drop = document.getElementById('compare-drop');
+  const results = Object.keys(CYM).sort()
+    .filter(c => c !== S.country && c.toLowerCase().includes(q))
+    .slice(0, 8);
+  drop.style.display = results.length ? '' : 'none';
+  drop.innerHTML = results.map(c =>
+    `<div class="compare-result" onclick="setCompare('${c.replace(/'/g, "\\'")}')">${c}</div>`
+  ).join('');
+}
+
+function setCompare(name) {
+  S.compareCountry = name;
+  S.rightPanel = 'comparison';
+  document.getElementById('compare-search-wrap').style.display = 'none';
+  document.getElementById('compare-drop').style.display = 'none';
+  renderComparePill();
+  updateDetail();
+}
+
+function clearCompare() {
+  S.compareCountry = null;
+  S.rightPanel = 'comparison';
+  renderComparePill();
+  updateDetail();
+}
+
+// Close compare dropdown on outside click
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('compare-search-wrap');
+  if (wrap && !wrap.contains(e.target) && !e.target.classList.contains('compare-add')) {
+    wrap.style.display = 'none';
+    document.getElementById('compare-drop').style.display = 'none';
+    if (!S.compareCountry) renderComparePill();
+  }
+});
 
 function showDash() {
   document.getElementById('v-country').classList.add('hidden');
@@ -914,14 +996,26 @@ function updateDetail() {
   document.getElementById('d-rank-imm').textContent = rank('immigrant');
   document.getElementById('d-rank-non').textContent = rank('nonimmigrant');
 
-  drawRadar('radar-imm-wrap', entry.program_types?.immigrant || {}, 'var(--violet)', 'immigrant');
-  drawRadar('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant');
+  const cmpEntry = S.compareCountry ? CYM[S.compareCountry]?.[S.year] : null;
+  drawPolar('radar-imm-wrap', entry.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', cmpEntry?.program_types?.immigrant || null);
+  drawPolar('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', cmpEntry?.program_types?.nonimmigrant || null);
   drawTotalTrend();
   drawRightPanel();
 }
 
 // ─── RADAR CHART ───
-function drawRadar(wrapId, ptypes, color, prog) {
+const PTYPE_COLORS = {
+  'Family-based':'#F87171','Employment-based':'#FACC15',
+  'Diversity lottery':'#4ADE80','Special immigrants':'#38BDF8',
+  'Other Immigrants':'#A78BFA','Temporary visitor':'#00D4B4',
+  'Temporary worker':'#FB923C','Study & Exchange':'#F472B6',
+  'Exchange visitor':'#67E8F9','Humanitarian':'#FCD34D',
+  'Diplomatic & Official':'#94A3B8','Transit':'#475569'
+};
+
+// Polar (Nightingale rose) chart — equal angle slices, radius ∝ value
+// If comparePtypes is provided, draws a ghost outline for comparison country
+function drawPolar(wrapId, ptypes, accentColor, prog, comparePtypes) {
   const wrap = document.getElementById(wrapId);
   wrap.innerHTML = '';
   const entries = Object.entries(ptypes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
@@ -929,93 +1023,133 @@ function drawRadar(wrapId, ptypes, color, prog) {
     wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:11px">No data for this year</div>';
     return;
   }
-  const total = entries.reduce((s, [, v]) => s + v, 0);
-  const N = entries.length;
+
   const W = wrap.clientWidth || 240, H = wrap.clientHeight || 200;
-  const cx = W / 2, cy = H / 2 + 4;
-  const r = Math.min(W * 0.34, H * 0.34);
-  const angleStep = (2 * Math.PI) / N;
+  // Leave room for labels: shrink radius so labels don't clip
+  const maxR = Math.min(W / 2 - 56, H / 2 - 18);
+  const innerR = Math.max(maxR * 0.12, 6);
+  const cx = W / 2, cy = H / 2;
+  const N = entries.length;
+  const total = entries.reduce((s, [, v]) => s + v, 0);
+  const maxVal = entries[0][1];
+  const rScale = d3.scaleLinear().domain([0, maxVal]).range([innerR, maxR]);
 
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
   const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
 
-  // Grid circles
-  [0.25, 0.5, 0.75, 1].forEach(lvl => {
-    g.append('circle').attr('r', r * lvl).attr('fill', 'none').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3').attr('stroke-width', .5);
-  });
-  // % labels on grid
-  [0.5, 1].forEach(lvl => {
-    g.append('text').attr('x', 3).attr('y', -r * lvl + 1).attr('fill', '#2A4060').attr('font-size', 6.5).attr('font-family', 'Outfit').text(Math.round(lvl * 100) + '%');
+  // Subtle grid rings
+  [0.33, 0.67, 1].forEach(lvl => {
+    g.append('circle').attr('r', innerR + (maxR - innerR) * lvl)
+      .attr('fill', 'none').attr('stroke', '#1A2E48').attr('stroke-width', 0.5);
   });
 
-  // Axis spokes
-  entries.forEach((_, i) => {
-    const angle = i * angleStep - Math.PI / 2;
-    g.append('line').attr('x1', 0).attr('y1', 0).attr('x2', r * Math.cos(angle)).attr('y2', r * Math.sin(angle)).attr('stroke', '#1E3554').attr('stroke-width', .5);
-  });
+  const pieLayout = d3.pie().value(() => 1).sort(null)(entries);
 
-  // Data polygon
-  const pts = entries.map(([, v], i) => {
-    const pct = v / total, angle = i * angleStep - Math.PI / 2;
-    return [r * pct * Math.cos(angle), r * pct * Math.sin(angle)];
-  });
-  g.append('polygon').attr('points', pts.map(p => p.join(',')).join(' ')).attr('fill', color).attr('fill-opacity', .18).attr('stroke', color).attr('stroke-width', 1.5).attr('stroke-linejoin', 'round');
+  // Main slices
+  pieLayout.forEach((arc, i) => {
+    const [name, v] = entries[i];
+    const r = rScale(v);
+    const pct = v / total;
+    const segColor = PTYPE_COLORS[name] || d3.schemeTableau10[i % 10];
+    const arcFn = d3.arc().innerRadius(innerR).outerRadius(r)
+      .startAngle(arc.startAngle).endAngle(arc.endAngle).padAngle(0.025);
 
-  // Data points (clickable)
-  entries.forEach(([name, v], i) => {
-    const pct = v / total, angle = i * angleStep - Math.PI / 2;
-    const px = r * pct * Math.cos(angle), py = r * pct * Math.sin(angle);
-    g.append('circle').attr('cx', px).attr('cy', py).attr('r', 4.5)
-      .attr('fill', color).attr('stroke', '#0B1622').attr('stroke-width', 1.5)
+    g.append('path').attr('d', arcFn)
+      .attr('fill', segColor).attr('fill-opacity', 0.82)
+      .attr('stroke', '#0B1622').attr('stroke-width', 0.5)
       .style('cursor', 'pointer')
       .on('click', () => showVisaTypes(prog, name))
-      .on('mouseover', e => { tip(e, name, v); d3.select(e.target).attr('r', 6); })
-      .on('mouseout', e => { hideTip(); d3.select(e.target).attr('r', 4.5); });
+      .on('mouseover', e => {
+        d3.select(e.target).attr('fill-opacity', 1).attr('stroke', segColor).attr('stroke-width', 1.5);
+        tip(e, `${name} — ${(pct * 100).toFixed(1)}%`, v);
+      })
+      .on('mouseout', e => {
+        d3.select(e.target).attr('fill-opacity', 0.82).attr('stroke', '#0B1622').attr('stroke-width', 0.5);
+        hideTip();
+      });
+
+    // Label for segments ≥ 10%
+    if (pct >= 0.10) {
+      const midAngle = (arc.startAngle + arc.endAngle) / 2;
+      const labelR = maxR + 12;
+      const lx = labelR * Math.sin(midAngle), ly = -labelR * Math.cos(midAngle);
+      g.append('text').attr('x', lx).attr('y', ly)
+        .attr('dominant-baseline', 'middle')
+        .attr('text-anchor', Math.abs(lx) < 4 ? 'middle' : lx > 0 ? 'start' : 'end')
+        .attr('fill', segColor).attr('font-size', 8).attr('font-family', 'Outfit')
+        .style('cursor', 'pointer').on('click', () => showVisaTypes(prog, name))
+        .text(name.length > 14 ? name.slice(0, 12) + '…' : name);
+    }
   });
 
-  // Axis labels (clickable)
-  const labelPad = 14;
-  entries.forEach(([name], i) => {
-    const angle = i * angleStep - Math.PI / 2;
-    const lx = (r + labelPad) * Math.cos(angle), ly = (r + labelPad) * Math.sin(angle);
-    const anchor = Math.abs(lx) < 5 ? 'middle' : lx > 0 ? 'start' : 'end';
-    g.append('text').attr('x', lx).attr('y', ly).attr('dominant-baseline', 'middle')
-      .attr('text-anchor', anchor).attr('fill', '#8BAABF').attr('font-size', 8.5).attr('font-family', 'Outfit')
-      .style('cursor', 'pointer')
-      .on('click', () => showVisaTypes(prog, name))
-      .on('mouseover', function() { d3.select(this).attr('fill', color); })
-      .on('mouseout', function() { d3.select(this).attr('fill', '#8BAABF'); })
-      .text(name.length > 15 ? name.slice(0, 13) + '…' : name);
-  });
+  // Ghost outline for comparison country (if provided)
+  if (comparePtypes) {
+    pieLayout.forEach((arc, i) => {
+      const [name] = entries[i];
+      const cv = comparePtypes[name] || 0;
+      if (!cv) return;
+      const compareTotal = Object.values(comparePtypes).reduce((s, v) => s + v, 0);
+      const compareMax = Math.max(...Object.values(comparePtypes));
+      const cr = rScale.copy().domain([0, compareMax])(cv);
+      const arcFn = d3.arc().innerRadius(innerR).outerRadius(cr)
+        .startAngle(arc.startAngle).endAngle(arc.endAngle).padAngle(0.025);
+      g.append('path').attr('d', arcFn)
+        .attr('fill', 'none').attr('stroke', '#FFB400').attr('stroke-width', 1.5)
+        .attr('stroke-dasharray', '3,2').attr('opacity', 0.7).attr('pointer-events', 'none');
+    });
+  }
+
+  // Center total
+  g.append('circle').attr('r', innerR).attr('fill', '#0B1622');
+  g.append('text').attr('text-anchor', 'middle').attr('dy', '-0.3em')
+    .attr('fill', '#4A6A8A').attr('font-size', 7).attr('font-family', 'Outfit').text('TOTAL');
+  g.append('text').attr('text-anchor', 'middle').attr('dy', '0.9em')
+    .attr('fill', accentColor).attr('font-size', 11).attr('font-weight', 600)
+    .attr('font-family', 'JetBrains Mono').text(fmt(total));
 }
 
 // ─── TOTAL TREND ───
 function drawTotalTrend() {
-  const c = S.country;
+  const c = S.country, cc = S.compareCountry;
   const wrap = document.getElementById('total-trend-wrap');
   wrap.innerHTML = '';
   const W = wrap.clientWidth || 280, H = wrap.clientHeight || 160;
-  const m = { t: 10, r: 14, b: 26, l: 44 };
+  const m = { t: 10, r: cc ? 80 : 14, b: 26, l: 44 };
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
-  const pts = YEARS.map(y => ({ y, v: CYM[c]?.[y]?.total || 0 }));
-  const maxV = d3.max(pts, d => d.v) || 1;
+
+  const series = [{ name: c, col: 'var(--amber)', pts: YEARS.map(y => ({ y, v: CYM[c]?.[y]?.total || 0 })) }];
+  if (cc) series.push({ name: cc, col: 'var(--teal)', pts: YEARS.map(y => ({ y, v: CYM[cc]?.[y]?.total || 0 })) });
+
+  const maxV = d3.max(series.flatMap(s => s.pts.map(p => p.v))) || 1;
   const xSc = d3.scalePoint().domain(YEARS).range([0, iW]);
   const ySc = d3.scaleLinear().domain([0, maxV * 1.15]).range([iH, 0]);
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+
   svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
     .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
     .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
-  svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH).attr('stroke', '#FFB400').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .5);
-  svg.append('path').datum(pts).attr('fill', 'var(--amber)').attr('fill-opacity', .07)
-    .attr('d', d3.area().x(d => xSc(d.y)).y0(iH).y1(d => ySc(d.v)).curve(d3.curveMonotoneX));
-  svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', 'var(--amber)').attr('stroke-width', 2)
-    .attr('d', d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX));
-  svg.selectAll('.dot').data(pts).join('circle')
-    .attr('cx', d => xSc(d.y)).attr('cy', d => ySc(d.v)).attr('r', 3)
-    .attr('fill', 'var(--amber)').attr('stroke', '#0B1622').attr('stroke-width', 1.5)
-    .style('cursor', 'pointer')
-    .on('mouseover', (e, d) => tip(e, `${c} (${d.y}) — Total`, d.v)).on('mouseout', hideTip);
+
+  svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
+    .attr('stroke', '#FFB400').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
+
+  const lineFn = d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX);
+  series.forEach(({ name, col, pts }) => {
+    if (!cc) {
+      svg.append('path').datum(pts).attr('fill', col).attr('fill-opacity', .07)
+        .attr('d', d3.area().x(d => xSc(d.y)).y0(iH).y1(d => ySc(d.v)).curve(d3.curveMonotoneX));
+    }
+    svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', col).attr('stroke-width', 2).attr('d', lineFn);
+    svg.selectAll(null).data(pts).join('circle').attr('cx', d => xSc(d.y)).attr('cy', d => ySc(d.v)).attr('r', 3)
+      .attr('fill', col).attr('stroke', '#0B1622').attr('stroke-width', 1.5).style('cursor', 'pointer')
+      .on('mouseover', (e, d) => tip(e, `${name} (${d.y})`, d.v)).on('mouseout', hideTip);
+    if (cc) {
+      const last = pts.filter(p => p.v > 0).pop();
+      if (last) svg.append('text').attr('x', xSc(last.y) + 5).attr('y', ySc(last.v))
+        .attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 8.5).attr('font-family', 'Outfit')
+        .text(name.length > 10 ? name.slice(0, 9) + '…' : name);
+    }
+  });
 }
 
 // ─── RIGHT PANEL ───
@@ -1042,12 +1176,55 @@ function resetRightPanel() {
 }
 
 function drawComparisonBars() {
-  const c = S.country;
+  const c = S.country, cc = S.compareCountry;
   const wrap = document.getElementById('right-panel-wrap');
   wrap.innerHTML = '';
   const W = wrap.clientWidth || 280, H = wrap.clientHeight || 160;
   const m = { t: 10, r: 14, b: 28, l: 48 };
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
+
+  // When compare is active: show two lines (immigrant + nonimmigrant) for both countries
+  // When single: grouped bars (immigrant + nonimmigrant per year)
+  if (cc) {
+    // Two-country line comparison: immigrant line (solid) + nonimmigrant line (dashed)
+    const series = [
+      { name: c + ' — Imm',  col: 'var(--violet)', dash: null, pts: YEARS.map(y => ({ y, v: CYM[c]?.[y]?.immigrant || 0 })) },
+      { name: c + ' — Non',  col: 'var(--teal)',   dash: '4,2', pts: YEARS.map(y => ({ y, v: CYM[c]?.[y]?.nonimmigrant || 0 })) },
+      { name: cc + ' — Imm', col: '#F87171',        dash: null, pts: YEARS.map(y => ({ y, v: CYM[cc]?.[y]?.immigrant || 0 })) },
+      { name: cc + ' — Non', col: '#FACC15',        dash: '4,2', pts: YEARS.map(y => ({ y, v: CYM[cc]?.[y]?.nonimmigrant || 0 })) },
+    ];
+    const maxV = d3.max(series.flatMap(s => s.pts.map(p => p.v))) || 1;
+    const xSc = d3.scalePoint().domain(YEARS).range([0, iW]);
+    const ySc = d3.scaleLinear().domain([0, maxV * 1.15]).range([iH, 0]);
+    const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+    svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
+      .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+    svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+      .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017','2019','2021','2023','2025'].includes(d)) d3.select(this).select('text').remove(); }); });
+    svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
+      .attr('stroke', '#FFB400').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
+    const lineFn = (dash) => d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX);
+    series.forEach(({ name, col, dash, pts }) => {
+      const path = svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', col).attr('stroke-width', 1.5).attr('d', lineFn()(pts));
+      if (dash) path.attr('stroke-dasharray', dash);
+      svg.selectAll(null).data(pts.filter(p => p.v > 0)).join('circle')
+        .attr('cx', d => xSc(d.y)).attr('cy', d => ySc(d.v)).attr('r', 2.5)
+        .attr('fill', col).attr('stroke', '#0B1622').attr('stroke-width', 1).style('cursor', 'pointer')
+        .on('mouseover', (e, d) => tip(e, `${name} (${d.y})`, d.v)).on('mouseout', hideTip);
+    });
+    // Legend
+    const legDiv = d3.select(wrap).append('div').style('display', 'flex').style('flex-wrap', 'wrap').style('gap', '8px').style('margin-top', '4px').style('padding-left', '48px');
+    series.forEach(({ name, col, dash }) => {
+      const item = legDiv.append('div').style('display', 'flex').style('align-items', 'center').style('gap', '4px').style('font-size', '8.5px').style('color', '#5C7A9B');
+      const sw = item.append('svg').attr('width', 14).attr('height', 8);
+      const ln = sw.append('line').attr('x1', 0).attr('y1', 4).attr('x2', 14).attr('y2', 4).attr('stroke', col).attr('stroke-width', 1.5);
+      if (dash) ln.attr('stroke-dasharray', dash);
+      item.append('span').text(name);
+    });
+    return;
+  }
+
+  // Single country: grouped bars
   const immPts = YEARS.map(y => ({ y, v: CYM[c]?.[y]?.immigrant || 0 }));
   const nonPts = YEARS.map(y => ({ y, v: CYM[c]?.[y]?.nonimmigrant || 0 }));
   const maxV = Math.max(d3.max(immPts, d => d.v) || 0, d3.max(nonPts, d => d.v) || 0) || 1;
@@ -1059,11 +1236,11 @@ function drawComparisonBars() {
     .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(4))
     .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
-  svg.selectAll('.b-imm').data(immPts).join('rect').attr('class', 'b-imm')
+  svg.selectAll('.b-imm').data(immPts).join('rect')
     .attr('x', d => xSc(d.y)).attr('y', d => ySc(d.v)).attr('width', bW - 1).attr('height', d => iH - ySc(d.v))
     .attr('fill', 'var(--violet)').attr('opacity', .75).attr('rx', 2)
     .style('cursor', 'pointer').on('mouseover', (e, d) => tip(e, `${c} ${d.y} — Immigrant`, d.v)).on('mouseout', hideTip);
-  svg.selectAll('.b-non').data(nonPts).join('rect').attr('class', 'b-non')
+  svg.selectAll('.b-non').data(nonPts).join('rect')
     .attr('x', d => xSc(d.y) + bW + 1).attr('y', d => ySc(d.v)).attr('width', bW - 1).attr('height', d => iH - ySc(d.v))
     .attr('fill', 'var(--teal)').attr('opacity', .75).attr('rx', 2)
     .style('cursor', 'pointer').on('mouseover', (e, d) => tip(e, `${c} ${d.y} — Nonimmigrant`, d.v)).on('mouseout', hideTip);
@@ -1151,7 +1328,12 @@ window.addEventListener('resize', () => {
     if (!DATA || !WORLD) return;
     if (S.view === 'overview') { drawMap(); drawLine(); drawBar(); }
     if (S.view === 'trends') drawTrendView();
-    if (S.country) { drawRadar('radar-imm-wrap', CYM[S.country]?.[S.year]?.program_types?.immigrant || {}, 'var(--violet)', 'immigrant'); drawRadar('radar-non-wrap', CYM[S.country]?.[S.year]?.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant'); drawTotalTrend(); drawRightPanel(); }
+    if (S.country) {
+      const e = CYM[S.country]?.[S.year]; const ce = S.compareCountry ? CYM[S.compareCountry]?.[S.year] : null;
+      drawPolar('radar-imm-wrap', e?.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', ce?.program_types?.immigrant || null);
+      drawPolar('radar-non-wrap', e?.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', ce?.program_types?.nonimmigrant || null);
+      drawTotalTrend(); drawRightPanel();
+    }
   }, 200);
 });
 
