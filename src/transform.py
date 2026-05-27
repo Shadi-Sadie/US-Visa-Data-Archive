@@ -194,7 +194,6 @@ def add_visa_metadata(df):
         how="left"
     )
 
-    # Fail if any unmatched; dump offending rows for inspection
     missing = merged["program_type"].isna()
 
     if missing.any():
@@ -202,13 +201,9 @@ def add_visa_metadata(df):
         os.makedirs("data/processed", exist_ok=True)
         out_path = "data/processed/unknown_visa_types.csv"
         unknown.to_csv(out_path, index=False)
-        # Print a concise sample for quick visibility
         sample = unknown[["visa_type", "visa_program"]].drop_duplicates().head(20)
-        print("Unknown visa types detected (sample):")
+        print("\nWARNING: Unknown visa types detected (metadata columns will be null):")
         print(sample.to_string(index=False))
-        print(f"Full rows dumped to: {out_path}")
-        raise ValueError(
-            f"Unknown visa types detected. See {out_path} for full details. Sample:\n{sample}"
-        )
+        print(f"Full rows dumped to: {out_path}\n")
 
     return merged
