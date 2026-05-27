@@ -450,7 +450,10 @@ async function init() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     DATA = await r.json();
     YEARS = Object.keys(DATA.totals_by_year).sort();
-    S.year = YEARS[YEARS.length - 1];
+    // Default to last complete year: if latest year total < 60% of prior year, it's partial
+    const _last = YEARS[YEARS.length - 1], _prev = YEARS[YEARS.length - 2];
+    const _isPartial = _prev && (DATA.totals_by_year[_last]?.total || 0) < (DATA.totals_by_year[_prev]?.total || 0) * 0.6;
+    S.year = _isPartial ? _prev : _last;
     for (const e of DATA.country_data) {
       if (!CYM[e.country]) CYM[e.country] = {};
       CYM[e.country][e.year] = e;
@@ -470,14 +473,26 @@ async function init() {
 // ═══════════════════════════════════════════════════
 //  OVERVIEW FILTERS
 // ═══════════════════════════════════════════════════
+// Track which years are partial (total < 60% of prior year)
+let PARTIAL_YEARS = new Set();
+
 function buildYears() {
+  // Detect partial years
+  PARTIAL_YEARS = new Set();
+  for (let i = 1; i < YEARS.length; i++) {
+    const cur = DATA.totals_by_year[YEARS[i]]?.total || 0;
+    const prv = DATA.totals_by_year[YEARS[i - 1]]?.total || 0;
+    if (prv > 0 && cur < prv * 0.6) PARTIAL_YEARS.add(YEARS[i]);
+  }
+
   const el = document.getElementById('year-opts');
   el.innerHTML = '';
   YEARS.forEach(y => {
     const d = document.createElement('div');
     d.className = 'r-item' + (y === S.year ? ' active' : '');
     d.dataset.v = y;
-    d.innerHTML = `<div class="r-dot"></div><span>${y}</span>`;
+    const tag = PARTIAL_YEARS.has(y) ? ` <span style="font-size:8px;color:var(--amber);margin-left:2px">partial</span>` : '';
+    d.innerHTML = `<div class="r-dot"></div><span>${y}${tag}</span>`;
     d.onclick = () => setYear(d);
     el.appendChild(d);
   });
@@ -516,6 +531,7 @@ function renderDash() {
   function setK(vid, did, cv, pv) {
     document.getElementById(vid).textContent = fmt(cv);
     const el = document.getElementById(did);
+    if (PARTIAL_YEARS.has(yr)) { el.className = 'kpi-sub flat'; el.textContent = 'Jan–May only'; return; }
     if (pv) {
       const pct = ((cv - pv) / pv * 100).toFixed(1);
       el.className = 'kpi-sub ' + (+pct >= 0 ? 'up' : 'down');
@@ -532,8 +548,11 @@ function renderDash() {
   const top10sum = top10.reduce((s, x) => s + x.v, 0);
   const pct = totalYr > 0 ? (top10sum / totalYr * 100).toFixed(1) : '—';
   const lbl = S.program === 'all' ? '' : ` <strong>${S.program}</strong>`;
+  const partialNote = PARTIAL_YEARS.has(yr)
+    ? ` <span style="color:var(--amber);font-weight:600">⚠ ${yr} is a partial year (Jan–May only) — totals are not comparable to prior years</span>`
+    : '';
   document.getElementById('summary-txt').innerHTML =
-    `In <strong>${yr}</strong>, <span class="hl">${pct}%</span> of${lbl} visas were issued to just 10 countries`;
+    `In <strong>${yr}</strong>, <span class="hl">${pct}%</span> of${lbl} visas were issued to just 10 countries${partialNote}`;
   drawBar();
 }
 
@@ -873,9 +892,10 @@ function updateDetail() {
   document.getElementById('d-imm').textContent = fmtN(imm);
   document.getElementById('d-non').textContent = fmtN(non);
 
-  // Deltas
+  // Deltas — suppress YoY for partial years (misleading)
   function setDelta(id, cur, prev) {
     const el = document.getElementById(id);
+    if (PARTIAL_YEARS.has(yr)) { el.className = 'kpi-sub flat'; el.textContent = 'partial year'; return; }
     if (prev > 0) { const p = ((cur - prev) / prev * 100).toFixed(1); el.className = 'kpi-sub ' + (+p >= 0 ? 'up' : 'down'); el.textContent = (+p >= 0 ? '▲ +' : '▼ ') + p + '% vs ' + (+yr - 1); }
     else { el.className = 'kpi-sub flat'; el.textContent = 'No prior year'; }
   }
