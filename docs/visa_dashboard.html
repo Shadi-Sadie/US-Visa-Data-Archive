@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US Visa Issuance Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0B1622;
+  --surface:#112035;
+  --surface2:#172B47;
+  --border:#1E3554;
+  --text:#E2EAF4;
+  --muted:#5C7A9B;
+  --teal:#00D4B4;
+  --teal-lo:rgba(0,212,180,0.12);
+  --amber:#FFB400;
+  --amber-lo:rgba(255,180,0,0.12);
+  --violet:#A78BFA;
+  --violet-lo:rgba(167,139,250,0.12);
+  --red:#F87171;
+  --green:#4ADE80;
+  --sidebar-w:200px;
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex}
+
+/* ─── SIDEBAR ─── */
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:#080E18;border-right:1px solid var(--border);
+  padding:20px 14px;display:flex;flex-direction:column;gap:24px;overflow-y:auto;
+}
+.brand{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);padding-bottom:14px;border-bottom:1px solid var(--border)}
+.filter-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block}
+.r-options{display:flex;flex-direction:column;gap:2px}
+.r-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;transition:background .15s;font-size:12px;color:var(--muted);user-select:none}
+.r-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.r-item.active{color:var(--text);background:var(--teal-lo)}
+.r-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s}
+.r-item.active .r-dot{border-color:var(--teal)}
+.r-item.active .r-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal)}
+
+/* ─── VIEWS WRAPPER ─── */
+.views-wrap{flex:1;overflow:hidden;position:relative}
+.view{position:absolute;inset:0;overflow-y:auto;padding:22px;transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .4s ease}
+.view.hidden{transform:translateX(60px);opacity:0;pointer-events:none}
+
+/* ─── HEADER ─── */
+.dash-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px}
+.dash-title{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.dash-title span{color:var(--teal)}
+
+/* ─── KPI ROW ─── */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.03) 0%,transparent 60%)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
+.kpi-card.c-total::before{background:var(--amber)}
+.kpi-card.c-nonimm::before{background:var(--teal)}
+.kpi-card.c-imm::before{background:var(--violet)}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.kpi-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.kpi-card.c-total .kpi-val{color:var(--amber)}
+.kpi-card.c-nonimm .kpi-val{color:var(--teal)}
+.kpi-card.c-imm .kpi-val{color:var(--violet)}
+.kpi-delta{font-size:10px;margin-top:3px;display:flex;align-items:center;gap:3px}
+.kpi-delta.up{color:var(--green)}.kpi-delta.down{color:var(--red)}.kpi-delta.flat{color:var(--muted)}
+
+/* ─── SUMMARY BAR ─── */
+.summary{font-size:12px;color:var(--muted);margin-bottom:14px;padding:9px 13px;background:var(--surface);border-radius:7px;border-left:2px solid var(--teal)}
+.summary strong{color:var(--text)}.summary .hl{color:var(--teal);font-weight:600}
+
+/* ─── CHART GRID ─── */
+.chart-grid{display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr auto;gap:10px;height:calc(100vh - 220px);min-height:380px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;overflow:hidden;display:flex;flex-direction:column}
+.chart-card.span-rows{grid-row:1/3}
+.chart-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;flex-shrink:0}
+.chart-body{flex:1;min-height:0;position:relative}
+
+/* ─── MAP ─── */
+#map-svg{width:100%;height:100%;display:block}
+.cpath{cursor:pointer;transition:opacity .15s,stroke .15s}
+.cpath:hover{opacity:.75;stroke:rgba(255,255,255,.25) !important;stroke-width:1 !important}
+
+/* ─── LOADING ─── */
+.loading-msg{display:flex;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted);font-size:12px}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── TOOLTIP ─── */
+.tt{position:fixed;background:#07101C;border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:11px;pointer-events:none;z-index:9999;min-width:150px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none}
+.tt-name{font-weight:700;font-size:12px;margin-bottom:5px;color:var(--text)}
+.tt-row{display:flex;justify-content:space-between;gap:14px;color:var(--muted);margin-top:2px}
+.tt-val{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px}
+
+/* ─── COUNTRY DETAIL ─── */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:5px 11px;border-radius:5px;border:1px solid var(--border);margin-bottom:14px;transition:all .15s;background:var(--surface)}
+.back-btn:hover{color:var(--teal);border-color:var(--teal)}
+.c-name{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px}
+.prog-tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab-btn{padding:6px 14px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all .15s}
+.tab-btn.active{background:var(--teal);color:#07101C;border-color:var(--teal)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:calc(100vh - 320px);min-height:300px}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<aside class="sidebar">
+  <div class="brand">US Visa Data</div>
+
+  <div id="year-filter">
+    <span class="filter-label">Selected Year</span>
+    <div class="r-options" id="year-opts"></div>
+  </div>
+
+  <div id="prog-filter">
+    <span class="filter-label">Visa Program</span>
+    <div class="r-options">
+      <div class="r-item" data-v="all"          onclick="setProgram(this)"><div class="r-dot"></div><span>All</span></div>
+      <div class="r-item" data-v="immigrant"    onclick="setProgram(this)"><div class="r-dot"></div><span>Immigrant</span></div>
+      <div class="r-item active" data-v="nonimmigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+    </div>
+  </div>
+
+  <div id="metric-filter">
+    <span class="filter-label">Map Metric</span>
+    <div class="r-options">
+      <div class="r-item active" data-v="count"  onclick="setMetric(this)"><div class="r-dot"></div><span>Visa Issued</span></div>
+      <div class="r-item"        data-v="per100k" onclick="setMetric(this)"><div class="r-dot"></div><span>Visa per 100K</span></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══════════════ VIEWS ═══════════════ -->
+<div class="views-wrap">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="view" id="v-dash">
+    <div class="dash-header">
+      <h1 class="dash-title">US Visa Issuance <span>Dashboard</span></h1>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi-card c-total"><div class="kpi-lbl">Total Visa Issued</div><div class="kpi-val" id="kpi-tot">—</div><div class="kpi-delta flat" id="kpi-tot-d">vs Previous Year</div></div>
+      <div class="kpi-card c-nonimm"><div class="kpi-lbl">Non-Immigrant Visa</div><div class="kpi-val" id="kpi-non">—</div><div class="kpi-delta flat" id="kpi-non-d">vs Previous Year</div></div>
+      <div class="kpi-card c-imm"><div class="kpi-lbl">Immigrant Visa</div><div class="kpi-val" id="kpi-imm">—</div><div class="kpi-delta flat" id="kpi-imm-d">vs Previous Year</div></div>
+    </div>
+
+    <div class="summary" id="summary-txt">Loading…</div>
+
+    <div class="chart-grid">
+      <div class="chart-card span-rows">
+        <div class="chart-title">Global Visa Intensity — click a country to drill down</div>
+        <div class="chart-body" id="map-wrap"><div class="loading-msg"><div class="spin"></div>Loading map…</div></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Top 10 Nationalities</div>
+        <div class="chart-body" id="bar-wrap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Total Visa Over Time</div>
+        <div class="chart-body" id="line-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── COUNTRY DETAIL ── -->
+  <div class="view hidden" id="v-country">
+    <div class="back-btn" onclick="showDash()">← Dashboard</div>
+    <div class="c-name" id="d-country">—</div>
+    <div class="prog-tabs">
+      <div class="tab-btn active" data-v="immigrant"    onclick="setDetailProg(this)">Immigrant</div>
+      <div class="tab-btn"        data-v="nonimmigrant" onclick="setDetailProg(this)">Nonimmigrant</div>
+    </div>
+
+    <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);max-width:440px;margin-bottom:14px">
+      <div class="kpi-card c-total"><div class="kpi-lbl">Total Visa Issued</div><div class="kpi-val" id="d-total">—</div><div class="kpi-delta flat" id="d-total-d"></div></div>
+      <div class="kpi-card c-nonimm"><div class="kpi-lbl">Rank (this year)</div><div class="kpi-val" id="d-rank">—</div><div class="kpi-delta flat" style="color:var(--muted)">among all countries</div></div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="chart-card">
+        <div class="chart-title">Visa by Program Type</div>
+        <div class="chart-body" id="polar-wrap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Count Trend 2017–2025</div>
+        <div class="chart-body" id="trend-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOOLTIP -->
+<div class="tt" id="tt"><div class="tt-name" id="tt-n"></div><div id="tt-b"></div></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const S = { year:'2023', program:'nonimmigrant', metric:'count', country:null, detProg:'immigrant' };
+const YEARS = ['2017','2018','2019','2020','2021','2022','2023','2024','2025'];
+let DATA = null, CYM = {}, WORLD = null;
+let mapSvg, mapG, pathFn, proj, colorScl;
+
+// ═══════════════════════════════════════════════════
+//  ISO NAME MAP  (204 countries)
+// ═══════════════════════════════════════════════════
+const N2I = {
+  'Afghanistan':4,'Albania':8,'Algeria':12,'Andorra':20,'Angola':24,
+  'Antigua and Barbuda':28,'Argentina':32,'Armenia':51,'Australia':36,'Austria':40,
+  'Azerbaijan':31,'Bahamas':44,'Bahrain':48,'Bangladesh':50,'Barbados':52,
+  'Belarus':112,'Belgium':56,'Belize':84,'Benin':204,'Bhutan':64,
+  'Bolivia':68,'Bosnia and Herzegovina':70,'Botswana':72,'Brazil':76,'Brunei':96,
+  'Bulgaria':100,'Burkina Faso':854,'Burundi':108,'Cabo Verde':132,'Cambodia':116,
+  'Cameroon':120,'Canada':124,'Central African Republic':140,'Chad':148,'Chile':152,
+  'China':156,'Colombia':170,'Comoros':174,'Congo':178,'Costa Rica':188,
+  "Cote d'Ivoire":384,'Croatia':191,'Cuba':192,'Cyprus':196,'Czech Republic':203,
+  'Democratic Republic of the Congo':180,'Denmark':208,'Djibouti':262,'Dominica':212,
+  'Dominican Republic':214,'Ecuador':218,'Egypt':818,'El Salvador':222,
+  'Equatorial Guinea':226,'Eritrea':232,'Estonia':233,'Eswatini':748,'Ethiopia':231,
+  'Fiji':242,'Finland':246,'France':250,'Gabon':266,'Gambia':270,'Georgia':268,
+  'Germany':276,'Ghana':288,'Greece':300,'Greenland':304,'Grenada':308,'Guatemala':320,
+  'Guinea':324,'Guinea-Bissau':624,'Guyana':328,'Haiti':332,'Honduras':340,
+  'Hong Kong':344,'Hungary':348,'Iceland':352,'India':356,'Indonesia':360,'Iran':364,
+  'Iraq':368,'Ireland':372,'Israel':376,'Italy':380,'Jamaica':388,'Japan':392,
+  'Jordan':400,'Kazakhstan':398,'Kenya':404,'Kiribati':296,'Kosovo':383,'Kuwait':414,
+  'Kyrgyzstan':417,'Laos':418,'Latvia':428,'Lebanon':422,'Lesotho':426,'Liberia':430,
+  'Libya':434,'Liechtenstein':438,'Lithuania':440,'Luxembourg':442,'Madagascar':450,
+  'Malawi':454,'Malaysia':458,'Maldives':462,'Mali':466,'Malta':470,
+  'Marshall Islands':584,'Mauritania':478,'Mauritius':480,'Mexico':484,'Micronesia':583,
+  'Moldova':498,'Monaco':492,'Mongolia':496,'Montenegro':499,'Morocco':504,
+  'Mozambique':508,'Myanmar':104,'Namibia':516,'Nauru':520,'Nepal':524,
+  'Netherlands':528,'New Zealand':554,'Nicaragua':558,'Niger':562,'Nigeria':566,
+  'North Korea':408,'North Macedonia':807,'Norway':578,'Oman':512,'Pakistan':586,
+  'Palau':585,'Palestine':275,'Panama':591,'Papua New Guinea':598,'Paraguay':600,
+  'Peru':604,'Philippines':608,'Poland':616,'Portugal':620,'Qatar':634,'Romania':642,
+  'Russia':643,'Rwanda':646,'Saint Kitts and Nevis':659,'Saint Lucia':662,
+  'Saint Vincent and the Grenadines':670,'Samoa':882,'San Marino':674,
+  'Sao Tome and Principe':678,'Saudi Arabia':682,'Senegal':686,'Serbia':688,
+  'Seychelles':690,'Sierra Leone':694,'Singapore':702,'Slovakia':703,'Slovenia':705,
+  'Solomon Islands':90,'Somalia':706,'South Africa':710,'South Korea':410,
+  'South Sudan':728,'Spain':724,'Sri Lanka':144,'Sudan':729,'Suriname':740,
+  'Sweden':752,'Switzerland':756,'Syria':760,'Taiwan':158,'Tajikistan':762,
+  'Tanzania':834,'Thailand':764,'Timor-Leste':626,'Togo':768,'Tonga':776,
+  'Trinidad and Tobago':780,'Tunisia':788,'Turkey':792,'Turkmenistan':795,
+  'Turks and Caicos Islands':796,'Tuvalu':798,'Uganda':800,'Ukraine':804,
+  'United Arab Emirates':784,'United Kingdom':826,'Uruguay':858,'Uzbekistan':860,
+  'Vanuatu':548,'Vatican City':336,'Venezuela':862,'Vietnam':704,
+  'Wallis and Futuna':876,'Western Sahara':732,'Yemen':887,'Zambia':894,'Zimbabwe':716,
+  'Falkland Islands':238,'Guadeloupe':312,'Pitcairn Islands':612
+};
+const I2N = Object.fromEntries(Object.entries(N2I).map(([n,i])=>[i,n]));
+
+// POPULATION estimates (millions) for per-100K metric
+const POP = {
+  'India':1428,'China':1412,'United States':335,'Indonesia':278,'Pakistan':232,
+  'Brazil':216,'Nigeria':223,'Bangladesh':173,'Russia':145,'Ethiopia':128,
+  'Mexico':129,'Japan':125,'Philippines':115,'Egypt':106,'Congo':102,
+  'Vietnam':98,'Iran':89,'Turkey':85,'Germany':84,'Thailand':72,
+  'United Kingdom':68,'France':68,'Tanzania':65,'South Africa':60,'Myanmar':55,
+  'Kenya':55,'Colombia':52,'Spain':48,'Uganda':48,'Argentina':46,
+  'Algeria':45,'Sudan':45,'Iraq':43,'Ukraine':44,'Canada':39,
+  'Morocco':38,'Saudi Arabia':36,'Afghanistan':42,'Poland':38,'Peru':34,
+  'Venezuela':33,'Malaysia':33,'Mozambique':33,'Ghana':34,'Yemen':34,
+  'Angola':36,'Nepal':30,'Ivory Coast':27,'Madagascar':29,'Cameroon':28,
+  'Australia':26,'Sri Lanka':22,'Romania':19,'Burkina Faso':23,'Niger':26,
+  'Kazakhstan':19,'Mali':23,'Malawi':20,'Syria':22,'Zambia':20,
+  'Chile':19,'Ecuador':18,'Guatemala':18,'Netherlands':18,'Cambodia':17,
+  'Zimbabwe':16,'Senegal':17,'Chad':18,'Bolivia':12,'Belgium':11,
+  'Cuba':11,'Czech Republic':11,'Greece':11,'Jordan':11,'Portugal':10,
+  'Sweden':10,'Dominican Republic':11,'Tunisia':12,'Honduras':10,'Bolivia':12,
+  'Rwanda':14,'Tajikistan':10,'Hungary':10,'Belarus':9,'Azerbaijan':10,
+  'United Arab Emirates':10,'Serbia':7,'Israel':9,'Switzerland':9,'Austria':9,
+  'Togo':9,'Sierra Leone':8,'Libya':7,'Paraguay':7,'Singapore':6,
+  'Laos':7,'El Salvador':6,'Nicaragua':7,'Norway':5,'Denmark':6,
+  'Finland':6,'Slovakia':6,'Congo':6,'Costa Rica':5,'New Zealand':5,
+  'Ireland':5,'Oman':5,'Kuwait':4,'Croatia':4,'Georgia':4,
+  'Uruguay':4,'Bosnia and Herzegovina':3,'Armenia':3,'Mongolia':3,
+  'Albania':3,'Puerto Rico':3,'Lithuania':3,'Slovenia':2,'Latvia':2,
+  'North Macedonia':2,'Moldova':3,'Botswana':3,'Gambia':2,'Guinea':13,
+  'Haiti':11,'Benin':13,'Burundi':13,'South Sudan':11,'Somalia':18,
+  'Eritrea':3,'Liberia':5,'Mauritania':5,'Namibia':3,'Lesotho':2,
+  'Eswatini':1,'Djibouti':1,'Comoros':1,'Seychelles':0.1,'Mauritius':1,
+  'Trinidad and Tobago':1,'Jamaica':3,'Barbados':0.3,'Bahamas':0.4,
+  'Saint Lucia':0.2,'Grenada':0.1,'Saint Vincent and the Grenadines':0.1,
+  'Antigua and Barbuda':0.1,'Saint Kitts and Nevis':0.05,'Dominica':0.07,
+  'Philippines':115,'Taiwan':23,'Hong Kong':7,'South Korea':52,
+  'Japan':125,'Thailand':72,'Malaysia':33,'Vietnam':98,'Indonesia':278,
+  'Myanmar':55,'Cambodia':17,'Laos':7,'Brunei':0.4,'Timor-Leste':1,
+  'Papua New Guinea':10,'Fiji':0.9,'Samoa':0.2,'Tonga':0.1,'Vanuatu':0.3,
+  'Kiribati':0.12,'Palau':0.018,'Marshall Islands':0.042,'Micronesia':0.1,
+  'Nauru':0.01,'Tuvalu':0.011,'Solomon Islands':0.7,
+  'Pakistan':232,'Bangladesh':173,'Sri Lanka':22,'Nepal':30,'Bhutan':0.8,
+  'Maldives':0.5,'Afghanistan':42,
+  'Kazakhstan':19,'Uzbekistan':36,'Turkmenistan':6,'Kyrgyzstan':7,'Tajikistan':10,
+  'Azerbaijan':10,'Armenia':3,'Georgia':4,
+  'Saudi Arabia':36,'Iraq':43,'Syria':22,'Jordan':11,'Lebanon':5,'Yemen':34,
+  'Oman':5,'Kuwait':4,'United Arab Emirates':10,'Qatar':3,'Bahrain':1,
+  'Iran':89,'Israel':9,'Palestine':5,
+  'Morocco':38,'Algeria':45,'Tunisia':12,'Libya':7,'Egypt':106,'Sudan':45,
+  'Ethiopia':128,'Eritrea':3,'Djibouti':1,'Somalia':18,'Kenya':55,'Uganda':48,
+  'Tanzania':65,'Rwanda':14,'Burundi':13,'Democratic Republic of the Congo':102,
+  'Congo':6,'Cameroon':28,'Central African Republic':5,'Chad':18,
+  'South Sudan':11,'Nigeria':223,'Ghana':34,'Ivory Coast':27,
+  "Cote d'Ivoire":27,'Burkina Faso':23,'Mali':23,'Niger':26,'Senegal':17,
+  'Gambia':2,'Guinea-Bissau':2,'Guinea':13,'Sierra Leone':8,'Liberia':5,
+  'Togo':9,'Benin':13,'Mauritania':5,'Cape Verde':0.6,'Cabo Verde':0.6,
+  'Sao Tome and Principe':0.22,'Equatorial Guinea':1,'Gabon':2,'Angola':36,
+  'Zambia':20,'Malawi':20,'Zimbabwe':16,'Mozambique':33,'Madagascar':29,
+  'Comoros':1,'Seychelles':0.1,'Mauritius':1,'Botswana':3,'Namibia':3,
+  'Lesotho':2,'Eswatini':1,'South Africa':60,
+  'Iceland':0.37,'Norway':5,'Sweden':10,'Finland':6,'Denmark':6,'Estonia':1.3,
+  'Latvia':2,'Lithuania':3,'Poland':38,'Germany':84,'France':68,
+  'Belgium':11,'Netherlands':18,'Luxembourg':0.66,'United Kingdom':68,
+  'Ireland':5,'Portugal':10,'Spain':48,'Italy':60,'Switzerland':9,
+  'Austria':9,'Czech Republic':11,'Slovakia':6,'Hungary':10,'Romania':19,
+  'Bulgaria':7,'Slovenia':2,'Croatia':4,'Bosnia and Herzegovina':3,
+  'Serbia':7,'Kosovo':1.8,'Montenegro':0.62,'Albania':3,'North Macedonia':2,
+  'Moldova':3,'Ukraine':44,'Belarus':9,'Russia':145,
+  'Canada':39,'United States':335,'Mexico':129,'Guatemala':18,'Belize':0.4,
+  'Honduras':10,'El Salvador':6,'Nicaragua':7,'Costa Rica':5,'Panama':4,
+  'Cuba':11,'Dominican Republic':11,'Haiti':11,'Jamaica':3,'Trinidad and Tobago':1,
+  'Barbados':0.3,'Bahamas':0.4,'Guyana':0.8,'Suriname':0.6,'Venezuela':33,
+  'Colombia':52,'Ecuador':18,'Peru':34,'Bolivia':12,'Brazil':216,
+  'Paraguay':7,'Uruguay':4,'Argentina':46,'Chile':19,
+  'Australia':26,'New Zealand':5
+};
+
+// ═══════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════
+const fmt = n => {
+  if(!n) return '—';
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  return d3.format(',')(Math.round(n));
+};
+const fmtN = n => n ? d3.format(',')(Math.round(n)) : '0';
+
+function getVal(entry, prog) {
+  if(!entry) return 0;
+  if(prog==='all') return entry.total||0;
+  return entry[prog]||0;
+}
+function countryVal(c, yr, prog) {
+  return getVal(CYM[c]?.[yr], prog);
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+async function init() {
+  buildYears();
+  try {
+    // NOTE: visa_aggregated.json must be in the same folder as this HTML file
+    const r = await fetch('./visa_aggregated.json');
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    DATA = await r.json();
+    for(const e of DATA.country_data) {
+      if(!CYM[e.country]) CYM[e.country]={};
+      CYM[e.country][e.year]=e;
+    }
+    WORLD = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    renderDash();
+    drawMap();
+    drawLine();
+  } catch(err) {
+    document.getElementById('map-wrap').innerHTML=
+      `<div class="loading-msg" style="flex-direction:column;color:var(--red)">
+        <b>Error loading data</b>
+        <span style="font-size:10px;margin-top:6px">${err.message}</span>
+        <span style="font-size:10px;color:var(--muted);margin-top:4px">Make sure visa_aggregated.json is in the same directory as this file</span>
+      </div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  YEAR FILTER
+// ═══════════════════════════════════════════════════
+function buildYears() {
+  const el = document.getElementById('year-opts');
+  el.innerHTML = '';
+  YEARS.forEach(y => {
+    const d = document.createElement('div');
+    d.className = 'r-item'+(y===S.year?' active':'');
+    d.dataset.v = y;
+    d.innerHTML = `<div class="r-dot"></div><span>${y}</span>`;
+    d.onclick = ()=>setYear(d);
+    el.appendChild(d);
+  });
+}
+
+function setYear(el) {
+  document.querySelectorAll('#year-opts .r-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  S.year = el.dataset.v;
+  if(S.country) updateDetail();
+  else { renderDash(); updateMapColors(); drawBar(); }
+}
+
+function setProgram(el) {
+  document.querySelectorAll('#prog-filter .r-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  S.program = el.dataset.v;
+  renderDash(); updateMapColors(); drawBar();
+}
+
+function setMetric(el) {
+  document.querySelectorAll('#metric-filter .r-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  S.metric = el.dataset.v;
+  updateMapColors();
+}
+
+// ═══════════════════════════════════════════════════
+//  KPI + SUMMARY
+// ═══════════════════════════════════════════════════
+function renderDash() {
+  if(!DATA) return;
+  const yr = S.year, py = String(+yr-1);
+  const c = DATA.totals_by_year[yr]||{}, p = DATA.totals_by_year[py]||{};
+
+  function setK(vid, did, cv, pv) {
+    document.getElementById(vid).textContent = fmt(cv);
+    const el = document.getElementById(did);
+    if(pv) {
+      const pct = ((cv-pv)/pv*100).toFixed(1);
+      el.className = 'kpi-delta '+(+pct>=0?'up':'down');
+      el.textContent = (+pct>=0?'▲ +':'▼ ')+pct+'% vs '+py;
+    } else { el.className='kpi-delta flat'; el.textContent='No prior year'; }
+  }
+  setK('kpi-tot','kpi-tot-d', c.total||0, p.total||0);
+  setK('kpi-non','kpi-non-d', c.nonimmigrant||0, p.nonimmigrant||0);
+  setK('kpi-imm','kpi-imm-d', c.immigrant||0, p.immigrant||0);
+
+  const prog = S.program==='all'?'total':S.program;
+  const top10 = getTop10(yr, prog);
+  const totalYr = prog==='total'?(c.total||0):(c[prog]||0);
+  const top10sum = top10.reduce((s,x)=>s+x.v,0);
+  const pct = totalYr>0?(top10sum/totalYr*100).toFixed(1):'—';
+  const lbl = S.program==='all'?'':` <strong>${S.program}</strong>`;
+  document.getElementById('summary-txt').innerHTML =
+    `In <strong>${yr}</strong>, <span class="hl">${pct}%</span> of${lbl} visas were issued to just 10 countries`;
+
+  drawBar();
+}
+
+// ═══════════════════════════════════════════════════
+//  TOP 10 BAR CHART
+// ═══════════════════════════════════════════════════
+function getTop10(yr, prog) {
+  return Object.entries(CYM)
+    .map(([c,yrs])=>({c, v:getVal(yrs[yr],prog)}))
+    .filter(x=>x.v>0)
+    .sort((a,b)=>b.v-a.v).slice(0,10);
+}
+
+function drawBar() {
+  if(!DATA) return;
+  const prog = S.program==='all'?'total':S.program;
+  const top = getTop10(S.year, prog);
+  const wrap = document.getElementById('bar-wrap');
+  wrap.innerHTML='';
+
+  const W = wrap.clientWidth||270;
+  const barH=16, gap=5;
+  const labelW = 100;
+  const barW = W - labelW - 44;
+  const H = top.length*(barH+gap)+4;
+  const max = top[0]?.v||1;
+  const xSc = d3.scaleLinear().domain([0,max]).range([0,barW]);
+  const color = prog==='immigrant'?'var(--violet)':prog==='total'?'var(--amber)':'var(--teal)';
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+  const rows = svg.selectAll('g').data(top).join('g')
+    .attr('transform',(_,i)=>`translate(0,${i*(barH+gap)})`)
+    .style('cursor','pointer')
+    .on('click',(_,d)=>showCountry(d.c))
+    .on('mouseover',(e,d)=>tip(e,d.c,d.v))
+    .on('mouseout',hideTip);
+
+  // label bg
+  rows.append('rect').attr('x',0).attr('y',0).attr('width',labelW).attr('height',barH)
+    .attr('fill','transparent');
+
+  // truncated country name
+  rows.append('text').attr('x',labelW-4).attr('y',barH/2+1)
+    .attr('dominant-baseline','middle').attr('text-anchor','end')
+    .attr('fill','#8BAABF').attr('font-size',10).attr('font-family','Outfit')
+    .text(d=>d.c.length>14?d.c.slice(0,13)+'…':d.c);
+
+  // bar
+  rows.append('rect')
+    .attr('x',labelW).attr('y',1)
+    .attr('width',d=>xSc(d.v)).attr('height',barH-2)
+    .attr('rx',3).attr('fill',color).attr('opacity',.75)
+    .transition().duration(400)
+    .attr('width',d=>xSc(d.v));
+
+  // value
+  rows.append('text')
+    .attr('x',d=>labelW+xSc(d.v)+5).attr('y',barH/2+1)
+    .attr('dominant-baseline','middle').attr('fill','#5C7A9B')
+    .attr('font-size',9).attr('font-family','JetBrains Mono')
+    .text(d=>fmt(d.v));
+}
+
+// ═══════════════════════════════════════════════════
+//  WORLD MAP
+// ═══════════════════════════════════════════════════
+function drawMap() {
+  const wrap = document.getElementById('map-wrap');
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth||600, H = wrap.clientHeight||320;
+
+  proj = d3.geoNaturalEarth1().scale(W/6.3).translate([W/2,H/2]);
+  pathFn = d3.geoPath().projection(proj);
+
+  mapSvg = d3.select(wrap).append('svg')
+    .attr('width',W).attr('height',H).style('display','block');
+
+  mapSvg.append('rect').attr('width',W).attr('height',H).attr('fill','#06101A');
+
+  // Graticule
+  mapSvg.append('path')
+    .datum(d3.geoGraticule()())
+    .attr('fill','none').attr('stroke','#0E2035').attr('stroke-width',.4)
+    .attr('d',pathFn);
+
+  mapG = mapSvg.append('g');
+
+  const features = topojson.feature(WORLD, WORLD.objects.countries).features;
+
+  mapG.selectAll('.cpath').data(features).join('path')
+    .attr('class','cpath').attr('d',pathFn)
+    .attr('stroke','#0E2035').attr('stroke-width',.3)
+    .on('click',(_,d)=>{
+      const name = I2N[+d.id];
+      if(name && CYM[name]) showCountry(name);
+    })
+    .on('mouseover',(e,d)=>{
+      const name=I2N[+d.id];
+      if(name) {
+        const v=countryVal(name,S.year,S.program==='all'?'total':S.program);
+        tip(e,name,v);
+      }
+    })
+    .on('mouseout',hideTip);
+
+  // Zoom
+  mapSvg.call(d3.zoom().scaleExtent([1,8]).on('zoom',e=>mapG.attr('transform',e.transform)));
+
+  updateMapColors();
+
+  // Color legend
+  const legW=120, legH=8;
+  const legSvg = d3.select(wrap).append('svg')
+    .attr('width',legW+60).attr('height',22)
+    .style('position','absolute').style('bottom','8px').style('left','12px');
+  const defs = legSvg.append('defs');
+  const grad = defs.append('linearGradient').attr('id','leg-grad');
+  grad.append('stop').attr('offset','0%').attr('stop-color','#132237');
+  grad.append('stop').attr('offset','100%').attr('stop-color','#00D4B4');
+  legSvg.append('rect').attr('x',24).attr('y',0).attr('width',legW).attr('height',legH)
+    .attr('rx',3).attr('fill','url(#leg-grad)');
+  legSvg.append('text').attr('x',20).attr('y',legH/2+1).attr('dominant-baseline','middle')
+    .attr('text-anchor','end').attr('fill','#3D5C7A').attr('font-size',8).text('0');
+  legSvg.append('text').attr('x',24+legW+4).attr('y',legH/2+1).attr('dominant-baseline','middle')
+    .attr('fill','#3D5C7A').attr('font-size',8).attr('id','leg-max').text('max');
+}
+
+function updateMapColors() {
+  if(!DATA||!mapG) return;
+  const prog = S.program==='all'?'total':S.program;
+
+  // Collect values
+  const vals = [];
+  for(const [c,yrs] of Object.entries(CYM)) {
+    const raw = getVal(yrs[S.year],prog);
+    if(!raw) continue;
+    const v = S.metric==='per100k' ? (POP[c]>0 ? raw/(POP[c]*10000)*1e5 : 0) : raw;
+    if(v>0) vals.push(v);
+  }
+  vals.sort((a,b)=>a-b);
+  const maxV = vals[vals.length-1]||1;
+
+  colorScl = d3.scaleSequentialLog([1,maxV], d3.interpolate('#152640','#00D4B4'));
+
+  mapG.selectAll('.cpath').transition().duration(350)
+    .attr('fill', d=>{
+      const nm = I2N[+d.id];
+      if(!nm) return '#0D1E30';
+      const raw = getVal(CYM[nm]?.[S.year],prog);
+      if(!raw) return '#0D1E30';
+      const v = S.metric==='per100k' ? (POP[nm]>0?raw/(POP[nm]*10000)*1e5:0) : raw;
+      return v>0 ? colorScl(v) : '#0D1E30';
+    });
+
+  const legEl = document.getElementById('leg-max');
+  if(legEl) legEl.textContent = S.metric==='per100k'?fmt(maxV)+'/100K':fmt(maxV);
+}
+
+// ═══════════════════════════════════════════════════
+//  GLOBAL LINE CHART
+// ═══════════════════════════════════════════════════
+function drawLine() {
+  if(!DATA) return;
+  const wrap = document.getElementById('line-wrap');
+  wrap.innerHTML='';
+  const W=wrap.clientWidth||270, H=wrap.clientHeight||100;
+  const m={t:8,r:12,b:24,l:42};
+  const iW=W-m.l-m.r, iH=H-m.t-m.b;
+
+  const progs = [{k:'nonimmigrant',c:'var(--teal)'},{k:'immigrant',c:'var(--violet)'}];
+  const series = progs.map(({k,c})=>({
+    k,c,pts:YEARS.map(y=>({y,v:DATA.totals_by_year[y]?.[k]||0}))
+  }));
+  const maxV = d3.max(series.flatMap(s=>s.pts.map(p=>p.v)))||1;
+  const xSc = d3.scalePoint().domain(YEARS).range([0,iW]);
+  const ySc = d3.scaleLinear().domain([0,maxV*1.05]).range([iH,0]);
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H)
+    .append('g').attr('transform',`translate(${m.l},${m.t})`);
+
+  // Grid lines
+  svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW)
+    .tickFormat(v=>v>=1e6?(v/1e6).toFixed(0)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v))
+    .call(g=>{
+      g.select('.domain').remove();
+      g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');
+      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
+    });
+
+  svg.append('g').attr('transform',`translate(0,${iH})`)
+    .call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g=>{
+      g.select('.domain').remove();
+      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
+      g.selectAll('.tick').each(function(d){
+        if(!['2017','2019','2021','2023','2025'].includes(d)) d3.select(this).select('text').remove();
+      });
+    });
+
+  // Highlight selected year band
+  svg.append('line')
+    .attr('x1',xSc(S.year)).attr('x2',xSc(S.year))
+    .attr('y1',0).attr('y2',iH)
+    .attr('stroke','#FFB400').attr('stroke-width',1).attr('stroke-dasharray','3,2').attr('opacity',.4);
+
+  // Areas + lines
+  const area = d3.area().x(d=>xSc(d.y)).y0(iH).y1(d=>ySc(d.v)).curve(d3.curveMonotoneX);
+  const line = d3.line().x(d=>xSc(d.y)).y(d=>ySc(d.v)).curve(d3.curveMonotoneX);
+
+  series.forEach(({k,c,pts})=>{
+    svg.append('path').datum(pts).attr('fill',c).attr('fill-opacity',.07).attr('d',area);
+    svg.append('path').datum(pts).attr('fill','none').attr('stroke',c).attr('stroke-width',1.5).attr('d',line);
+  });
+
+  // Legend
+  const legDiv = d3.select(wrap).append('div')
+    .style('display','flex').style('gap','10px').style('margin-top','4px').style('padding-left','42px');
+  series.forEach(({k,c})=>{
+    const item = legDiv.append('div').style('display','flex').style('align-items','center').style('gap','5px')
+      .style('font-size','9px').style('color','#5C7A9B');
+    item.append('div').style('width','10px').style('height','2px').style('background',c).style('border-radius','1px');
+    item.append('span').text(k);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  COUNTRY DETAIL
+// ═══════════════════════════════════════════════════
+function showCountry(name) {
+  S.country = name;
+  document.getElementById('d-country').textContent = name;
+  document.getElementById('prog-filter').style.display='none';
+  document.getElementById('metric-filter').style.display='none';
+  document.getElementById('v-dash').classList.add('hidden');
+  document.getElementById('v-country').classList.remove('hidden');
+  updateDetail();
+}
+
+function showDash() {
+  document.getElementById('v-country').classList.add('hidden');
+  document.getElementById('v-dash').classList.remove('hidden');
+  document.getElementById('prog-filter').style.display='';
+  document.getElementById('metric-filter').style.display='';
+  S.country=null;
+}
+
+function setDetailProg(el) {
+  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  S.detProg = el.dataset.v;
+  updateDetail();
+}
+
+function updateDetail() {
+  const c=S.country, prog=S.detProg, yr=S.year;
+  const entry = CYM[c]?.[yr];
+  const total = getVal(entry, prog);
+  document.getElementById('d-total').textContent = fmtN(total);
+
+  const py = String(+yr-1);
+  const prev = getVal(CYM[c]?.[py], prog);
+  const del = document.getElementById('d-total-d');
+  if(prev>0) {
+    const pct=((total-prev)/prev*100).toFixed(1);
+    del.className='kpi-delta '+(+pct>=0?'up':'down');
+    del.textContent=(+pct>=0?'▲ +':'▼ ')+pct+'% vs '+py;
+  } else { del.className='kpi-delta flat'; del.textContent='No prior year data'; }
+
+  // Rank
+  const ranked = Object.entries(CYM)
+    .map(([n,yrs])=>({n,v:getVal(yrs[yr],prog)}))
+    .filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const rank = ranked.findIndex(x=>x.n===c)+1;
+  document.getElementById('d-rank').textContent = rank||'—';
+
+  drawPolar(); drawTrend();
+}
+
+// ═══════════════════════════════════════════════════
+//  POLAR (PIE) CHART
+// ═══════════════════════════════════════════════════
+const PTYPE_COLORS = {
+  'Family-based':'#F87171','Employment-based':'#FACC15',
+  'Diversity lottery':'#4ADE80','Special immigrants':'#38BDF8',
+  'Other Immigrants':'#A78BFA','Temporary visitor':'#00D4B4',
+  'Temporary worker':'#FB923C','Study & Exchange':'#F472B6',
+  'Exchange visitor':'#67E8F9','Humanitarian':'#FCD34D',
+  'Diplomatic & Official':'#94A3B8','Transit':'#475569'
+};
+
+function drawPolar() {
+  const c=S.country, prog=S.detProg, yr=S.year;
+  const entry=CYM[c]?.[yr];
+  const ptypes = entry?.program_types?.[prog]||{};
+  const wrap=document.getElementById('polar-wrap');
+  wrap.innerHTML='';
+
+  // Aggregate (trim keys)
+  const agg={};
+  for(const [k,v] of Object.entries(ptypes)) {
+    const key=k.trim(); agg[key]=(agg[key]||0)+v;
+  }
+
+  const pieData = Object.entries(agg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(!pieData.length) {
+    wrap.innerHTML='<div class="loading-msg" style="color:var(--muted)">No data for this selection</div>';
+    return;
+  }
+
+  const W=wrap.clientWidth||260, H=wrap.clientHeight||220;
+  const cx=W/2, cy=H/2, r=Math.min(W,H)*0.33;
+  const total=pieData.reduce((s,[,v])=>s+v,0);
+
+  const pie=d3.pie().value(d=>d[1]).sort(null);
+  const arcFn=d3.arc().innerRadius(r*.38).outerRadius(r);
+  const outerArc=d3.arc().innerRadius(r*1.15).outerRadius(r*1.15);
+
+  const svg=d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+  const g=svg.append('g').attr('transform',`translate(${cx},${cy})`);
+
+  const arcs=pie(pieData);
+  g.selectAll('.arc').data(arcs).join('g').attr('class','arc')
+    .append('path').attr('d',arcFn)
+    .attr('fill',(d,i)=>PTYPE_COLORS[d.data[0]]||d3.schemeTableau10[i%10])
+    .attr('stroke','#0B1622').attr('stroke-width',1.5).attr('opacity',.88)
+    .style('cursor','pointer')
+    .on('mouseover',function(e,d){
+      d3.select(this).attr('opacity',1);
+      const pct=(d.data[1]/total*100).toFixed(1);
+      document.getElementById('tt').innerHTML=
+        `<div class="tt-name">${d.data[0]}</div>
+         <div class="tt-b">
+           <div class="tt-row"><span>Visas</span><span class="tt-val">${fmtN(d.data[1])}</span></div>
+           <div class="tt-row"><span>Share</span><span class="tt-val">${pct}%</span></div>
+         </div>`;
+      document.getElementById('tt').style.display='block';
+      moveTip(e);
+    })
+    .on('mouseout',function(){d3.select(this).attr('opacity',.88);hideTip();});
+
+  // Polylines + labels for segments >5%
+  const visible=arcs.filter(d=>d.data[1]/total>0.05);
+  g.selectAll('.pl').data(visible).join('polyline')
+    .attr('fill','none').attr('stroke','#2A4060').attr('stroke-width',.8)
+    .attr('points',d=>{
+      const a=arcFn.centroid(d), b=outerArc.centroid(d);
+      const mid=(d.startAngle+d.endAngle)/2;
+      const cx2=r*1.2*(mid<Math.PI?1:-1);
+      return [a,b,[cx2,b[1]]].map(p=>p.join(',')).join(' ');
+    });
+
+  g.selectAll('.pl-label').data(visible).join('text')
+    .attr('transform',d=>{
+      const b=outerArc.centroid(d);
+      const mid=(d.startAngle+d.endAngle)/2;
+      return `translate(${r*1.24*(mid<Math.PI?1:-1)},${b[1]})`;
+    })
+    .attr('dominant-baseline','middle')
+    .attr('text-anchor',d=>{const m=(d.startAngle+d.endAngle)/2;return m<Math.PI?'start':'end';})
+    .attr('fill','#5C7A9B').attr('font-size',8.5).attr('font-family','Outfit')
+    .text(d=>d.data[0].length>16?d.data[0].slice(0,14)+'…':d.data[0]);
+
+  // Center label
+  g.append('text').attr('text-anchor','middle').attr('dy','-.2em')
+    .attr('fill','#8BAABF').attr('font-size',8).attr('font-family','Outfit').text('TOTAL');
+  g.append('text').attr('text-anchor','middle').attr('dy','1em')
+    .attr('fill',S.detProg==='immigrant'?'var(--violet)':'var(--teal)')
+    .attr('font-size',13).attr('font-weight',600).attr('font-family','JetBrains Mono')
+    .text(fmt(total));
+}
+
+// ═══════════════════════════════════════════════════
+//  TREND LINE
+// ═══════════════════════════════════════════════════
+function drawTrend() {
+  const c=S.country, prog=S.detProg;
+  const pts=YEARS.map(y=>({y,v:getVal(CYM[c]?.[y],prog)}));
+  const wrap=document.getElementById('trend-wrap');
+  wrap.innerHTML='';
+  const W=wrap.clientWidth||260, H=wrap.clientHeight||200;
+  const m={t:10,r:14,b:26,l:44};
+  const iW=W-m.l-m.r, iH=H-m.t-m.b;
+  const maxV=d3.max(pts,d=>d.v)||1;
+  const xSc=d3.scalePoint().domain(YEARS).range([0,iW]);
+  const ySc=d3.scaleLinear().domain([0,maxV*1.1]).range([iH,0]);
+  const color=prog==='immigrant'?'var(--violet)':'var(--teal)';
+
+  const svg=d3.select(wrap).append('svg').attr('width',W).attr('height',H)
+    .append('g').attr('transform',`translate(${m.l},${m.t})`);
+
+  svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW)
+    .tickFormat(v=>v>=1000?(v/1000).toFixed(v>=10000?0:1)+'K':v))
+    .call(g=>{
+      g.select('.domain').remove();
+      g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');
+      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
+    });
+
+  svg.append('g').attr('transform',`translate(0,${iH})`)
+    .call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g=>{
+      g.select('.domain').remove();
+      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
+      g.selectAll('.tick').each(function(d){
+        if(!['2017','2019','2021','2023','2025'].includes(d)) d3.select(this).select('text').text('');
+      });
+    });
+
+  // Selected year line
+  svg.append('line')
+    .attr('x1',xSc(S.year)).attr('x2',xSc(S.year))
+    .attr('y1',0).attr('y2',iH)
+    .attr('stroke','#FFB400').attr('stroke-width',1)
+    .attr('stroke-dasharray','3,2').attr('opacity',.5);
+
+  svg.append('path').datum(pts)
+    .attr('fill',color).attr('fill-opacity',.08)
+    .attr('d',d3.area().x(d=>xSc(d.y)).y0(iH).y1(d=>ySc(d.v)).curve(d3.curveMonotoneX));
+
+  svg.append('path').datum(pts)
+    .attr('fill','none').attr('stroke',color).attr('stroke-width',2)
+    .attr('d',d3.line().x(d=>xSc(d.y)).y(d=>ySc(d.v)).curve(d3.curveMonotoneX));
+
+  svg.selectAll('.dot').data(pts).join('circle')
+    .attr('cx',d=>xSc(d.y)).attr('cy',d=>ySc(d.v)).attr('r',3.5)
+    .attr('fill',color).attr('stroke','#0B1622').attr('stroke-width',1.5)
+    .style('cursor','pointer')
+    .on('mouseover',(e,d)=>tip(e,d.y+' — '+S.country,d.v))
+    .on('mouseout',hideTip);
+}
+
+// ═══════════════════════════════════════════════════
+//  TOOLTIP
+// ═══════════════════════════════════════════════════
+function tip(e, title, val) {
+  const t=document.getElementById('tt');
+  t.innerHTML=`<div class="tt-name">${title}</div><div class="tt-b"><div class="tt-row"><span>Visas</span><span class="tt-val">${fmtN(val)}</span></div></div>`;
+  t.style.display='block';
+  moveTip(e);
+}
+function moveTip(e) {
+  const t=document.getElementById('tt');
+  t.style.left=Math.min(e.clientX+14,window.innerWidth-180)+'px';
+  t.style.top=Math.min(e.clientY-10,window.innerHeight-80)+'px';
+}
+function hideTip() { document.getElementById('tt').style.display='none'; }
+document.addEventListener('mousemove', e=>{ if(document.getElementById('tt').style.display==='block') moveTip(e); });
+
+// ═══════════════════════════════════════════════════
+//  RESPONSIVE REDRAWS ON RESIZE
+// ═══════════════════════════════════════════════════
+let resizeTimer;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{
+    if(!DATA||!WORLD) return;
+    drawMap(); drawLine(); drawBar();
+    if(S.country) { drawPolar(); drawTrend(); }
+  },200);
+});
+
+// ═══════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
