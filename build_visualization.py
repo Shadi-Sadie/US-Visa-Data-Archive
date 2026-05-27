@@ -7,7 +7,7 @@ OUTPUT_PATH = "docs/visa_aggregated.json"
 
 
 def main():
-    df = pd.read_csv(INPUT_PATH, usecols=["year", "visa_program", "program_type", "country", "count"])
+    df = pd.read_csv(INPUT_PATH, usecols=["year", "visa_program", "program_type", "country", "count", "visa_type"])
 
     df["count"] = pd.to_numeric(df["count"], errors="coerce").fillna(0)
     df["program_type"] = df["program_type"].astype(str).str.strip()
@@ -37,10 +37,18 @@ def main():
     )
     totals["total"] = totals.get("immigrant", 0) + totals.get("nonimmigrant", 0)
 
+    valid = df[df["program_type"] != "nan"]
+
     # Per-country-year-program breakdown by program_type
     breakdown = (
-        df[df["program_type"] != "nan"]
-        .groupby(["country", "year", "visa_program", "program_type"])["count"]
+        valid.groupby(["country", "year", "visa_program", "program_type"])["count"]
+        .sum()
+    )
+
+    # Per-country-year-program-program_type breakdown by visa_type
+    visa_type_breakdown = (
+        valid[valid["visa_type"].notna()]
+        .groupby(["country", "year", "visa_program", "program_type", "visa_type"])["count"]
         .sum()
     )
 
@@ -50,12 +58,21 @@ def main():
         year = row["year"]
 
         program_types = {"immigrant": {}, "nonimmigrant": {}}
+        visa_types = {"immigrant": {}, "nonimmigrant": {}}
+
         for program in ("immigrant", "nonimmigrant"):
             try:
                 pt = breakdown.loc[country, year, program]
                 program_types[program] = {k: int(v) for k, v in pt.items()}
             except KeyError:
                 pass
+
+            for prog_type in program_types[program]:
+                try:
+                    vt = visa_type_breakdown.loc[country, year, program, prog_type]
+                    visa_types[program][prog_type] = {k: int(v) for k, v in vt.items()}
+                except KeyError:
+                    pass
 
         country_data.append({
             "country": country,
@@ -64,6 +81,7 @@ def main():
             "nonimmigrant": int(row.get("nonimmigrant", 0)),
             "total": int(row["total"]),
             "program_types": program_types,
+            "visa_types": visa_types,
         })
 
     os.makedirs("visualization", exist_ok=True)

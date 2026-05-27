@@ -11,31 +11,27 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0B1622;
-  --surface:#112035;
-  --surface2:#172B47;
-  --border:#1E3554;
-  --text:#E2EAF4;
-  --muted:#5C7A9B;
-  --teal:#00D4B4;
-  --teal-lo:rgba(0,212,180,0.12);
-  --amber:#FFB400;
-  --amber-lo:rgba(255,180,0,0.12);
-  --violet:#A78BFA;
-  --violet-lo:rgba(167,139,250,0.12);
-  --red:#F87171;
-  --green:#4ADE80;
-  --sidebar-w:200px;
+  --bg:#0B1622;--surface:#112035;--surface2:#172B47;--border:#1E3554;
+  --text:#E2EAF4;--muted:#5C7A9B;--teal:#00D4B4;--teal-lo:rgba(0,212,180,0.12);
+  --amber:#FFB400;--amber-lo:rgba(255,180,0,0.12);
+  --violet:#A78BFA;--violet-lo:rgba(167,139,250,0.12);
+  --red:#F87171;--green:#4ADE80;--sidebar-w:200px;
 }
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* ─── TOP NAV ─── */
+.topnav{display:flex;align-items:center;padding:0 16px;background:#080E18;border-bottom:1px solid var(--border);height:44px;flex-shrink:0}
+.brand{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin-right:24px;white-space:nowrap}
+.nav-tab{padding:0 16px;height:44px;display:flex;align-items:center;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none}
+.nav-tab:hover{color:var(--text)}
+.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.nav-badge{font-size:8px;padding:2px 5px;border-radius:3px;background:rgba(255,180,0,.1);color:var(--amber);border:1px solid rgba(255,180,0,.25);margin-left:6px;font-weight:700}
+
+/* ─── SHELL ─── */
+.shell{display:flex;flex:1;overflow:hidden}
 
 /* ─── SIDEBAR ─── */
-.sidebar{
-  width:var(--sidebar-w);min-width:var(--sidebar-w);
-  background:#080E18;border-right:1px solid var(--border);
-  padding:20px 14px;display:flex;flex-direction:column;gap:24px;overflow-y:auto;
-}
-.brand{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);padding-bottom:14px;border-bottom:1px solid var(--border)}
+.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:#080E18;border-right:1px solid var(--border);padding:18px 14px;display:flex;flex-direction:column;gap:22px;overflow-y:auto}
 .filter-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block}
 .r-options{display:flex;flex-direction:column;gap:2px}
 .r-item{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;cursor:pointer;transition:background .15s;font-size:12px;color:var(--muted);user-select:none}
@@ -45,67 +41,85 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 .r-item.active .r-dot{border-color:var(--teal)}
 .r-item.active .r-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal)}
 
-/* ─── VIEWS WRAPPER ─── */
+/* trends sidebar chips */
+.chip-grid{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.cchip{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--muted);transition:all .15s;user-select:none}
+.cchip.sel{color:#07101C;border-color:transparent}
+.cchip .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cchip-add{padding:5px 8px;border-radius:6px;font-size:10px;font-weight:600;color:var(--muted);border:1px dashed var(--border);cursor:pointer;text-align:center;margin-top:2px}
+.cchip-add:hover{border-color:var(--teal);color:var(--teal)}
+.chip-search{width:100%;padding:5px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;font-family:'Outfit',sans-serif;outline:none;margin-top:4px}
+.chip-search:focus{border-color:var(--teal)}
+.chip-results{display:flex;flex-direction:column;gap:2px;max-height:150px;overflow-y:auto;margin-top:3px}
+.chip-result{padding:4px 8px;border-radius:5px;font-size:11px;color:var(--muted);cursor:pointer}
+.chip-result:hover{background:var(--teal-lo);color:var(--teal)}
+
+/* ─── VIEWS ─── */
 .views-wrap{flex:1;overflow:hidden;position:relative}
-.view{position:absolute;inset:0;overflow-y:auto;padding:22px;transition:transform .4s cubic-bezier(.4,0,.2,1),opacity .4s ease}
-.view.hidden{transform:translateX(60px);opacity:0;pointer-events:none}
+.view{position:absolute;inset:0;overflow-y:auto;padding:22px;transition:transform .3s cubic-bezier(.4,0,.2,1),opacity .3s ease}
+.view.hidden{transform:translateX(40px);opacity:0;pointer-events:none}
 
 /* ─── HEADER ─── */
 .dash-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px}
 .dash-title{font-size:20px;font-weight:800;letter-spacing:-.03em}
 .dash-title span{color:var(--teal)}
 
-/* ─── KPI ROW ─── */
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+/* ─── KPI ─── */
+.kpi-row{display:grid;gap:10px;margin-bottom:14px}
+.kpi-row-3{grid-template-columns:repeat(3,1fr)}
+.kpi-row-6{grid-template-columns:repeat(6,1fr)}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
 .kpi-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.03) 0%,transparent 60%)}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
 .kpi-card.c-total::before{background:var(--amber)}
 .kpi-card.c-nonimm::before{background:var(--teal)}
 .kpi-card.c-imm::before{background:var(--violet)}
-.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.kpi-val{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.kpi-card.c-rank::before{background:#38BDF8}
+.kpi-lbl{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.kpi-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;letter-spacing:-.02em}
 .kpi-card.c-total .kpi-val{color:var(--amber)}
 .kpi-card.c-nonimm .kpi-val{color:var(--teal)}
 .kpi-card.c-imm .kpi-val{color:var(--violet)}
-.kpi-delta{font-size:10px;margin-top:3px;display:flex;align-items:center;gap:3px}
-.kpi-delta.up{color:var(--green)}.kpi-delta.down{color:var(--red)}.kpi-delta.flat{color:var(--muted)}
+.kpi-card.c-rank .kpi-val{color:#38BDF8}
+.kpi-sub{font-size:9px;margin-top:2px}
+.kpi-sub.up{color:var(--green)}.kpi-sub.down{color:var(--red)}.kpi-sub.flat{color:var(--muted)}
 
-/* ─── SUMMARY BAR ─── */
+/* ─── SUMMARY ─── */
 .summary{font-size:12px;color:var(--muted);margin-bottom:14px;padding:9px 13px;background:var(--surface);border-radius:7px;border-left:2px solid var(--teal)}
 .summary strong{color:var(--text)}.summary .hl{color:var(--teal);font-weight:600}
 
-/* ─── CHART GRID ─── */
-.chart-grid{display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr auto;gap:10px;height:calc(100vh - 220px);min-height:380px}
+/* ─── CHART CARDS ─── */
+.chart-grid{display:grid;grid-template-columns:1fr 300px;grid-template-rows:1fr auto;gap:10px;height:calc(100vh - 264px);min-height:380px}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;overflow:hidden;display:flex;flex-direction:column}
 .chart-card.span-rows{grid-row:1/3}
-.chart-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;flex-shrink:0}
+.chart-title{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+.chart-back{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:4px;border:1px solid var(--border)}
+.chart-back:hover{color:var(--teal);border-color:var(--teal)}
 .chart-body{flex:1;min-height:0;position:relative}
 
 /* ─── MAP ─── */
-#map-svg{width:100%;height:100%;display:block}
 .cpath{cursor:pointer;transition:opacity .15s,stroke .15s}
 .cpath:hover{opacity:.75;stroke:rgba(255,255,255,.25) !important;stroke-width:1 !important}
 
-/* ─── LOADING ─── */
+/* ─── LOADING / TOOLTIP ─── */
 .loading-msg{display:flex;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted);font-size:12px}
 .spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ─── TOOLTIP ─── */
 .tt{position:fixed;background:#07101C;border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:11px;pointer-events:none;z-index:9999;min-width:150px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none}
 .tt-name{font-weight:700;font-size:12px;margin-bottom:5px;color:var(--text)}
 .tt-row{display:flex;justify-content:space-between;gap:14px;color:var(--muted);margin-top:2px}
 .tt-val{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:10px}
 
 /* ─── COUNTRY DETAIL ─── */
-.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:5px 11px;border-radius:5px;border:1px solid var(--border);margin-bottom:14px;transition:all .15s;background:var(--surface)}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:5px 11px;border-radius:5px;border:1px solid var(--border);margin-bottom:12px;transition:all .15s;background:var(--surface)}
 .back-btn:hover{color:var(--teal);border-color:var(--teal)}
-.c-name{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:4px}
-.prog-tabs{display:flex;gap:6px;margin-bottom:14px}
-.tab-btn{padding:6px 14px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all .15s}
-.tab-btn.active{background:var(--teal);color:#07101C;border-color:var(--teal)}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:calc(100vh - 320px);min-height:300px}
+.c-name{font-size:24px;font-weight:800;letter-spacing:-.03em;margin-bottom:14px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;height:calc(100vh - 230px);min-height:380px}
+
+/* ─── TRENDS VIEW ─── */
+.trends-grid{display:grid;grid-template-columns:1fr 340px;gap:10px;height:calc(100vh - 110px);min-height:400px}
+.trends-main{display:flex;flex-direction:column;gap:10px;height:100%}
+.trends-side{display:flex;flex-direction:column;gap:10px;height:100%}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -113,50 +127,76 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 </head>
 <body>
 
-<!-- ═══════════════ SIDEBAR ═══════════════ -->
-<aside class="sidebar">
+<!-- ══ TOP NAV ══ -->
+<div class="topnav">
   <div class="brand">US Visa Data</div>
+  <div class="nav-tab active" data-v="overview" onclick="setView('overview')">Overview</div>
+  <div class="nav-tab" data-v="trends" onclick="setView('trends')">Trends <span class="nav-badge">NEW</span></div>
+</div>
 
-  <div id="year-filter">
-    <span class="filter-label">Selected Year</span>
-    <div class="r-options" id="year-opts"></div>
-  </div>
+<div class="shell">
 
-  <div id="prog-filter">
-    <span class="filter-label">Visa Program</span>
-    <div class="r-options">
-      <div class="r-item" data-v="all"          onclick="setProgram(this)"><div class="r-dot"></div><span>All</span></div>
-      <div class="r-item" data-v="immigrant"    onclick="setProgram(this)"><div class="r-dot"></div><span>Immigrant</span></div>
-      <div class="r-item active" data-v="nonimmigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+
+  <div id="sb-overview">
+    <div>
+      <span class="filter-label">Selected Year</span>
+      <div class="r-options" id="year-opts"></div>
+    </div>
+    <div id="prog-filter">
+      <span class="filter-label">Visa Program</span>
+      <div class="r-options">
+        <div class="r-item" data-v="all" onclick="setProgram(this)"><div class="r-dot"></div><span>All</span></div>
+        <div class="r-item" data-v="immigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Immigrant</span></div>
+        <div class="r-item active" data-v="nonimmigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+      </div>
+    </div>
+    <div id="metric-filter">
+      <span class="filter-label">Map Metric</span>
+      <div class="r-options">
+        <div class="r-item active" data-v="count" onclick="setMetric(this)"><div class="r-dot"></div><span>Visa Issued</span></div>
+        <div class="r-item" data-v="per100k" onclick="setMetric(this)"><div class="r-dot"></div><span>Per 100K Pop.</span></div>
+      </div>
     </div>
   </div>
 
-  <div id="metric-filter">
-    <span class="filter-label">Map Metric</span>
-    <div class="r-options">
-      <div class="r-item active" data-v="count"  onclick="setMetric(this)"><div class="r-dot"></div><span>Visa Issued</span></div>
-      <div class="r-item"        data-v="per100k" onclick="setMetric(this)"><div class="r-dot"></div><span>Visa per 100K</span></div>
+  <div id="sb-trends" style="display:none">
+    <div>
+      <span class="filter-label">Visa Program</span>
+      <div class="r-options">
+        <div class="r-item" data-v="total" onclick="setTrendProg(this)"><div class="r-dot"></div><span>All</span></div>
+        <div class="r-item" data-v="immigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Immigrant</span></div>
+        <div class="r-item active" data-v="nonimmigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+      </div>
+    </div>
+    <div>
+      <span class="filter-label">Compare Countries</span>
+      <div class="chip-grid" id="trend-chips"></div>
+      <div class="cchip-add" onclick="toggleChipSearch()">+ Add country</div>
+      <div id="chip-search-wrap" style="display:none">
+        <input class="chip-search" id="chip-search-input" placeholder="Search…" oninput="filterChipSearch()" autocomplete="off">
+        <div class="chip-results" id="chip-search-results"></div>
+      </div>
     </div>
   </div>
+
 </aside>
 
-<!-- ═══════════════ VIEWS ═══════════════ -->
+<!-- ══ VIEWS ══ -->
 <div class="views-wrap">
 
-  <!-- ── DASHBOARD ── -->
+  <!-- OVERVIEW -->
   <div class="view" id="v-dash">
     <div class="dash-header">
       <h1 class="dash-title">US Visa Issuance <span>Dashboard</span></h1>
     </div>
-
-    <div class="kpi-row">
-      <div class="kpi-card c-total"><div class="kpi-lbl">Total Visa Issued</div><div class="kpi-val" id="kpi-tot">—</div><div class="kpi-delta flat" id="kpi-tot-d">vs Previous Year</div></div>
-      <div class="kpi-card c-nonimm"><div class="kpi-lbl">Non-Immigrant Visa</div><div class="kpi-val" id="kpi-non">—</div><div class="kpi-delta flat" id="kpi-non-d">vs Previous Year</div></div>
-      <div class="kpi-card c-imm"><div class="kpi-lbl">Immigrant Visa</div><div class="kpi-val" id="kpi-imm">—</div><div class="kpi-delta flat" id="kpi-imm-d">vs Previous Year</div></div>
+    <div class="kpi-row kpi-row-3">
+      <div class="kpi-card c-total"><div class="kpi-lbl">Total Visa Issued</div><div class="kpi-val" id="kpi-tot">—</div><div class="kpi-sub flat" id="kpi-tot-d">vs Previous Year</div></div>
+      <div class="kpi-card c-nonimm"><div class="kpi-lbl">Non-Immigrant</div><div class="kpi-val" id="kpi-non">—</div><div class="kpi-sub flat" id="kpi-non-d">vs Previous Year</div></div>
+      <div class="kpi-card c-imm"><div class="kpi-lbl">Immigrant</div><div class="kpi-val" id="kpi-imm">—</div><div class="kpi-sub flat" id="kpi-imm-d">vs Previous Year</div></div>
     </div>
-
     <div class="summary" id="summary-txt">Loading…</div>
-
     <div class="chart-grid">
       <div class="chart-card span-rows">
         <div class="chart-title">Global Visa Intensity — click a country to drill down</div>
@@ -173,48 +213,119 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
     </div>
   </div>
 
-  <!-- ── COUNTRY DETAIL ── -->
-  <div class="view hidden" id="v-country">
-    <div class="back-btn" onclick="showDash()">← Dashboard</div>
-    <div class="c-name" id="d-country">—</div>
-    <div class="prog-tabs">
-      <div class="tab-btn active" data-v="immigrant"    onclick="setDetailProg(this)">Immigrant</div>
-      <div class="tab-btn"        data-v="nonimmigrant" onclick="setDetailProg(this)">Nonimmigrant</div>
+  <!-- TRENDS -->
+  <div class="view hidden" id="v-trends">
+    <div class="dash-header">
+      <h1 class="dash-title">Country <span>Trends</span></h1>
     </div>
-
-    <div class="kpi-row" style="grid-template-columns:repeat(2,1fr);max-width:440px;margin-bottom:14px">
-      <div class="kpi-card c-total"><div class="kpi-lbl">Total Visa Issued</div><div class="kpi-val" id="d-total">—</div><div class="kpi-delta flat" id="d-total-d"></div></div>
-      <div class="kpi-card c-nonimm"><div class="kpi-lbl">Rank (this year)</div><div class="kpi-val" id="d-rank">—</div><div class="kpi-delta flat" style="color:var(--muted)">among all countries</div></div>
-    </div>
-
-    <div class="detail-grid">
-      <div class="chart-card">
-        <div class="chart-title">Visa by Program Type</div>
-        <div class="chart-body" id="polar-wrap"></div>
+    <div class="trends-grid">
+      <div class="trends-main">
+        <div class="chart-card" style="flex:2;min-height:0">
+          <div class="chart-title">Visa Issuance Over Time</div>
+          <div class="chart-body" id="tc-line-wrap"></div>
+        </div>
+        <div class="chart-card" style="flex:1;min-height:0">
+          <div class="chart-title" id="growth-title">Year-over-Year Growth %</div>
+          <div class="chart-body" id="tc-growth-wrap"></div>
+        </div>
       </div>
-      <div class="chart-card">
-        <div class="chart-title">Count Trend 2017–2025</div>
-        <div class="chart-body" id="trend-wrap"></div>
+      <div class="trends-side">
+        <div class="chart-card" style="flex:1;min-height:0">
+          <div class="chart-title">Ranking by Total Visas</div>
+          <div class="chart-body" id="tc-rank-wrap"></div>
+        </div>
       </div>
     </div>
   </div>
 
-</div>
+  <!-- COUNTRY DETAIL -->
+  <div class="view hidden" id="v-country">
+    <div class="back-btn" onclick="showDash()">← Back</div>
+    <div class="c-name" id="d-country">—</div>
 
-<!-- TOOLTIP -->
+    <div class="kpi-row kpi-row-6" style="margin-bottom:14px">
+      <div class="kpi-card c-total">
+        <div class="kpi-lbl">Total Visas</div>
+        <div class="kpi-val" id="d-total">—</div>
+        <div class="kpi-sub flat" id="d-total-d"></div>
+      </div>
+      <div class="kpi-card c-imm">
+        <div class="kpi-lbl">Immigrant</div>
+        <div class="kpi-val" id="d-imm">—</div>
+        <div class="kpi-sub flat" id="d-imm-d"></div>
+      </div>
+      <div class="kpi-card c-nonimm">
+        <div class="kpi-lbl">Nonimmigrant</div>
+        <div class="kpi-val" id="d-non">—</div>
+        <div class="kpi-sub flat" id="d-non-d"></div>
+      </div>
+      <div class="kpi-card c-rank">
+        <div class="kpi-lbl">Total Rank</div>
+        <div class="kpi-val" id="d-rank-tot">—</div>
+        <div class="kpi-sub flat">among all countries</div>
+      </div>
+      <div class="kpi-card c-rank">
+        <div class="kpi-lbl">Immigrant Rank</div>
+        <div class="kpi-val" id="d-rank-imm">—</div>
+        <div class="kpi-sub flat">among all countries</div>
+      </div>
+      <div class="kpi-card c-rank">
+        <div class="kpi-lbl">Nonimmigrant Rank</div>
+        <div class="kpi-val" id="d-rank-non">—</div>
+        <div class="kpi-sub flat">among all countries</div>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="chart-card">
+        <div class="chart-title">Immigrant Program Types <span style="font-size:8px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">— click segment to drill down</span></div>
+        <div class="chart-body" id="radar-imm-wrap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Nonimmigrant Program Types <span style="font-size:8px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">— click segment to drill down</span></div>
+        <div class="chart-body" id="radar-non-wrap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Total Visas Over Time</div>
+        <div class="chart-body" id="total-trend-wrap"></div>
+      </div>
+      <div class="chart-card" id="right-panel-card">
+        <div class="chart-title" id="right-panel-title">
+          <span id="right-panel-label">Immigrant vs Nonimmigrant</span>
+          <span class="chart-back" id="right-panel-back" style="display:none" onclick="resetRightPanel()">← back</span>
+        </div>
+        <div class="chart-body" id="right-panel-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /views-wrap -->
+</div><!-- /shell -->
+
 <div class="tt" id="tt"><div class="tt-name" id="tt-n"></div><div id="tt-b"></div></div>
 
 <script>
 // ═══════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════
-const S = { year:'2023', program:'nonimmigrant', metric:'count', country:null, detProg:'immigrant' };
-const YEARS = ['2017','2018','2019','2020','2021','2022','2023','2024','2025'];
+const S = {
+  year: '2024', program: 'nonimmigrant', metric: 'count',
+  country: null,
+  view: 'overview',
+  trendProg: 'nonimmigrant',
+  trendCountries: ['Mexico', 'India', 'China', 'Philippines', 'United Kingdom', 'Brazil'],
+  rightPanel: 'comparison', // 'comparison' | 'visa_types'
+  selectedProgType: null,
+  selectedProgTypeFrom: null,
+};
+let YEARS = [];
 let DATA = null, CYM = {}, WORLD = null;
 let mapSvg, mapG, pathFn, proj, colorScl;
 
+const TREND_COLORS = ['#00D4B4','#A78BFA','#FFB400','#F87171','#4ADE80','#38BDF8','#FB923C','#F472B6'];
+
 // ═══════════════════════════════════════════════════
-//  ISO NAME MAP  (204 countries)
+//  ISO MAP
 // ═══════════════════════════════════════════════════
 const N2I = {
   'Afghanistan':4,'Albania':8,'Algeria':12,'Andorra':20,'Angola':24,
@@ -262,7 +373,6 @@ const N2I = {
 };
 const I2N = Object.fromEntries(Object.entries(N2I).map(([n,i])=>[i,n]));
 
-// POPULATION estimates (millions) for per-100K metric
 const POP = {
   'India':1428,'China':1412,'United States':335,'Indonesia':278,'Pakistan':232,
   'Brazil':216,'Nigeria':223,'Bangladesh':173,'Russia':145,'Ethiopia':128,
@@ -273,150 +383,123 @@ const POP = {
   'Algeria':45,'Sudan':45,'Iraq':43,'Ukraine':44,'Canada':39,
   'Morocco':38,'Saudi Arabia':36,'Afghanistan':42,'Poland':38,'Peru':34,
   'Venezuela':33,'Malaysia':33,'Mozambique':33,'Ghana':34,'Yemen':34,
-  'Angola':36,'Nepal':30,'Ivory Coast':27,'Madagascar':29,'Cameroon':28,
+  'Angola':36,'Nepal':30,"Cote d'Ivoire":27,'Madagascar':29,'Cameroon':28,
   'Australia':26,'Sri Lanka':22,'Romania':19,'Burkina Faso':23,'Niger':26,
   'Kazakhstan':19,'Mali':23,'Malawi':20,'Syria':22,'Zambia':20,
   'Chile':19,'Ecuador':18,'Guatemala':18,'Netherlands':18,'Cambodia':17,
   'Zimbabwe':16,'Senegal':17,'Chad':18,'Bolivia':12,'Belgium':11,
   'Cuba':11,'Czech Republic':11,'Greece':11,'Jordan':11,'Portugal':10,
-  'Sweden':10,'Dominican Republic':11,'Tunisia':12,'Honduras':10,'Bolivia':12,
+  'Sweden':10,'Dominican Republic':11,'Tunisia':12,'Honduras':10,
   'Rwanda':14,'Tajikistan':10,'Hungary':10,'Belarus':9,'Azerbaijan':10,
   'United Arab Emirates':10,'Serbia':7,'Israel':9,'Switzerland':9,'Austria':9,
   'Togo':9,'Sierra Leone':8,'Libya':7,'Paraguay':7,'Singapore':6,
   'Laos':7,'El Salvador':6,'Nicaragua':7,'Norway':5,'Denmark':6,
-  'Finland':6,'Slovakia':6,'Congo':6,'Costa Rica':5,'New Zealand':5,
+  'Finland':6,'Slovakia':6,'Costa Rica':5,'New Zealand':5,
   'Ireland':5,'Oman':5,'Kuwait':4,'Croatia':4,'Georgia':4,
   'Uruguay':4,'Bosnia and Herzegovina':3,'Armenia':3,'Mongolia':3,
-  'Albania':3,'Puerto Rico':3,'Lithuania':3,'Slovenia':2,'Latvia':2,
-  'North Macedonia':2,'Moldova':3,'Botswana':3,'Gambia':2,'Guinea':13,
-  'Haiti':11,'Benin':13,'Burundi':13,'South Sudan':11,'Somalia':18,
-  'Eritrea':3,'Liberia':5,'Mauritania':5,'Namibia':3,'Lesotho':2,
-  'Eswatini':1,'Djibouti':1,'Comoros':1,'Seychelles':0.1,'Mauritius':1,
-  'Trinidad and Tobago':1,'Jamaica':3,'Barbados':0.3,'Bahamas':0.4,
-  'Saint Lucia':0.2,'Grenada':0.1,'Saint Vincent and the Grenadines':0.1,
-  'Antigua and Barbuda':0.1,'Saint Kitts and Nevis':0.05,'Dominica':0.07,
-  'Philippines':115,'Taiwan':23,'Hong Kong':7,'South Korea':52,
-  'Japan':125,'Thailand':72,'Malaysia':33,'Vietnam':98,'Indonesia':278,
-  'Myanmar':55,'Cambodia':17,'Laos':7,'Brunei':0.4,'Timor-Leste':1,
+  'Albania':3,'Lithuania':3,'Slovenia':2,'Latvia':2,'North Macedonia':2,
+  'Moldova':3,'Botswana':3,'Gambia':2,'Guinea':13,'Haiti':11,'Benin':13,
+  'Burundi':13,'South Sudan':11,'Somalia':18,'Eritrea':3,'Liberia':5,
+  'Mauritania':5,'Namibia':3,'Lesotho':2,'Eswatini':1,'Djibouti':1,
+  'Comoros':1,'Seychelles':0.1,'Mauritius':1,'Trinidad and Tobago':1,
+  'Jamaica':3,'Barbados':0.3,'Bahamas':0.4,'Saint Lucia':0.2,'Grenada':0.1,
+  'Saint Vincent and the Grenadines':0.1,'Antigua and Barbuda':0.1,
+  'Saint Kitts and Nevis':0.05,'Dominica':0.07,'Philippines':115,'Taiwan':23,
+  'Hong Kong':7,'South Korea':52,'Brunei':0.4,'Timor-Leste':1,
   'Papua New Guinea':10,'Fiji':0.9,'Samoa':0.2,'Tonga':0.1,'Vanuatu':0.3,
   'Kiribati':0.12,'Palau':0.018,'Marshall Islands':0.042,'Micronesia':0.1,
-  'Nauru':0.01,'Tuvalu':0.011,'Solomon Islands':0.7,
-  'Pakistan':232,'Bangladesh':173,'Sri Lanka':22,'Nepal':30,'Bhutan':0.8,
-  'Maldives':0.5,'Afghanistan':42,
-  'Kazakhstan':19,'Uzbekistan':36,'Turkmenistan':6,'Kyrgyzstan':7,'Tajikistan':10,
-  'Azerbaijan':10,'Armenia':3,'Georgia':4,
-  'Saudi Arabia':36,'Iraq':43,'Syria':22,'Jordan':11,'Lebanon':5,'Yemen':34,
-  'Oman':5,'Kuwait':4,'United Arab Emirates':10,'Qatar':3,'Bahrain':1,
-  'Iran':89,'Israel':9,'Palestine':5,
-  'Morocco':38,'Algeria':45,'Tunisia':12,'Libya':7,'Egypt':106,'Sudan':45,
-  'Ethiopia':128,'Eritrea':3,'Djibouti':1,'Somalia':18,'Kenya':55,'Uganda':48,
-  'Tanzania':65,'Rwanda':14,'Burundi':13,'Democratic Republic of the Congo':102,
-  'Congo':6,'Cameroon':28,'Central African Republic':5,'Chad':18,
-  'South Sudan':11,'Nigeria':223,'Ghana':34,'Ivory Coast':27,
-  "Cote d'Ivoire":27,'Burkina Faso':23,'Mali':23,'Niger':26,'Senegal':17,
-  'Gambia':2,'Guinea-Bissau':2,'Guinea':13,'Sierra Leone':8,'Liberia':5,
-  'Togo':9,'Benin':13,'Mauritania':5,'Cape Verde':0.6,'Cabo Verde':0.6,
-  'Sao Tome and Principe':0.22,'Equatorial Guinea':1,'Gabon':2,'Angola':36,
-  'Zambia':20,'Malawi':20,'Zimbabwe':16,'Mozambique':33,'Madagascar':29,
-  'Comoros':1,'Seychelles':0.1,'Mauritius':1,'Botswana':3,'Namibia':3,
-  'Lesotho':2,'Eswatini':1,'South Africa':60,
-  'Iceland':0.37,'Norway':5,'Sweden':10,'Finland':6,'Denmark':6,'Estonia':1.3,
-  'Latvia':2,'Lithuania':3,'Poland':38,'Germany':84,'France':68,
-  'Belgium':11,'Netherlands':18,'Luxembourg':0.66,'United Kingdom':68,
-  'Ireland':5,'Portugal':10,'Spain':48,'Italy':60,'Switzerland':9,
-  'Austria':9,'Czech Republic':11,'Slovakia':6,'Hungary':10,'Romania':19,
-  'Bulgaria':7,'Slovenia':2,'Croatia':4,'Bosnia and Herzegovina':3,
-  'Serbia':7,'Kosovo':1.8,'Montenegro':0.62,'Albania':3,'North Macedonia':2,
-  'Moldova':3,'Ukraine':44,'Belarus':9,'Russia':145,
-  'Canada':39,'United States':335,'Mexico':129,'Guatemala':18,'Belize':0.4,
-  'Honduras':10,'El Salvador':6,'Nicaragua':7,'Costa Rica':5,'Panama':4,
-  'Cuba':11,'Dominican Republic':11,'Haiti':11,'Jamaica':3,'Trinidad and Tobago':1,
-  'Barbados':0.3,'Bahamas':0.4,'Guyana':0.8,'Suriname':0.6,'Venezuela':33,
-  'Colombia':52,'Ecuador':18,'Peru':34,'Bolivia':12,'Brazil':216,
-  'Paraguay':7,'Uruguay':4,'Argentina':46,'Chile':19,
-  'Australia':26,'New Zealand':5
+  'Nauru':0.01,'Tuvalu':0.011,'Solomon Islands':0.7,'Bhutan':0.8,'Maldives':0.5,
+  'Uzbekistan':36,'Turkmenistan':6,'Kyrgyzstan':7,'Lebanon':5,'Qatar':3,
+  'Bahrain':1,'Palestine':5,'Democratic Republic of the Congo':102,
+  'Central African Republic':5,'Equatorial Guinea':1,'Gabon':2,'Cabo Verde':0.6,
+  'Sao Tome and Principe':0.22,'Iceland':0.37,'Luxembourg':0.66,'Montenegro':0.62,
+  'Kosovo':1.8,'Panama':4,'Guyana':0.8,'Suriname':0.6
 };
 
 // ═══════════════════════════════════════════════════
 //  UTILS
 // ═══════════════════════════════════════════════════
-const fmt = n => {
-  if(!n) return '—';
-  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
-  return d3.format(',')(Math.round(n));
-};
+const fmt = n => { if(!n) return '—'; if(n>=1e6) return (n/1e6).toFixed(2)+'M'; return d3.format(',')(Math.round(n)); };
 const fmtN = n => n ? d3.format(',')(Math.round(n)) : '0';
-
 function getVal(entry, prog) {
   if(!entry) return 0;
-  if(prog==='all') return entry.total||0;
+  if(prog==='all'||prog==='total') return entry.total||0;
   return entry[prog]||0;
 }
-function countryVal(c, yr, prog) {
-  return getVal(CYM[c]?.[yr], prog);
+
+// ═══════════════════════════════════════════════════
+//  VIEW SWITCHING
+// ═══════════════════════════════════════════════════
+function setView(name) {
+  S.view = name;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.v === name));
+  document.getElementById('sb-overview').style.display = name === 'overview' ? '' : 'none';
+  document.getElementById('sb-trends').style.display   = name === 'trends'   ? '' : 'none';
+  document.getElementById('v-dash').classList.toggle('hidden', name !== 'overview');
+  document.getElementById('v-trends').classList.toggle('hidden', name !== 'trends');
+  document.getElementById('v-country').classList.add('hidden');
+  if (name === 'trends') drawTrendView();
 }
 
 // ═══════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════
 async function init() {
-  buildYears();
   try {
-    // NOTE: visa_aggregated.json must be in the same folder as this HTML file
     const r = await fetch('./visa_aggregated.json');
-    if(!r.ok) throw new Error('HTTP '+r.status);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
     DATA = await r.json();
-    for(const e of DATA.country_data) {
-      if(!CYM[e.country]) CYM[e.country]={};
-      CYM[e.country][e.year]=e;
+    YEARS = Object.keys(DATA.totals_by_year).sort();
+    S.year = YEARS[YEARS.length - 1];
+    for (const e of DATA.country_data) {
+      if (!CYM[e.country]) CYM[e.country] = {};
+      CYM[e.country][e.year] = e;
     }
     WORLD = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    buildYears();
     renderDash();
     drawMap();
     drawLine();
+    renderTrendChips();
   } catch(err) {
-    document.getElementById('map-wrap').innerHTML=
-      `<div class="loading-msg" style="flex-direction:column;color:var(--red)">
-        <b>Error loading data</b>
-        <span style="font-size:10px;margin-top:6px">${err.message}</span>
-        <span style="font-size:10px;color:var(--muted);margin-top:4px">Make sure visa_aggregated.json is in the same directory as this file</span>
-      </div>`;
+    document.getElementById('map-wrap').innerHTML =
+      `<div class="loading-msg" style="flex-direction:column;color:var(--red)"><b>Error loading data</b><span style="font-size:10px;margin-top:6px">${err.message}</span></div>`;
   }
 }
 
 // ═══════════════════════════════════════════════════
-//  YEAR FILTER
+//  OVERVIEW FILTERS
 // ═══════════════════════════════════════════════════
 function buildYears() {
   const el = document.getElementById('year-opts');
   el.innerHTML = '';
   YEARS.forEach(y => {
     const d = document.createElement('div');
-    d.className = 'r-item'+(y===S.year?' active':'');
+    d.className = 'r-item' + (y === S.year ? ' active' : '');
     d.dataset.v = y;
     d.innerHTML = `<div class="r-dot"></div><span>${y}</span>`;
-    d.onclick = ()=>setYear(d);
+    d.onclick = () => setYear(d);
     el.appendChild(d);
   });
 }
 
 function setYear(el) {
-  document.querySelectorAll('#year-opts .r-item').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('#year-opts .r-item').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
   S.year = el.dataset.v;
-  if(S.country) updateDetail();
-  else { renderDash(); updateMapColors(); drawBar(); }
+  if (S.country) updateDetail();
+  else { renderDash(); updateMapColors(); drawBar(); drawLine(); }
 }
 
 function setProgram(el) {
-  document.querySelectorAll('#prog-filter .r-item').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('#prog-filter .r-item').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
   S.program = el.dataset.v;
-  renderDash(); updateMapColors(); drawBar();
+  renderDash(); updateMapColors(); drawBar(); drawLine();
 }
 
 function setMetric(el) {
-  document.querySelectorAll('#metric-filter .r-item').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('#metric-filter .r-item').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
   S.metric = el.dataset.v;
   updateMapColors();
@@ -426,93 +509,71 @@ function setMetric(el) {
 //  KPI + SUMMARY
 // ═══════════════════════════════════════════════════
 function renderDash() {
-  if(!DATA) return;
-  const yr = S.year, py = String(+yr-1);
-  const c = DATA.totals_by_year[yr]||{}, p = DATA.totals_by_year[py]||{};
+  if (!DATA) return;
+  const yr = S.year, py = String(+yr - 1);
+  const c = DATA.totals_by_year[yr] || {}, p = DATA.totals_by_year[py] || {};
 
   function setK(vid, did, cv, pv) {
     document.getElementById(vid).textContent = fmt(cv);
     const el = document.getElementById(did);
-    if(pv) {
-      const pct = ((cv-pv)/pv*100).toFixed(1);
-      el.className = 'kpi-delta '+(+pct>=0?'up':'down');
-      el.textContent = (+pct>=0?'▲ +':'▼ ')+pct+'% vs '+py;
-    } else { el.className='kpi-delta flat'; el.textContent='No prior year'; }
+    if (pv) {
+      const pct = ((cv - pv) / pv * 100).toFixed(1);
+      el.className = 'kpi-sub ' + (+pct >= 0 ? 'up' : 'down');
+      el.textContent = (+pct >= 0 ? '▲ +' : '▼ ') + pct + '% vs ' + py;
+    } else { el.className = 'kpi-sub flat'; el.textContent = 'No prior year'; }
   }
-  setK('kpi-tot','kpi-tot-d', c.total||0, p.total||0);
-  setK('kpi-non','kpi-non-d', c.nonimmigrant||0, p.nonimmigrant||0);
-  setK('kpi-imm','kpi-imm-d', c.immigrant||0, p.immigrant||0);
+  setK('kpi-tot', 'kpi-tot-d', c.total || 0, p.total || 0);
+  setK('kpi-non', 'kpi-non-d', c.nonimmigrant || 0, p.nonimmigrant || 0);
+  setK('kpi-imm', 'kpi-imm-d', c.immigrant || 0, p.immigrant || 0);
 
-  const prog = S.program==='all'?'total':S.program;
+  const prog = S.program === 'all' ? 'total' : S.program;
   const top10 = getTop10(yr, prog);
-  const totalYr = prog==='total'?(c.total||0):(c[prog]||0);
-  const top10sum = top10.reduce((s,x)=>s+x.v,0);
-  const pct = totalYr>0?(top10sum/totalYr*100).toFixed(1):'—';
-  const lbl = S.program==='all'?'':` <strong>${S.program}</strong>`;
+  const totalYr = prog === 'total' ? (c.total || 0) : (c[prog] || 0);
+  const top10sum = top10.reduce((s, x) => s + x.v, 0);
+  const pct = totalYr > 0 ? (top10sum / totalYr * 100).toFixed(1) : '—';
+  const lbl = S.program === 'all' ? '' : ` <strong>${S.program}</strong>`;
   document.getElementById('summary-txt').innerHTML =
     `In <strong>${yr}</strong>, <span class="hl">${pct}%</span> of${lbl} visas were issued to just 10 countries`;
-
   drawBar();
 }
 
 // ═══════════════════════════════════════════════════
-//  TOP 10 BAR CHART
+//  TOP 10 BAR
 // ═══════════════════════════════════════════════════
 function getTop10(yr, prog) {
-  return Object.entries(CYM)
-    .map(([c,yrs])=>({c, v:getVal(yrs[yr],prog)}))
-    .filter(x=>x.v>0)
-    .sort((a,b)=>b.v-a.v).slice(0,10);
+  return Object.entries(CYM).map(([c, yrs]) => ({ c, v: getVal(yrs[yr], prog) }))
+    .filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 10);
 }
 
 function drawBar() {
-  if(!DATA) return;
-  const prog = S.program==='all'?'total':S.program;
+  if (!DATA) return;
+  const prog = S.program === 'all' ? 'total' : S.program;
   const top = getTop10(S.year, prog);
   const wrap = document.getElementById('bar-wrap');
-  wrap.innerHTML='';
-
-  const W = wrap.clientWidth||270;
-  const barH=16, gap=5;
-  const labelW = 100;
-  const barW = W - labelW - 44;
-  const H = top.length*(barH+gap)+4;
-  const max = top[0]?.v||1;
-  const xSc = d3.scaleLinear().domain([0,max]).range([0,barW]);
-  const color = prog==='immigrant'?'var(--violet)':prog==='total'?'var(--amber)':'var(--teal)';
-
-  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H);
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth || 270;
+  const barH = 16, gap = 5, labelW = 100, barW = W - labelW - 44;
+  const H = top.length * (barH + gap) + 4;
+  const xSc = d3.scaleLinear().domain([0, top[0]?.v || 1]).range([0, barW]);
+  const color = prog === 'immigrant' ? 'var(--violet)' : prog === 'total' ? 'var(--amber)' : 'var(--teal)';
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
   const rows = svg.selectAll('g').data(top).join('g')
-    .attr('transform',(_,i)=>`translate(0,${i*(barH+gap)})`)
-    .style('cursor','pointer')
-    .on('click',(_,d)=>showCountry(d.c))
-    .on('mouseover',(e,d)=>tip(e,d.c,d.v))
-    .on('mouseout',hideTip);
-
-  // label bg
-  rows.append('rect').attr('x',0).attr('y',0).attr('width',labelW).attr('height',barH)
-    .attr('fill','transparent');
-
-  // truncated country name
-  rows.append('text').attr('x',labelW-4).attr('y',barH/2+1)
-    .attr('dominant-baseline','middle').attr('text-anchor','end')
-    .attr('fill','#8BAABF').attr('font-size',10).attr('font-family','Outfit')
-    .text(d=>d.c.length>14?d.c.slice(0,13)+'…':d.c);
-
-  // bar
-  rows.append('rect')
-    .attr('x',labelW).attr('y',1)
-    .attr('width',d=>xSc(d.v)).attr('height',barH-2)
-    .attr('rx',3).attr('fill',color).attr('opacity',.75)
-    .transition().duration(400)
-    .attr('width',d=>xSc(d.v));
-
-  // value
-  rows.append('text')
-    .attr('x',d=>labelW+xSc(d.v)+5).attr('y',barH/2+1)
-    .attr('dominant-baseline','middle').attr('fill','#5C7A9B')
-    .attr('font-size',9).attr('font-family','JetBrains Mono')
-    .text(d=>fmt(d.v));
+    .attr('transform', (_, i) => `translate(0,${i * (barH + gap)})`)
+    .style('cursor', 'pointer')
+    .on('click', (_, d) => showCountry(d.c))
+    .on('mouseover', (e, d) => tip(e, d.c, d.v))
+    .on('mouseout', hideTip);
+  rows.append('rect').attr('width', labelW).attr('height', barH).attr('fill', 'transparent');
+  rows.append('text').attr('x', labelW - 4).attr('y', barH / 2 + 1)
+    .attr('dominant-baseline', 'middle').attr('text-anchor', 'end')
+    .attr('fill', '#8BAABF').attr('font-size', 10).attr('font-family', 'Outfit')
+    .text(d => d.c.length > 14 ? d.c.slice(0, 13) + '…' : d.c);
+  rows.append('rect').attr('x', labelW).attr('y', 1).attr('height', barH - 2).attr('rx', 3)
+    .attr('fill', color).attr('opacity', .75).attr('width', 0)
+    .transition().duration(400).attr('width', d => xSc(d.v));
+  rows.append('text').attr('x', d => labelW + xSc(d.v) + 5).attr('y', barH / 2 + 1)
+    .attr('dominant-baseline', 'middle').attr('fill', '#5C7A9B')
+    .attr('font-size', 9).attr('font-family', 'JetBrains Mono').text(d => fmt(d.v));
 }
 
 // ═══════════════════════════════════════════════════
@@ -521,159 +582,262 @@ function drawBar() {
 function drawMap() {
   const wrap = document.getElementById('map-wrap');
   wrap.innerHTML = '';
-  const W = wrap.clientWidth||600, H = wrap.clientHeight||320;
-
-  proj = d3.geoNaturalEarth1().scale(W/6.3).translate([W/2,H/2]);
+  const W = wrap.clientWidth || 600, H = wrap.clientHeight || 320;
+  proj = d3.geoNaturalEarth1().scale(W / 6.3).translate([W / 2, H / 2]);
   pathFn = d3.geoPath().projection(proj);
-
-  mapSvg = d3.select(wrap).append('svg')
-    .attr('width',W).attr('height',H).style('display','block');
-
-  mapSvg.append('rect').attr('width',W).attr('height',H).attr('fill','#06101A');
-
-  // Graticule
-  mapSvg.append('path')
-    .datum(d3.geoGraticule()())
-    .attr('fill','none').attr('stroke','#0E2035').attr('stroke-width',.4)
-    .attr('d',pathFn);
-
+  mapSvg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).style('display', 'block');
+  mapSvg.append('rect').attr('width', W).attr('height', H).attr('fill', '#06101A');
+  mapSvg.append('path').datum(d3.geoGraticule()())
+    .attr('fill', 'none').attr('stroke', '#0E2035').attr('stroke-width', .4).attr('d', pathFn);
   mapG = mapSvg.append('g');
-
-  const features = topojson.feature(WORLD, WORLD.objects.countries).features;
-
-  mapG.selectAll('.cpath').data(features).join('path')
-    .attr('class','cpath').attr('d',pathFn)
-    .attr('stroke','#0E2035').attr('stroke-width',.3)
-    .on('click',(_,d)=>{
-      const name = I2N[+d.id];
-      if(name && CYM[name]) showCountry(name);
-    })
-    .on('mouseover',(e,d)=>{
-      const name=I2N[+d.id];
-      if(name) {
-        const v=countryVal(name,S.year,S.program==='all'?'total':S.program);
-        tip(e,name,v);
-      }
-    })
-    .on('mouseout',hideTip);
-
-  // Zoom
-  mapSvg.call(d3.zoom().scaleExtent([1,8]).on('zoom',e=>mapG.attr('transform',e.transform)));
-
+  mapG.selectAll('.cpath').data(topojson.feature(WORLD, WORLD.objects.countries).features).join('path')
+    .attr('class', 'cpath').attr('d', pathFn).attr('stroke', '#0E2035').attr('stroke-width', .3)
+    .on('click', (_, d) => { const nm = I2N[+d.id]; if (nm && CYM[nm]) showCountry(nm); })
+    .on('mouseover', (e, d) => { const nm = I2N[+d.id]; if (nm) { const v = getVal(CYM[nm]?.[S.year], S.program === 'all' ? 'total' : S.program); tip(e, nm, v); } })
+    .on('mouseout', hideTip);
+  mapSvg.call(d3.zoom().scaleExtent([1, 8]).on('zoom', e => mapG.attr('transform', e.transform)));
   updateMapColors();
-
-  // Color legend
-  const legW=120, legH=8;
-  const legSvg = d3.select(wrap).append('svg')
-    .attr('width',legW+60).attr('height',22)
-    .style('position','absolute').style('bottom','8px').style('left','12px');
-  const defs = legSvg.append('defs');
-  const grad = defs.append('linearGradient').attr('id','leg-grad');
-  grad.append('stop').attr('offset','0%').attr('stop-color','#132237');
-  grad.append('stop').attr('offset','100%').attr('stop-color','#00D4B4');
-  legSvg.append('rect').attr('x',24).attr('y',0).attr('width',legW).attr('height',legH)
-    .attr('rx',3).attr('fill','url(#leg-grad)');
-  legSvg.append('text').attr('x',20).attr('y',legH/2+1).attr('dominant-baseline','middle')
-    .attr('text-anchor','end').attr('fill','#3D5C7A').attr('font-size',8).text('0');
-  legSvg.append('text').attr('x',24+legW+4).attr('y',legH/2+1).attr('dominant-baseline','middle')
-    .attr('fill','#3D5C7A').attr('font-size',8).attr('id','leg-max').text('max');
+  const legW = 120, legH = 8;
+  const legSvg = d3.select(wrap).append('svg').attr('width', legW + 60).attr('height', 22)
+    .style('position', 'absolute').style('bottom', '8px').style('left', '12px');
+  const grad = legSvg.append('defs').append('linearGradient').attr('id', 'leg-grad');
+  grad.append('stop').attr('offset', '0%').attr('stop-color', '#132237');
+  grad.append('stop').attr('offset', '100%').attr('stop-color', '#00D4B4');
+  legSvg.append('rect').attr('x', 24).attr('y', 0).attr('width', legW).attr('height', legH).attr('rx', 3).attr('fill', 'url(#leg-grad)');
+  legSvg.append('text').attr('x', 20).attr('y', legH / 2 + 1).attr('dominant-baseline', 'middle').attr('text-anchor', 'end').attr('fill', '#3D5C7A').attr('font-size', 8).text('0');
+  legSvg.append('text').attr('x', 24 + legW + 4).attr('y', legH / 2 + 1).attr('dominant-baseline', 'middle').attr('fill', '#3D5C7A').attr('font-size', 8).attr('id', 'leg-max').text('max');
 }
 
 function updateMapColors() {
-  if(!DATA||!mapG) return;
-  const prog = S.program==='all'?'total':S.program;
-
-  // Collect values
+  if (!DATA || !mapG) return;
+  const prog = S.program === 'all' ? 'total' : S.program;
   const vals = [];
-  for(const [c,yrs] of Object.entries(CYM)) {
-    const raw = getVal(yrs[S.year],prog);
-    if(!raw) continue;
-    const v = S.metric==='per100k' ? (POP[c]>0 ? raw/(POP[c]*10000)*1e5 : 0) : raw;
-    if(v>0) vals.push(v);
+  for (const [c, yrs] of Object.entries(CYM)) {
+    const raw = getVal(yrs[S.year], prog);
+    if (!raw) continue;
+    const v = S.metric === 'per100k' ? (POP[c] > 0 ? raw / (POP[c] * 10000) * 1e5 : 0) : raw;
+    if (v > 0) vals.push(v);
   }
-  vals.sort((a,b)=>a-b);
-  const maxV = vals[vals.length-1]||1;
-
-  colorScl = d3.scaleSequentialLog([1,maxV], d3.interpolate('#152640','#00D4B4'));
-
-  mapG.selectAll('.cpath').transition().duration(350)
-    .attr('fill', d=>{
-      const nm = I2N[+d.id];
-      if(!nm) return '#0D1E30';
-      const raw = getVal(CYM[nm]?.[S.year],prog);
-      if(!raw) return '#0D1E30';
-      const v = S.metric==='per100k' ? (POP[nm]>0?raw/(POP[nm]*10000)*1e5:0) : raw;
-      return v>0 ? colorScl(v) : '#0D1E30';
-    });
-
+  vals.sort((a, b) => a - b);
+  const maxV = vals[vals.length - 1] || 1;
+  colorScl = d3.scaleSequentialLog([1, maxV], d3.interpolate('#152640', '#00D4B4'));
+  mapG.selectAll('.cpath').transition().duration(350).attr('fill', d => {
+    const nm = I2N[+d.id];
+    if (!nm) return '#0D1E30';
+    const raw = getVal(CYM[nm]?.[S.year], prog);
+    if (!raw) return '#0D1E30';
+    const v = S.metric === 'per100k' ? (POP[nm] > 0 ? raw / (POP[nm] * 10000) * 1e5 : 0) : raw;
+    return v > 0 ? colorScl(v) : '#0D1E30';
+  });
   const legEl = document.getElementById('leg-max');
-  if(legEl) legEl.textContent = S.metric==='per100k'?fmt(maxV)+'/100K':fmt(maxV);
+  if (legEl) legEl.textContent = S.metric === 'per100k' ? fmt(maxV) + '/100K' : fmt(maxV);
 }
 
 // ═══════════════════════════════════════════════════
 //  GLOBAL LINE CHART
 // ═══════════════════════════════════════════════════
 function drawLine() {
-  if(!DATA) return;
+  if (!DATA) return;
   const wrap = document.getElementById('line-wrap');
-  wrap.innerHTML='';
-  const W=wrap.clientWidth||270, H=wrap.clientHeight||100;
-  const m={t:8,r:12,b:24,l:42};
-  const iW=W-m.l-m.r, iH=H-m.t-m.b;
-
-  const progs = [{k:'nonimmigrant',c:'var(--teal)'},{k:'immigrant',c:'var(--violet)'}];
-  const series = progs.map(({k,c})=>({
-    k,c,pts:YEARS.map(y=>({y,v:DATA.totals_by_year[y]?.[k]||0}))
-  }));
-  const maxV = d3.max(series.flatMap(s=>s.pts.map(p=>p.v)))||1;
-  const xSc = d3.scalePoint().domain(YEARS).range([0,iW]);
-  const ySc = d3.scaleLinear().domain([0,maxV*1.05]).range([iH,0]);
-
-  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H)
-    .append('g').attr('transform',`translate(${m.l},${m.t})`);
-
-  // Grid lines
-  svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW)
-    .tickFormat(v=>v>=1e6?(v/1e6).toFixed(0)+'M':v>=1e3?(v/1e3).toFixed(0)+'K':v))
-    .call(g=>{
-      g.select('.domain').remove();
-      g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');
-      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
-    });
-
-  svg.append('g').attr('transform',`translate(0,${iH})`)
-    .call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g=>{
-      g.select('.domain').remove();
-      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
-      g.selectAll('.tick').each(function(d){
-        if(!['2017','2019','2021','2023','2025'].includes(d)) d3.select(this).select('text').remove();
-      });
-    });
-
-  // Highlight selected year band
-  svg.append('line')
-    .attr('x1',xSc(S.year)).attr('x2',xSc(S.year))
-    .attr('y1',0).attr('y2',iH)
-    .attr('stroke','#FFB400').attr('stroke-width',1).attr('stroke-dasharray','3,2').attr('opacity',.4);
-
-  // Areas + lines
-  const area = d3.area().x(d=>xSc(d.y)).y0(iH).y1(d=>ySc(d.v)).curve(d3.curveMonotoneX);
-  const line = d3.line().x(d=>xSc(d.y)).y(d=>ySc(d.v)).curve(d3.curveMonotoneX);
-
-  series.forEach(({k,c,pts})=>{
-    svg.append('path').datum(pts).attr('fill',c).attr('fill-opacity',.07).attr('d',area);
-    svg.append('path').datum(pts).attr('fill','none').attr('stroke',c).attr('stroke-width',1.5).attr('d',line);
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth || 270, H = wrap.clientHeight || 100;
+  const m = { t: 8, r: 12, b: 24, l: 42 };
+  const iW = W - m.l - m.r, iH = H - m.t - m.b;
+  const progs = [{ k: 'nonimmigrant', c: 'var(--teal)' }, { k: 'immigrant', c: 'var(--violet)' }];
+  const series = progs.map(({ k, c }) => ({ k, c, pts: YEARS.map(y => ({ y, v: DATA.totals_by_year[y]?.[k] || 0 })) }));
+  const maxV = d3.max(series.flatMap(s => s.pts.map(p => p.v))) || 1;
+  const xSc = d3.scalePoint().domain(YEARS).range([0, iW]);
+  const ySc = d3.scaleLinear().domain([0, maxV * 1.05]).range([iH, 0]);
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+  svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(0) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
+  svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
+    .attr('stroke', '#FFB400').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
+  const area = d3.area().x(d => xSc(d.y)).y0(iH).y1(d => ySc(d.v)).curve(d3.curveMonotoneX);
+  const line = d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX);
+  series.forEach(({ k, c, pts }) => {
+    svg.append('path').datum(pts).attr('fill', c).attr('fill-opacity', .07).attr('d', area);
+    svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 1.5).attr('d', line);
   });
-
-  // Legend
-  const legDiv = d3.select(wrap).append('div')
-    .style('display','flex').style('gap','10px').style('margin-top','4px').style('padding-left','42px');
-  series.forEach(({k,c})=>{
-    const item = legDiv.append('div').style('display','flex').style('align-items','center').style('gap','5px')
-      .style('font-size','9px').style('color','#5C7A9B');
-    item.append('div').style('width','10px').style('height','2px').style('background',c).style('border-radius','1px');
+  const legDiv = d3.select(wrap).append('div').style('display', 'flex').style('gap', '10px').style('margin-top', '4px').style('padding-left', '42px');
+  series.forEach(({ k, c }) => {
+    const item = legDiv.append('div').style('display', 'flex').style('align-items', 'center').style('gap', '5px').style('font-size', '9px').style('color', '#5C7A9B');
+    item.append('div').style('width', '10px').style('height', '2px').style('background', c).style('border-radius', '1px');
     item.append('span').text(k);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  TRENDS VIEW
+// ═══════════════════════════════════════════════════
+function setTrendProg(el) {
+  document.querySelectorAll('#sb-trends .r-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  S.trendProg = el.dataset.v;
+  drawTrendView();
+}
+
+function renderTrendChips() {
+  const wrap = document.getElementById('trend-chips');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  S.trendCountries.forEach((c, i) => {
+    const col = TREND_COLORS[i % TREND_COLORS.length];
+    const chip = document.createElement('div');
+    chip.className = 'cchip sel';
+    chip.style.cssText = `background:${col}22;border-color:${col};color:${col}`;
+    chip.innerHTML = `<div class="dot" style="background:${col}"></div><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 4px">${c}</span><span style="color:#5C7A9B;font-size:10px" onclick="removeTrendCountry('${c}',event)">✕</span>`;
+    wrap.appendChild(chip);
+  });
+}
+
+function removeTrendCountry(c, e) {
+  e.stopPropagation();
+  S.trendCountries = S.trendCountries.filter(x => x !== c);
+  renderTrendChips();
+  if (S.view === 'trends') drawTrendView();
+}
+
+let searchVisible = false;
+function toggleChipSearch() {
+  searchVisible = !searchVisible;
+  document.getElementById('chip-search-wrap').style.display = searchVisible ? '' : 'none';
+  if (searchVisible) { document.getElementById('chip-search-input').value = ''; filterChipSearch(); document.getElementById('chip-search-input').focus(); }
+}
+
+function filterChipSearch() {
+  const q = document.getElementById('chip-search-input').value.toLowerCase();
+  const results = Object.keys(CYM).sort().filter(c => !S.trendCountries.includes(c) && c.toLowerCase().includes(q)).slice(0, 8);
+  const wrap = document.getElementById('chip-search-results');
+  wrap.innerHTML = '';
+  results.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'chip-result';
+    el.textContent = c;
+    el.onclick = () => {
+      if (S.trendCountries.length < 8) { S.trendCountries.push(c); renderTrendChips(); if (S.view === 'trends') drawTrendView(); }
+      toggleChipSearch();
+    };
+    wrap.appendChild(el);
+  });
+}
+
+function drawTrendView() {
+  if (!DATA) return;
+  drawComparisonLine();
+  drawGrowthBars();
+  drawRankingChart();
+}
+
+function drawComparisonLine() {
+  const wrap = document.getElementById('tc-line-wrap');
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth || 500, H = wrap.clientHeight || 200;
+  const m = { t: 10, r: 90, b: 28, l: 48 };
+  const iW = W - m.l - m.r, iH = H - m.t - m.b;
+  const prog = S.trendProg;
+  const series = S.trendCountries.map((c, i) => ({
+    c, col: TREND_COLORS[i % TREND_COLORS.length],
+    pts: YEARS.map(y => ({ y, v: getVal(CYM[c]?.[y], prog) }))
+  }));
+  const maxV = d3.max(series.flatMap(s => s.pts.map(p => p.v))) || 1;
+  const xSc = d3.scalePoint().domain(YEARS).range([0, iW]);
+  const ySc = d3.scaleLinear().domain([0, maxV * 1.1]).range([iH, 0]);
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+  svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  const lineFn = d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX).defined(d => d.v > 0);
+  series.forEach(({ c, col, pts }) => {
+    svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', col).attr('stroke-width', 2).attr('opacity', .85).attr('d', lineFn);
+    svg.selectAll(null).data(pts.filter(d => d.v > 0)).join('circle')
+      .attr('cx', d => xSc(d.y)).attr('cy', d => ySc(d.v)).attr('r', 3)
+      .attr('fill', col).attr('stroke', '#0B1622').attr('stroke-width', 1.5)
+      .style('cursor', 'pointer')
+      .on('mouseover', (e, d) => tip(e, `${c} (${d.y})`, d.v)).on('mouseout', hideTip);
+    const last = [...pts].filter(d => d.v > 0).pop();
+    if (last) svg.append('text').attr('x', xSc(last.y) + 6).attr('y', ySc(last.v)).attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 9).attr('font-family', 'Outfit').text(c.length > 12 ? c.slice(0, 10) + '…' : c);
+  });
+}
+
+function drawGrowthBars() {
+  const wrap = document.getElementById('tc-growth-wrap');
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth || 500, H = wrap.clientHeight || 100;
+  const prog = S.trendProg;
+  const growthYears = YEARS.slice(1);
+  const m = { t: 8, r: 12, b: 24, l: 48 };
+  const iW = W - m.l - m.r, iH = H - m.t - m.b;
+  const allGrowth = [];
+  S.trendCountries.forEach((c, ci) => {
+    growthYears.forEach(y => {
+      const cur = getVal(CYM[c]?.[y], prog), prev = getVal(CYM[c]?.[String(+y - 1)], prog);
+      if (prev > 0) allGrowth.push({ c, y, g: (cur - prev) / prev * 100, col: TREND_COLORS[ci % TREND_COLORS.length] });
+    });
+  });
+  document.getElementById('growth-title').textContent = `Year-over-Year Growth % — ${S.trendProg}`;
+  const xSc = d3.scalePoint().domain(growthYears).range([0, iW]);
+  const ext = d3.extent(allGrowth, d => d.g);
+  const ySc = d3.scaleLinear().domain([Math.min(ext[0] || 0, -20), Math.max(ext[1] || 0, 20)]).range([iH, 0]).nice();
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+  svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v + '%'))
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  svg.append('line').attr('x1', 0).attr('x2', iW).attr('y1', ySc(0)).attr('y2', ySc(0)).attr('stroke', '#2A4060').attr('stroke-width', 1);
+  const byCountry = d3.group(allGrowth, d => d.c);
+  byCountry.forEach((pts, c) => {
+    const col = pts[0].col;
+    svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', col).attr('stroke-width', 1.5).attr('opacity', .8)
+      .attr('d', d3.line().x(d => xSc(d.y)).y(d => ySc(d.g)).curve(d3.curveMonotoneX));
+    pts.forEach(p => {
+      svg.append('circle').attr('cx', xSc(p.y)).attr('cy', ySc(p.g)).attr('r', 2.5)
+        .attr('fill', col).attr('stroke', '#0B1622').attr('stroke-width', 1).style('cursor', 'pointer')
+        .on('mouseover', e => { const el = document.getElementById('tt'); el.innerHTML = `<div class="tt-name">${c} (${p.y})</div><div class="tt-b"><div class="tt-row"><span>Growth</span><span class="tt-val">${p.g >= 0 ? '+' : ''}${p.g.toFixed(1)}%</span></div></div>`; el.style.display = 'block'; moveTip(e); })
+        .on('mouseout', hideTip);
+    });
+  });
+}
+
+function drawRankingChart() {
+  const wrap = document.getElementById('tc-rank-wrap');
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth || 320, H = wrap.clientHeight || 300;
+  const prog = S.trendProg;
+  const m = { t: 10, r: 90, b: 24, l: 16 };
+  const iW = W - m.l - m.r, iH = H - m.t - m.b;
+  const rankData = YEARS.map(y => {
+    const sorted = Object.entries(CYM).map(([c, yrs]) => ({ c, v: getVal(yrs[y], prog) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    const ranks = {};
+    sorted.forEach((x, i) => ranks[x.c] = i + 1);
+    return { y, ranks };
+  });
+  const maxRank = Math.min(Math.max(...S.trendCountries.flatMap(c => rankData.map(d => d.ranks[c] || 999).filter(r => r < 999))) + 5, 30);
+  const xSc = d3.scalePoint().domain(YEARS).range([0, iW]);
+  const ySc = d3.scaleLinear().domain([1, maxRank]).range([0, iH]);
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+  svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  [1, 5, 10, 15, 20, 25, 30].filter(r => r <= maxRank).forEach(r => {
+    svg.append('line').attr('x1', 0).attr('x2', iW).attr('y1', ySc(r)).attr('y2', ySc(r)).attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3').attr('stroke-width', .5);
+    svg.append('text').attr('x', -4).attr('y', ySc(r)).attr('dominant-baseline', 'middle').attr('text-anchor', 'end').attr('fill', '#2A4060').attr('font-size', 7).text('#' + r);
+  });
+  S.trendCountries.forEach((c, ci) => {
+    const col = TREND_COLORS[ci % TREND_COLORS.length];
+    const pts = rankData.map(d => ({ y: d.y, rank: d.ranks[c] || 999 }));
+    svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', col).attr('stroke-width', 2).attr('opacity', .8)
+      .attr('d', d3.line().x(d => xSc(d.y)).y(d => ySc(d.rank)).curve(d3.curveMonotoneX).defined(d => d.rank < 999));
+    pts.filter(p => p.rank < 999).forEach(p => {
+      svg.append('circle').attr('cx', xSc(p.y)).attr('cy', ySc(p.rank)).attr('r', 3)
+        .attr('fill', col).attr('stroke', '#0B1622').attr('stroke-width', 1.5).style('cursor', 'pointer')
+        .on('mouseover', e => { const el = document.getElementById('tt'); el.innerHTML = `<div class="tt-name">${c} (${p.y})</div><div class="tt-b"><div class="tt-row"><span>Rank</span><span class="tt-val">#${p.rank}</span></div></div>`; el.style.display = 'block'; moveTip(e); })
+        .on('mouseout', hideTip);
+    });
+    const last = pts.filter(p => p.rank < 999).pop();
+    if (last) svg.append('text').attr('x', xSc(last.y) + 6).attr('y', ySc(last.rank)).attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 9).attr('font-family', 'Outfit').text(c.length > 12 ? c.slice(0, 10) + '…' : c);
   });
 }
 
@@ -682,240 +846,295 @@ function drawLine() {
 // ═══════════════════════════════════════════════════
 function showCountry(name) {
   S.country = name;
+  S.rightPanel = 'comparison';
+  S.selectedProgType = null;
   document.getElementById('d-country').textContent = name;
-  document.getElementById('prog-filter').style.display='none';
-  document.getElementById('metric-filter').style.display='none';
   document.getElementById('v-dash').classList.add('hidden');
+  document.getElementById('v-trends').classList.add('hidden');
   document.getElementById('v-country').classList.remove('hidden');
+  document.getElementById('sb-overview').style.display = '';
+  document.getElementById('sb-trends').style.display = 'none';
   updateDetail();
 }
 
 function showDash() {
   document.getElementById('v-country').classList.add('hidden');
-  document.getElementById('v-dash').classList.remove('hidden');
-  document.getElementById('prog-filter').style.display='';
-  document.getElementById('metric-filter').style.display='';
-  S.country=null;
-}
-
-function setDetailProg(el) {
-  document.querySelectorAll('.tab-btn').forEach(e=>e.classList.remove('active'));
-  el.classList.add('active');
-  S.detProg = el.dataset.v;
-  updateDetail();
+  S.country = null;
+  setView(S.view === 'trends' ? 'trends' : 'overview');
 }
 
 function updateDetail() {
-  const c=S.country, prog=S.detProg, yr=S.year;
-  const entry = CYM[c]?.[yr];
-  const total = getVal(entry, prog);
-  document.getElementById('d-total').textContent = fmtN(total);
+  const c = S.country, yr = S.year;
+  const entry = CYM[c]?.[yr] || {};
 
-  const py = String(+yr-1);
-  const prev = getVal(CYM[c]?.[py], prog);
-  const del = document.getElementById('d-total-d');
-  if(prev>0) {
-    const pct=((total-prev)/prev*100).toFixed(1);
-    del.className='kpi-delta '+(+pct>=0?'up':'down');
-    del.textContent=(+pct>=0?'▲ +':'▼ ')+pct+'% vs '+py;
-  } else { del.className='kpi-delta flat'; del.textContent='No prior year data'; }
+  // Totals
+  const tot = entry.total || 0, imm = entry.immigrant || 0, non = entry.nonimmigrant || 0;
+  document.getElementById('d-total').textContent = fmtN(tot);
+  document.getElementById('d-imm').textContent = fmtN(imm);
+  document.getElementById('d-non').textContent = fmtN(non);
 
-  // Rank
-  const ranked = Object.entries(CYM)
-    .map(([n,yrs])=>({n,v:getVal(yrs[yr],prog)}))
-    .filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
-  const rank = ranked.findIndex(x=>x.n===c)+1;
-  document.getElementById('d-rank').textContent = rank||'—';
+  // Deltas
+  function setDelta(id, cur, prev) {
+    const el = document.getElementById(id);
+    if (prev > 0) { const p = ((cur - prev) / prev * 100).toFixed(1); el.className = 'kpi-sub ' + (+p >= 0 ? 'up' : 'down'); el.textContent = (+p >= 0 ? '▲ +' : '▼ ') + p + '% vs ' + (+yr - 1); }
+    else { el.className = 'kpi-sub flat'; el.textContent = 'No prior year'; }
+  }
+  const prev = CYM[c]?.[String(+yr - 1)] || {};
+  setDelta('d-total-d', tot, prev.total || 0);
+  setDelta('d-imm-d', imm, prev.immigrant || 0);
+  setDelta('d-non-d', non, prev.nonimmigrant || 0);
 
-  drawPolar(); drawTrend();
+  // Ranks
+  function rank(prog) {
+    const sorted = Object.entries(CYM).map(([n, yrs]) => ({ n, v: getVal(yrs[yr], prog) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    const i = sorted.findIndex(x => x.n === c);
+    return i >= 0 ? i + 1 : '—';
+  }
+  document.getElementById('d-rank-tot').textContent = rank('total');
+  document.getElementById('d-rank-imm').textContent = rank('immigrant');
+  document.getElementById('d-rank-non').textContent = rank('nonimmigrant');
+
+  drawRadar('radar-imm-wrap', entry.program_types?.immigrant || {}, 'var(--violet)', 'immigrant');
+  drawRadar('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant');
+  drawTotalTrend();
+  drawRightPanel();
 }
 
-// ═══════════════════════════════════════════════════
-//  POLAR (PIE) CHART
-// ═══════════════════════════════════════════════════
-const PTYPE_COLORS = {
-  'Family-based':'#F87171','Employment-based':'#FACC15',
-  'Diversity lottery':'#4ADE80','Special immigrants':'#38BDF8',
-  'Other Immigrants':'#A78BFA','Temporary visitor':'#00D4B4',
-  'Temporary worker':'#FB923C','Study & Exchange':'#F472B6',
-  'Exchange visitor':'#67E8F9','Humanitarian':'#FCD34D',
-  'Diplomatic & Official':'#94A3B8','Transit':'#475569'
-};
-
-function drawPolar() {
-  const c=S.country, prog=S.detProg, yr=S.year;
-  const entry=CYM[c]?.[yr];
-  const ptypes = entry?.program_types?.[prog]||{};
-  const wrap=document.getElementById('polar-wrap');
-  wrap.innerHTML='';
-
-  // Aggregate (trim keys)
-  const agg={};
-  for(const [k,v] of Object.entries(ptypes)) {
-    const key=k.trim(); agg[key]=(agg[key]||0)+v;
+// ─── RADAR CHART ───
+function drawRadar(wrapId, ptypes, color, prog) {
+  const wrap = document.getElementById(wrapId);
+  wrap.innerHTML = '';
+  const entries = Object.entries(ptypes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  if (!entries.length) {
+    wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:11px">No data for this year</div>';
+    return;
   }
+  const total = entries.reduce((s, [, v]) => s + v, 0);
+  const N = entries.length;
+  const W = wrap.clientWidth || 240, H = wrap.clientHeight || 200;
+  const cx = W / 2, cy = H / 2 + 4;
+  const r = Math.min(W * 0.34, H * 0.34);
+  const angleStep = (2 * Math.PI) / N;
 
-  const pieData = Object.entries(agg).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
-  if(!pieData.length) {
-    wrap.innerHTML='<div class="loading-msg" style="color:var(--muted)">No data for this selection</div>';
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
+  const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
+
+  // Grid circles
+  [0.25, 0.5, 0.75, 1].forEach(lvl => {
+    g.append('circle').attr('r', r * lvl).attr('fill', 'none').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3').attr('stroke-width', .5);
+  });
+  // % labels on grid
+  [0.5, 1].forEach(lvl => {
+    g.append('text').attr('x', 3).attr('y', -r * lvl + 1).attr('fill', '#2A4060').attr('font-size', 6.5).attr('font-family', 'Outfit').text(Math.round(lvl * 100) + '%');
+  });
+
+  // Axis spokes
+  entries.forEach((_, i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    g.append('line').attr('x1', 0).attr('y1', 0).attr('x2', r * Math.cos(angle)).attr('y2', r * Math.sin(angle)).attr('stroke', '#1E3554').attr('stroke-width', .5);
+  });
+
+  // Data polygon
+  const pts = entries.map(([, v], i) => {
+    const pct = v / total, angle = i * angleStep - Math.PI / 2;
+    return [r * pct * Math.cos(angle), r * pct * Math.sin(angle)];
+  });
+  g.append('polygon').attr('points', pts.map(p => p.join(',')).join(' ')).attr('fill', color).attr('fill-opacity', .18).attr('stroke', color).attr('stroke-width', 1.5).attr('stroke-linejoin', 'round');
+
+  // Data points (clickable)
+  entries.forEach(([name, v], i) => {
+    const pct = v / total, angle = i * angleStep - Math.PI / 2;
+    const px = r * pct * Math.cos(angle), py = r * pct * Math.sin(angle);
+    g.append('circle').attr('cx', px).attr('cy', py).attr('r', 4.5)
+      .attr('fill', color).attr('stroke', '#0B1622').attr('stroke-width', 1.5)
+      .style('cursor', 'pointer')
+      .on('click', () => showVisaTypes(prog, name))
+      .on('mouseover', e => { tip(e, name, v); d3.select(e.target).attr('r', 6); })
+      .on('mouseout', e => { hideTip(); d3.select(e.target).attr('r', 4.5); });
+  });
+
+  // Axis labels (clickable)
+  const labelPad = 14;
+  entries.forEach(([name], i) => {
+    const angle = i * angleStep - Math.PI / 2;
+    const lx = (r + labelPad) * Math.cos(angle), ly = (r + labelPad) * Math.sin(angle);
+    const anchor = Math.abs(lx) < 5 ? 'middle' : lx > 0 ? 'start' : 'end';
+    g.append('text').attr('x', lx).attr('y', ly).attr('dominant-baseline', 'middle')
+      .attr('text-anchor', anchor).attr('fill', '#8BAABF').attr('font-size', 8.5).attr('font-family', 'Outfit')
+      .style('cursor', 'pointer')
+      .on('click', () => showVisaTypes(prog, name))
+      .on('mouseover', function() { d3.select(this).attr('fill', color); })
+      .on('mouseout', function() { d3.select(this).attr('fill', '#8BAABF'); })
+      .text(name.length > 15 ? name.slice(0, 13) + '…' : name);
+  });
+}
+
+// ─── TOTAL TREND ───
+function drawTotalTrend() {
+  const c = S.country;
+  const wrap = document.getElementById('total-trend-wrap');
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth || 280, H = wrap.clientHeight || 160;
+  const m = { t: 10, r: 14, b: 26, l: 44 };
+  const iW = W - m.l - m.r, iH = H - m.t - m.b;
+  const pts = YEARS.map(y => ({ y, v: CYM[c]?.[y]?.total || 0 }));
+  const maxV = d3.max(pts, d => d.v) || 1;
+  const xSc = d3.scalePoint().domain(YEARS).range([0, iW]);
+  const ySc = d3.scaleLinear().domain([0, maxV * 1.15]).range([iH, 0]);
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+  svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
+  svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH).attr('stroke', '#FFB400').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .5);
+  svg.append('path').datum(pts).attr('fill', 'var(--amber)').attr('fill-opacity', .07)
+    .attr('d', d3.area().x(d => xSc(d.y)).y0(iH).y1(d => ySc(d.v)).curve(d3.curveMonotoneX));
+  svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', 'var(--amber)').attr('stroke-width', 2)
+    .attr('d', d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX));
+  svg.selectAll('.dot').data(pts).join('circle')
+    .attr('cx', d => xSc(d.y)).attr('cy', d => ySc(d.v)).attr('r', 3)
+    .attr('fill', 'var(--amber)').attr('stroke', '#0B1622').attr('stroke-width', 1.5)
+    .style('cursor', 'pointer')
+    .on('mouseover', (e, d) => tip(e, `${c} (${d.y}) — Total`, d.v)).on('mouseout', hideTip);
+}
+
+// ─── RIGHT PANEL ───
+function drawRightPanel() {
+  if (S.rightPanel === 'comparison') drawComparisonBars();
+  else drawVisaTypeBreakdown();
+}
+
+function showVisaTypes(prog, progType) {
+  S.rightPanel = 'visa_types';
+  S.selectedProgType = progType;
+  S.selectedProgTypeFrom = prog;
+  document.getElementById('right-panel-label').textContent = progType;
+  document.getElementById('right-panel-back').style.display = '';
+  drawVisaTypeBreakdown();
+}
+
+function resetRightPanel() {
+  S.rightPanel = 'comparison';
+  S.selectedProgType = null;
+  document.getElementById('right-panel-label').textContent = 'Immigrant vs Nonimmigrant';
+  document.getElementById('right-panel-back').style.display = 'none';
+  drawComparisonBars();
+}
+
+function drawComparisonBars() {
+  const c = S.country;
+  const wrap = document.getElementById('right-panel-wrap');
+  wrap.innerHTML = '';
+  const W = wrap.clientWidth || 280, H = wrap.clientHeight || 160;
+  const m = { t: 10, r: 14, b: 28, l: 48 };
+  const iW = W - m.l - m.r, iH = H - m.t - m.b;
+  const immPts = YEARS.map(y => ({ y, v: CYM[c]?.[y]?.immigrant || 0 }));
+  const nonPts = YEARS.map(y => ({ y, v: CYM[c]?.[y]?.nonimmigrant || 0 }));
+  const maxV = Math.max(d3.max(immPts, d => d.v) || 0, d3.max(nonPts, d => d.v) || 0) || 1;
+  const xSc = d3.scaleBand().domain(YEARS).range([0, iW]).padding(.25);
+  const ySc = d3.scaleLinear().domain([0, maxV * 1.15]).range([iH, 0]);
+  const bW = xSc.bandwidth() / 2;
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+  svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+  svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(4))
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
+  svg.selectAll('.b-imm').data(immPts).join('rect').attr('class', 'b-imm')
+    .attr('x', d => xSc(d.y)).attr('y', d => ySc(d.v)).attr('width', bW - 1).attr('height', d => iH - ySc(d.v))
+    .attr('fill', 'var(--violet)').attr('opacity', .75).attr('rx', 2)
+    .style('cursor', 'pointer').on('mouseover', (e, d) => tip(e, `${c} ${d.y} — Immigrant`, d.v)).on('mouseout', hideTip);
+  svg.selectAll('.b-non').data(nonPts).join('rect').attr('class', 'b-non')
+    .attr('x', d => xSc(d.y) + bW + 1).attr('y', d => ySc(d.v)).attr('width', bW - 1).attr('height', d => iH - ySc(d.v))
+    .attr('fill', 'var(--teal)').attr('opacity', .75).attr('rx', 2)
+    .style('cursor', 'pointer').on('mouseover', (e, d) => tip(e, `${c} ${d.y} — Nonimmigrant`, d.v)).on('mouseout', hideTip);
+  svg.append('rect').attr('x', xSc(S.year) - 2).attr('y', 0).attr('width', xSc.bandwidth() + 4).attr('height', iH)
+    .attr('fill', '#FFB400').attr('fill-opacity', .04).attr('stroke', '#FFB400').attr('stroke-opacity', .2).attr('stroke-width', 1).attr('rx', 2);
+  const legDiv = d3.select(wrap).append('div').style('display', 'flex').style('gap', '14px').style('margin-top', '4px').style('padding-left', '48px');
+  [{ l: 'Immigrant', c: 'var(--violet)' }, { l: 'Nonimmigrant', c: 'var(--teal)' }].forEach(({ l, c }) => {
+    const item = legDiv.append('div').style('display', 'flex').style('align-items', 'center').style('gap', '5px').style('font-size', '9px').style('color', '#5C7A9B');
+    item.append('div').style('width', '10px').style('height', '8px').style('background', c).style('border-radius', '2px').style('opacity', '.75');
+    item.append('span').text(l);
+  });
+}
+
+function drawVisaTypeBreakdown() {
+  const c = S.country, yr = S.year;
+  const prog = S.selectedProgTypeFrom, pt = S.selectedProgType;
+  const entry = CYM[c]?.[yr];
+  const vtData = entry?.visa_types?.[prog]?.[pt] || {};
+  const wrap = document.getElementById('right-panel-wrap');
+  wrap.innerHTML = '';
+
+  const items = Object.entries(vtData).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  if (!items.length) {
+    wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:11px">No visa type breakdown available</div>';
     return;
   }
 
-  const W=wrap.clientWidth||260, H=wrap.clientHeight||220;
-  const cx=W/2, cy=H/2, r=Math.min(W,H)*0.33;
-  const total=pieData.reduce((s,[,v])=>s+v,0);
+  const color = prog === 'immigrant' ? 'var(--violet)' : 'var(--teal)';
+  const W = wrap.clientWidth || 280, barH = 15, gap = 4, labelW = 44, valW = 52;
+  const barAreaW = W - labelW - valW - 8;
+  const H = items.length * (barH + gap) + 8;
+  const maxV = items[0][1];
+  const xSc = d3.scaleLinear().domain([0, maxV]).range([0, barAreaW]);
 
-  const pie=d3.pie().value(d=>d[1]).sort(null);
-  const arcFn=d3.arc().innerRadius(r*.38).outerRadius(r);
-  const outerArc=d3.arc().innerRadius(r*1.15).outerRadius(r*1.15);
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
+  const rows = svg.selectAll('g').data(items).join('g')
+    .attr('transform', (_, i) => `translate(0,${i * (barH + gap) + 4})`);
 
-  const svg=d3.select(wrap).append('svg').attr('width',W).attr('height',H);
-  const g=svg.append('g').attr('transform',`translate(${cx},${cy})`);
+  rows.append('text').attr('x', labelW - 4).attr('y', barH / 2 + 1)
+    .attr('dominant-baseline', 'middle').attr('text-anchor', 'end')
+    .attr('fill', '#8BAABF').attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+    .text(([name]) => name);
 
-  const arcs=pie(pieData);
-  g.selectAll('.arc').data(arcs).join('g').attr('class','arc')
-    .append('path').attr('d',arcFn)
-    .attr('fill',(d,i)=>PTYPE_COLORS[d.data[0]]||d3.schemeTableau10[i%10])
-    .attr('stroke','#0B1622').attr('stroke-width',1.5).attr('opacity',.88)
-    .style('cursor','pointer')
-    .on('mouseover',function(e,d){
-      d3.select(this).attr('opacity',1);
-      const pct=(d.data[1]/total*100).toFixed(1);
-      document.getElementById('tt').innerHTML=
-        `<div class="tt-name">${d.data[0]}</div>
-         <div class="tt-b">
-           <div class="tt-row"><span>Visas</span><span class="tt-val">${fmtN(d.data[1])}</span></div>
-           <div class="tt-row"><span>Share</span><span class="tt-val">${pct}%</span></div>
-         </div>`;
-      document.getElementById('tt').style.display='block';
-      moveTip(e);
-    })
-    .on('mouseout',function(){d3.select(this).attr('opacity',.88);hideTip();});
+  rows.append('rect').attr('x', labelW).attr('y', 1).attr('height', barH - 2).attr('rx', 2)
+    .attr('fill', color).attr('opacity', .7).attr('width', 0)
+    .transition().duration(350).attr('width', ([, v]) => xSc(v));
 
-  // Polylines + labels for segments >5%
-  const visible=arcs.filter(d=>d.data[1]/total>0.05);
-  g.selectAll('.pl').data(visible).join('polyline')
-    .attr('fill','none').attr('stroke','#2A4060').attr('stroke-width',.8)
-    .attr('points',d=>{
-      const a=arcFn.centroid(d), b=outerArc.centroid(d);
-      const mid=(d.startAngle+d.endAngle)/2;
-      const cx2=r*1.2*(mid<Math.PI?1:-1);
-      return [a,b,[cx2,b[1]]].map(p=>p.join(',')).join(' ');
-    });
+  rows.append('text').attr('x', labelW + barAreaW + 6).attr('y', barH / 2 + 1)
+    .attr('dominant-baseline', 'middle').attr('fill', '#5C7A9B')
+    .attr('font-size', 9).attr('font-family', 'JetBrains Mono')
+    .text(([, v]) => fmtN(v));
 
-  g.selectAll('.pl-label').data(visible).join('text')
-    .attr('transform',d=>{
-      const b=outerArc.centroid(d);
-      const mid=(d.startAngle+d.endAngle)/2;
-      return `translate(${r*1.24*(mid<Math.PI?1:-1)},${b[1]})`;
-    })
-    .attr('dominant-baseline','middle')
-    .attr('text-anchor',d=>{const m=(d.startAngle+d.endAngle)/2;return m<Math.PI?'start':'end';})
-    .attr('fill','#5C7A9B').attr('font-size',8.5).attr('font-family','Outfit')
-    .text(d=>d.data[0].length>16?d.data[0].slice(0,14)+'…':d.data[0]);
-
-  // Center label
-  g.append('text').attr('text-anchor','middle').attr('dy','-.2em')
-    .attr('fill','#8BAABF').attr('font-size',8).attr('font-family','Outfit').text('TOTAL');
-  g.append('text').attr('text-anchor','middle').attr('dy','1em')
-    .attr('fill',S.detProg==='immigrant'?'var(--violet)':'var(--teal)')
-    .attr('font-size',13).attr('font-weight',600).attr('font-family','JetBrains Mono')
-    .text(fmt(total));
-}
-
-// ═══════════════════════════════════════════════════
-//  TREND LINE
-// ═══════════════════════════════════════════════════
-function drawTrend() {
-  const c=S.country, prog=S.detProg;
-  const pts=YEARS.map(y=>({y,v:getVal(CYM[c]?.[y],prog)}));
-  const wrap=document.getElementById('trend-wrap');
-  wrap.innerHTML='';
-  const W=wrap.clientWidth||260, H=wrap.clientHeight||200;
-  const m={t:10,r:14,b:26,l:44};
-  const iW=W-m.l-m.r, iH=H-m.t-m.b;
-  const maxV=d3.max(pts,d=>d.v)||1;
-  const xSc=d3.scalePoint().domain(YEARS).range([0,iW]);
-  const ySc=d3.scaleLinear().domain([0,maxV*1.1]).range([iH,0]);
-  const color=prog==='immigrant'?'var(--violet)':'var(--teal)';
-
-  const svg=d3.select(wrap).append('svg').attr('width',W).attr('height',H)
-    .append('g').attr('transform',`translate(${m.l},${m.t})`);
-
-  svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW)
-    .tickFormat(v=>v>=1000?(v/1000).toFixed(v>=10000?0:1)+'K':v))
-    .call(g=>{
-      g.select('.domain').remove();
-      g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');
-      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
-    });
-
-  svg.append('g').attr('transform',`translate(0,${iH})`)
-    .call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g=>{
-      g.select('.domain').remove();
-      g.selectAll('text').attr('fill','#3D5C7A').attr('font-size',8).attr('font-family','Outfit');
-      g.selectAll('.tick').each(function(d){
-        if(!['2017','2019','2021','2023','2025'].includes(d)) d3.select(this).select('text').text('');
-      });
-    });
-
-  // Selected year line
-  svg.append('line')
-    .attr('x1',xSc(S.year)).attr('x2',xSc(S.year))
-    .attr('y1',0).attr('y2',iH)
-    .attr('stroke','#FFB400').attr('stroke-width',1)
-    .attr('stroke-dasharray','3,2').attr('opacity',.5);
-
-  svg.append('path').datum(pts)
-    .attr('fill',color).attr('fill-opacity',.08)
-    .attr('d',d3.area().x(d=>xSc(d.y)).y0(iH).y1(d=>ySc(d.v)).curve(d3.curveMonotoneX));
-
-  svg.append('path').datum(pts)
-    .attr('fill','none').attr('stroke',color).attr('stroke-width',2)
-    .attr('d',d3.line().x(d=>xSc(d.y)).y(d=>ySc(d.v)).curve(d3.curveMonotoneX));
-
-  svg.selectAll('.dot').data(pts).join('circle')
-    .attr('cx',d=>xSc(d.y)).attr('cy',d=>ySc(d.v)).attr('r',3.5)
-    .attr('fill',color).attr('stroke','#0B1622').attr('stroke-width',1.5)
-    .style('cursor','pointer')
-    .on('mouseover',(e,d)=>tip(e,d.y+' — '+S.country,d.v))
-    .on('mouseout',hideTip);
+  rows.on('mouseover', (e, [name, v]) => {
+    const total = items.reduce((s, [, x]) => s + x, 0);
+    const pct = (v / total * 100).toFixed(1);
+    const el = document.getElementById('tt');
+    el.innerHTML = `<div class="tt-name">${name}</div><div class="tt-b"><div class="tt-row"><span>Visas</span><span class="tt-val">${fmtN(v)}</span></div><div class="tt-row"><span>Share</span><span class="tt-val">${pct}%</span></div></div>`;
+    el.style.display = 'block'; moveTip(e);
+  }).on('mouseout', hideTip);
 }
 
 // ═══════════════════════════════════════════════════
 //  TOOLTIP
 // ═══════════════════════════════════════════════════
 function tip(e, title, val) {
-  const t=document.getElementById('tt');
-  t.innerHTML=`<div class="tt-name">${title}</div><div class="tt-b"><div class="tt-row"><span>Visas</span><span class="tt-val">${fmtN(val)}</span></div></div>`;
-  t.style.display='block';
-  moveTip(e);
+  const t = document.getElementById('tt');
+  t.innerHTML = `<div class="tt-name">${title}</div><div class="tt-b"><div class="tt-row"><span>Visas</span><span class="tt-val">${fmtN(val)}</span></div></div>`;
+  t.style.display = 'block'; moveTip(e);
 }
 function moveTip(e) {
-  const t=document.getElementById('tt');
-  t.style.left=Math.min(e.clientX+14,window.innerWidth-180)+'px';
-  t.style.top=Math.min(e.clientY-10,window.innerHeight-80)+'px';
+  const t = document.getElementById('tt');
+  t.style.left = Math.min(e.clientX + 14, window.innerWidth - 180) + 'px';
+  t.style.top = Math.min(e.clientY - 10, window.innerHeight - 80) + 'px';
 }
-function hideTip() { document.getElementById('tt').style.display='none'; }
-document.addEventListener('mousemove', e=>{ if(document.getElementById('tt').style.display==='block') moveTip(e); });
+function hideTip() { document.getElementById('tt').style.display = 'none'; }
+document.addEventListener('mousemove', e => { if (document.getElementById('tt').style.display === 'block') moveTip(e); });
 
 // ═══════════════════════════════════════════════════
-//  RESPONSIVE REDRAWS ON RESIZE
+//  RESIZE
 // ═══════════════════════════════════════════════════
 let resizeTimer;
-window.addEventListener('resize',()=>{
+window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer=setTimeout(()=>{
-    if(!DATA||!WORLD) return;
-    drawMap(); drawLine(); drawBar();
-    if(S.country) { drawPolar(); drawTrend(); }
-  },200);
+  resizeTimer = setTimeout(() => {
+    if (!DATA || !WORLD) return;
+    if (S.view === 'overview') { drawMap(); drawLine(); drawBar(); }
+    if (S.view === 'trends') drawTrendView();
+    if (S.country) { drawRadar('radar-imm-wrap', CYM[S.country]?.[S.year]?.program_types?.immigrant || {}, 'var(--violet)', 'immigrant'); drawRadar('radar-non-wrap', CYM[S.country]?.[S.year]?.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant'); drawTotalTrend(); drawRightPanel(); }
+  }, 200);
 });
 
-// ═══════════════════════════════════════════════════
-//  START
-// ═══════════════════════════════════════════════════
 init();
 </script>
 </body>
