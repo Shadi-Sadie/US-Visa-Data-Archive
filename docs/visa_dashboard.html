@@ -157,17 +157,91 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ─── HAMBURGER ─── */
+.nav-menu-btn{display:none;background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;align-items:center;justify-content:center;border-radius:6px;margin-right:6px;flex-shrink:0}
+.nav-menu-btn:hover{color:var(--text);background:rgba(255,255,255,.06)}
+
+/* ─── MOBILE BACKDROP ─── */
+.sb-backdrop{display:none;position:fixed;inset:0;top:44px;background:rgba(0,0,0,.65);z-index:499;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.sb-backdrop.open{display:block}
+
+/* ─── TABLET ≤900px: auto-collapse sidebar ─── */
+@media(max-width:900px){
+  .sidebar:not(.mobile-open){width:var(--sidebar-collapsed-w)}
+  .sidebar:not(.mobile-open) .sb-section-body{display:none}
+  .sidebar:not(.mobile-open) .sb-lbl{opacity:0;pointer-events:none}
+  .sidebar:not(.mobile-open) .sb-section-hd{justify-content:center;padding:8px 0}
+  .sidebar:not(.mobile-open) .sb-section{padding:0 6px;margin-bottom:18px}
+  .kpi-row-6{grid-template-columns:repeat(3,1fr)}
+  .trends-grid{grid-template-columns:1fr}
+  .trends-side{display:none}
+}
+
+/* ─── MOBILE ≤640px ─── */
+@media(max-width:640px){
+  /* Nav scrolls horizontally */
+  .topnav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:0 8px;gap:0}
+  .topnav::-webkit-scrollbar{display:none}
+  .brand{margin-right:4px;font-size:11px}
+  .nav-tab{padding:0 12px;font-size:11px;white-space:nowrap}
+  .nav-menu-btn{display:flex}
+
+  /* Sidebar: fixed overlay */
+  .sidebar{position:fixed;left:calc(-1 * var(--sidebar-w));top:44px;bottom:0;width:var(--sidebar-w) !important;z-index:500;transition:left .22s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 32px rgba(0,0,0,.6)}
+  .sidebar.mobile-open{left:0}
+  .sb-toggle{display:none}
+
+  /* Body becomes scrollable */
+  body{overflow-y:auto;height:auto;min-height:100svh}
+  .shell{overflow:visible;height:auto;flex:none}
+  .views-wrap{overflow:visible;position:static;height:auto;flex:none}
+
+  /* Views: no slide transition on mobile */
+  .view{position:static !important;transform:none !important;opacity:1 !important;overflow:visible !important;height:auto !important;padding:14px}
+  .view.hidden{display:none !important}
+
+  /* KPI grids */
+  .dash-title{font-size:17px}
+  .kpi-row-3{grid-template-columns:1fr}
+  .kpi-row-6{grid-template-columns:repeat(2,1fr);gap:8px}
+  .kpi-val{font-size:17px}
+  .kpi-lbl{font-size:9px}
+
+  /* Chart grid: single column stack */
+  .chart-grid{display:flex;flex-direction:column;height:auto;gap:12px}
+  .chart-card{height:280px}
+  .chart-card.span-rows{height:300px}
+  .chart-body{height:100%;min-height:0}
+
+  /* Country detail */
+  .c-name{font-size:20px;margin-bottom:10px}
+  .detail-grid{display:flex;flex-direction:column;height:auto;gap:12px}
+  .detail-grid .chart-card{height:300px}
+
+  /* Trends */
+  .trends-grid{display:flex;flex-direction:column;height:auto;gap:12px}
+  .trends-main,.trends-side{height:auto;display:flex;flex-direction:column;gap:12px}
+  .trends-main>.chart-card{height:300px}
+  .trends-side{display:flex}
+  .trends-side>.chart-card{height:260px}
+}
 </style>
 </head>
 <body>
 
 <!-- ══ TOP NAV ══ -->
 <div class="topnav">
+  <button class="nav-menu-btn" id="nav-menu-btn" onclick="toggleMobileSidebar()">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
   <div class="brand">US Visa Data</div>
   <div class="nav-tab active" data-v="overview" onclick="setView('overview')">Overview</div>
   <div class="nav-tab" data-v="trends" onclick="setView('trends')">Trends <span class="nav-badge">NEW</span></div>
   <div class="nav-tab" data-v="country" onclick="setView('country')">Country</div>
 </div>
+
+<div class="sb-backdrop" id="sb-backdrop" onclick="closeMobileSidebar()"></div>
 
 <div class="shell">
 
@@ -531,8 +605,20 @@ function getVal(entry, prog) {
 // ═══════════════════════════════════════════════════
 //  VIEW SWITCHING
 // ═══════════════════════════════════════════════════
+function toggleMobileSidebar() {
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sb-backdrop');
+  const open = sb.classList.toggle('mobile-open');
+  bd.classList.toggle('open', open);
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sb-backdrop').classList.remove('open');
+}
+
 function setView(name) {
   S.view = name;
+  closeMobileSidebar();
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.v === name));
   document.getElementById('sb-overview').style.display = name === 'overview' ? '' : 'none';
   document.getElementById('sb-trends').style.display   = name === 'trends'   ? '' : 'none';
