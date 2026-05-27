@@ -5,54 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>US Visa Issuance Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson@3"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
   --bg:#0B1622;--surface:#112035;--surface2:#172B47;--border:#1E3554;
-  --text:#E2EAF4;--muted:#5C7A9B;--teal:#00D4B4;--teal-lo:rgba(0,212,180,0.12);
+  --text:#E2EAF4;--muted:#6B88A8;--gold:#E8B84B;--gold-lo:rgba(232,184,75,0.12);
   --amber:#FFB400;--amber-lo:rgba(255,180,0,0.12);
   --violet:#A78BFA;--violet-lo:rgba(167,139,250,0.12);
-  --red:#F87171;--green:#4ADE80;--sidebar-w:240px;
+  --red:#F87171;--green:#4ADE80;--sidebar-w:240px;--sidebar-collapsed-w:58px;
 }
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
 /* ─── TOP NAV ─── */
 .topnav{display:flex;align-items:center;padding:0 16px;background:#080E18;border-bottom:1px solid var(--border);height:44px;flex-shrink:0}
-.brand{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--teal);margin-right:28px;white-space:nowrap}
+.brand{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-right:28px;white-space:nowrap}
 .nav-tab{padding:0 18px;height:44px;display:flex;align-items:center;font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;user-select:none}
 .nav-tab:hover{color:var(--text)}
-.nav-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
 .nav-badge{font-size:10px;padding:2px 6px;border-radius:3px;background:rgba(255,180,0,.1);color:var(--amber);border:1px solid rgba(255,180,0,.25);margin-left:6px;font-weight:700}
 
 /* ─── SHELL ─── */
 .shell{display:flex;flex:1;overflow:hidden}
 
 /* ─── SIDEBAR ─── */
-.sidebar{width:var(--sidebar-w);min-width:var(--sidebar-w);background:#080E18;border-right:1px solid var(--border);padding:22px 18px;display:flex;flex-direction:column;gap:28px;overflow-y:auto}
-.filter-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:block}
-.r-options{display:flex;flex-direction:column;gap:4px}
-.r-item{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background .15s;font-size:13px;color:var(--muted);user-select:none}
-.r-item:hover{background:rgba(255,255,255,.04);color:var(--text)}
-.r-item.active{color:var(--text);background:var(--teal-lo)}
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:#07111C;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .22s cubic-bezier(.4,0,.2,1);position:relative}
+.sidebar.collapsed{width:var(--sidebar-collapsed-w)}
+.sb-toggle{position:absolute;top:18px;right:-13px;width:26px;height:26px;border-radius:50%;background:#0D1E30;border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:100;padding:0;flex-shrink:0;transition:color .15s,border-color .15s,background .15s}
+.sb-toggle:hover{color:var(--gold);border-color:var(--gold);background:var(--gold-lo)}
+.sb-inner{overflow-y:auto;overflow-x:hidden;flex:1;padding:20px 0}
+.sb-section{padding:0 12px;margin-bottom:26px}
+.sb-section-hd{display:flex;align-items:center;gap:9px;padding:6px 8px;margin-bottom:10px;border-radius:6px;position:relative}
+.sb-icon{width:15px;height:15px;flex-shrink:0;color:var(--muted)}
+.sb-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap;transition:opacity .12s}
+.sidebar.collapsed .sb-lbl{opacity:0;pointer-events:none}
+.sidebar.collapsed .sb-section-body{display:none}
+.sidebar.collapsed .sb-section-hd{justify-content:center;padding:8px 0}
+.sidebar.collapsed .sb-section{padding:0 6px;margin-bottom:18px}
+/* Tooltip when collapsed */
+.sidebar.collapsed .sb-section-hd::after{content:attr(data-tip);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);background:#0D1E30;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--text);white-space:nowrap;z-index:200;opacity:0;pointer-events:none;transition:opacity .15s}
+.sidebar.collapsed .sb-section-hd:hover::after{opacity:1}
+.r-options{display:flex;flex-direction:column;gap:3px}
+.r-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s;font-size:13px;color:var(--muted);user-select:none}
+.r-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.r-item.active{color:var(--text);background:rgba(255,255,255,.07);font-weight:500}
 .r-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s}
-.r-item.active .r-dot{border-color:var(--teal)}
-.r-item.active .r-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal)}
-
-/* trends sidebar chips */
-.chip-grid{display:flex;flex-direction:column;gap:5px;margin-top:8px}
-.cchip{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--muted);transition:all .15s;user-select:none}
-.cchip.sel{color:#07101C;border-color:transparent}
+.r-item.active .r-dot{border-color:var(--gold)}
+.r-item.active .r-dot::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold)}
+/* Trend chips */
+.chip-grid{display:flex;flex-direction:column;gap:5px}
+.cchip{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--muted);transition:all .15s;user-select:none}
+.cchip.sel{color:#07101C;border-color:transparent;font-weight:600}
 .cchip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.cchip-add{padding:7px 10px;border-radius:6px;font-size:12px;font-weight:600;color:var(--muted);border:1px dashed var(--border);cursor:pointer;text-align:center;margin-top:6px}
-.cchip-add:hover{border-color:var(--teal);color:var(--teal)}
-.chip-search{width:100%;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:'Outfit',sans-serif;outline:none;margin-top:6px}
-.chip-search:focus{border-color:var(--teal)}
-.chip-results{display:flex;flex-direction:column;gap:3px;max-height:150px;overflow-y:auto;margin-top:6px}
-.chip-result{padding:6px 10px;border-radius:5px;font-size:12px;color:var(--muted);cursor:pointer}
-.chip-result:hover{background:var(--teal-lo);color:var(--teal)}
+.cchip-add{padding:7px 10px;border-radius:8px;font-size:12px;font-weight:500;color:var(--muted);border:1px dashed var(--border);cursor:pointer;text-align:center;margin-top:4px;transition:all .15s}
+.cchip-add:hover{border-color:var(--gold);color:var(--gold)}
+.chip-search{width:100%;padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;font-family:'Inter',sans-serif;outline:none;margin-top:6px;transition:border-color .15s}
+.chip-search:focus{border-color:var(--gold)}
+.chip-results{display:flex;flex-direction:column;gap:2px;max-height:150px;overflow-y:auto;margin-top:6px}
+.chip-result{padding:6px 10px;border-radius:6px;font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s}
+.chip-result:hover{background:var(--gold-lo);color:var(--gold)}
 
 /* ─── VIEWS ─── */
 .views-wrap{flex:1;overflow:hidden;position:relative}
@@ -62,7 +75,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 /* ─── HEADER ─── */
 .dash-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px}
 .dash-title{font-size:20px;font-weight:800;letter-spacing:-.03em}
-.dash-title span{color:var(--teal)}
+.dash-title span{color:var(--gold)}
 
 /* ─── KPI ─── */
 .kpi-row{display:grid;gap:12px;margin-bottom:16px}
@@ -72,28 +85,28 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 .kpi-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.03) 0%,transparent 60%)}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0}
 .kpi-card.c-total::before{background:var(--amber)}
-.kpi-card.c-nonimm::before{background:var(--teal)}
+.kpi-card.c-nonimm::before{background:var(--gold)}
 .kpi-card.c-imm::before{background:var(--violet)}
 .kpi-card.c-rank::before{background:#38BDF8}
 .kpi-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .kpi-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;letter-spacing:-.02em}
 .kpi-card.c-total .kpi-val{color:var(--amber)}
-.kpi-card.c-nonimm .kpi-val{color:var(--teal)}
+.kpi-card.c-nonimm .kpi-val{color:var(--gold)}
 .kpi-card.c-imm .kpi-val{color:var(--violet)}
 .kpi-card.c-rank .kpi-val{color:#38BDF8}
 .kpi-sub{font-size:10px;margin-top:4px}
 .kpi-sub.up{color:var(--green)}.kpi-sub.down{color:var(--red)}.kpi-sub.flat{color:var(--muted)}
 
 /* ─── SUMMARY ─── */
-.summary{font-size:13px;color:var(--muted);margin-bottom:14px;padding:10px 14px;background:var(--surface);border-radius:7px;border-left:3px solid var(--teal)}
-.summary strong{color:var(--text)}.summary .hl{color:var(--teal);font-weight:600}
+.summary{font-size:13px;color:var(--muted);margin-bottom:14px;padding:10px 14px;background:var(--surface);border-radius:7px;border-left:3px solid var(--gold)}
+.summary strong{color:var(--text)}.summary .hl{color:var(--gold);font-weight:600}
 
 /* ─── CHART CARDS ─── */
 .chart-grid{display:grid;grid-template-columns:1fr 300px;gap:10px;height:calc(100vh - 270px);min-height:380px}
 .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;overflow:hidden;display:flex;flex-direction:column}
 .chart-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
 .chart-back{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:4px;border:1px solid var(--border)}
-.chart-back:hover{color:var(--teal);border-color:var(--teal)}
+.chart-back:hover{color:var(--gold);border-color:var(--gold)}
 .chart-body{flex:1;min-height:0;position:relative}
 
 /* ─── MAP ─── */
@@ -102,7 +115,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 
 /* ─── LOADING / TOOLTIP ─── */
 .loading-msg{display:flex;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--muted);font-size:12px}
-.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
+.spin{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .tt{position:fixed;background:#07101C;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;z-index:9999;min-width:160px;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none}
 .tt-name{font-weight:700;font-size:14px;margin-bottom:6px;color:var(--text)}
@@ -111,20 +124,20 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 
 /* ─── COUNTRY DETAIL ─── */
 .back-btn{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:6px 13px;border-radius:5px;border:1px solid var(--border);margin-bottom:12px;transition:all .15s;background:var(--surface)}
-.back-btn:hover{color:var(--teal);border-color:var(--teal)}
+.back-btn:hover{color:var(--gold);border-color:var(--gold)}
 .c-name{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:16px}
 .detail-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;height:calc(100vh - 200px);min-height:380px}
 
 /* ─── TRENDS VIEW ─── */
 .trends-grid{display:flex;flex-direction:column;gap:10px;height:calc(100vh - 114px);min-height:400px}
 .stgl{padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;cursor:pointer;border:1px solid var(--border);color:var(--muted);user-select:none;letter-spacing:.06em}
-.stgl.active{background:var(--teal-lo);color:var(--teal);border-color:var(--teal)}
+.stgl.active{background:var(--gold-lo);color:var(--gold);border-color:var(--gold)}
 
 /* ─── YEAR CHIPS ─── */
 .year-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .ychip{padding:5px 10px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--muted);transition:all .15s;user-select:none;display:flex;align-items:center;gap:4px}
 .ychip:hover{border-color:var(--text);color:var(--text)}
-.ychip.active{background:var(--teal);color:#07101C;border-color:var(--teal)}
+.ychip.active{background:var(--gold);color:#07101C;border-color:var(--gold)}
 .partial-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0}
 .ychip.active .partial-dot{background:#07101C}
 
@@ -135,12 +148,12 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 .compare-pill-x{color:var(--muted);font-size:10px;cursor:pointer;margin-left:2px;line-height:1}
 .compare-pill-x:hover{color:var(--red)}
 .compare-add{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px dashed var(--border);color:var(--muted);cursor:pointer;transition:all .15s}
-.compare-add:hover{border-color:var(--teal);color:var(--teal)}
+.compare-add:hover{border-color:var(--gold);color:var(--gold)}
 .compare-search-wrap{position:relative}
-.compare-search{padding:4px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--teal);color:var(--text);font-size:11px;font-family:'Outfit',sans-serif;outline:none;width:160px}
+.compare-search{padding:4px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--gold);color:var(--text);font-size:11px;font-family:'Inter',sans-serif;outline:none;width:160px}
 .compare-drop{position:absolute;top:calc(100% + 4px);left:0;background:#07101C;border:1px solid var(--border);border-radius:8px;padding:4px;z-index:200;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.6)}
 .compare-result{padding:5px 8px;font-size:11px;color:var(--muted);cursor:pointer;border-radius:4px}
-.compare-result:hover{background:var(--teal-lo);color:var(--teal)}
+.compare-result:hover{background:var(--gold-lo);color:var(--gold)}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -159,72 +172,113 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 <div class="shell">
 
 <!-- ══ SIDEBAR ══ -->
-<aside class="sidebar">
+<aside class="sidebar" id="sidebar">
+  <button class="sb-toggle" id="sb-toggle-btn" onclick="toggleSidebar()">
+    <svg id="sb-toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
+  <div class="sb-inner">
 
   <div id="sb-overview">
-    <div>
-      <span class="filter-label">Selected Year</span>
-      <div id="year-opts"></div>
+    <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Selected Year">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="sb-lbl">Selected Year</span>
+      </div>
+      <div class="sb-section-body" id="year-opts"></div>
     </div>
-    <div id="prog-filter">
-      <span class="filter-label">Visa Program</span>
-      <div class="r-options">
-        <div class="r-item" data-v="all" onclick="setProgram(this)"><div class="r-dot"></div><span>All</span></div>
-        <div class="r-item" data-v="immigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Immigrant</span></div>
-        <div class="r-item active" data-v="nonimmigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+    <div class="sb-section" id="prog-filter">
+      <div class="sb-section-hd" data-tip="Visa Program">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        <span class="sb-lbl">Visa Program</span>
+      </div>
+      <div class="sb-section-body">
+        <div class="r-options">
+          <div class="r-item" data-v="all" onclick="setProgram(this)"><div class="r-dot"></div><span>All</span></div>
+          <div class="r-item" data-v="immigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Immigrant</span></div>
+          <div class="r-item active" data-v="nonimmigrant" onclick="setProgram(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+        </div>
       </div>
     </div>
-    <div id="metric-filter">
-      <span class="filter-label">Map Metric</span>
-      <div class="r-options">
-        <div class="r-item active" data-v="count" onclick="setMetric(this)"><div class="r-dot"></div><span>Visa Issued</span></div>
-        <div class="r-item" data-v="per100k" onclick="setMetric(this)"><div class="r-dot"></div><span>Per 100K Pop.</span></div>
+    <div class="sb-section" id="metric-filter">
+      <div class="sb-section-hd" data-tip="Map Metric">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span class="sb-lbl">Map Metric</span>
+      </div>
+      <div class="sb-section-body">
+        <div class="r-options">
+          <div class="r-item active" data-v="count" onclick="setMetric(this)"><div class="r-dot"></div><span>Visa Issued</span></div>
+          <div class="r-item" data-v="per100k" onclick="setMetric(this)"><div class="r-dot"></div><span>Per 100K Pop.</span></div>
+        </div>
       </div>
     </div>
   </div>
 
   <div id="sb-trends" style="display:none">
-    <div>
-      <span class="filter-label">Visa Program</span>
-      <div class="r-options">
-        <div class="r-item" data-v="total" onclick="setTrendProg(this)"><div class="r-dot"></div><span>All</span></div>
-        <div class="r-item" data-v="immigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Immigrant</span></div>
-        <div class="r-item active" data-v="nonimmigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+    <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Visa Program">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        <span class="sb-lbl">Visa Program</span>
+      </div>
+      <div class="sb-section-body">
+        <div class="r-options">
+          <div class="r-item" data-v="total" onclick="setTrendProg(this)"><div class="r-dot"></div><span>All</span></div>
+          <div class="r-item" data-v="immigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Immigrant</span></div>
+          <div class="r-item active" data-v="nonimmigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
+        </div>
       </div>
     </div>
-    <div>
-      <span class="filter-label">Compare Countries</span>
-      <div class="chip-grid" id="trend-chips"></div>
-      <div class="cchip-add" onclick="toggleChipSearch()">+ Add country</div>
-      <div id="chip-search-wrap" style="display:none">
-        <input class="chip-search" id="chip-search-input" placeholder="Search…" oninput="filterChipSearch()" autocomplete="off">
-        <div class="chip-results" id="chip-search-results"></div>
+    <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Compare Countries">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span class="sb-lbl">Compare Countries</span>
+      </div>
+      <div class="sb-section-body">
+        <div class="chip-grid" id="trend-chips"></div>
+        <div class="cchip-add" onclick="toggleChipSearch()">+ Add country</div>
+        <div id="chip-search-wrap" style="display:none">
+          <input class="chip-search" id="chip-search-input" placeholder="Search…" oninput="filterChipSearch()" autocomplete="off">
+          <div class="chip-results" id="chip-search-results"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <div id="sb-country" style="display:none">
-    <div>
-      <span class="filter-label">Country</span>
-      <input class="chip-search" id="country-search" placeholder="Search country…" oninput="filterCountrySearch()" autocomplete="off">
-      <div class="chip-results" id="country-search-results"></div>
-    </div>
-    <div>
-      <span class="filter-label">Selected Year</span>
-      <div id="year-opts-c"></div>
-    </div>
-    <div>
-      <span class="filter-label">Compare With</span>
-      <div id="sb-compare-pill-wrap">
-        <div class="compare-add" onclick="openSbCompareSearch()">+ Add country</div>
+    <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Country">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="sb-lbl">Country</span>
       </div>
-      <div id="sb-compare-search-wrap" style="display:none">
-        <input class="chip-search" id="sb-compare-input" placeholder="Search…" oninput="filterSbCompareSearch()" autocomplete="off">
-        <div class="chip-results" id="sb-compare-results"></div>
+      <div class="sb-section-body">
+        <input class="chip-search" id="country-search" placeholder="Search country…" oninput="filterCountrySearch()" autocomplete="off">
+        <div class="chip-results" id="country-search-results"></div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Selected Year">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span class="sb-lbl">Selected Year</span>
+      </div>
+      <div class="sb-section-body" id="year-opts-c"></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Compare With">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        <span class="sb-lbl">Compare With</span>
+      </div>
+      <div class="sb-section-body">
+        <div id="sb-compare-pill-wrap">
+          <div class="compare-add" onclick="openSbCompareSearch()">+ Add country</div>
+        </div>
+        <div id="sb-compare-search-wrap" style="display:none">
+          <input class="chip-search" id="sb-compare-input" placeholder="Search…" oninput="filterSbCompareSearch()" autocomplete="off">
+          <div class="chip-results" id="sb-compare-results"></div>
+        </div>
       </div>
     </div>
   </div>
 
+  </div><!-- /sb-inner -->
 </aside>
 
 <!-- ══ VIEWS ══ -->
@@ -342,6 +396,16 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 <div class="tt" id="tt"><div class="tt-name" id="tt-n"></div><div id="tt-b"></div></div>
 
 <script>
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const icon = document.getElementById('sb-toggle-icon');
+  sb.classList.toggle('collapsed');
+  const collapsed = sb.classList.contains('collapsed');
+  icon.innerHTML = collapsed
+    ? '<polyline points="9 18 15 12 9 6"></polyline>'
+    : '<polyline points="15 18 9 12 15 6"></polyline>';
+}
+
 // ═══════════════════════════════════════════════════
 //  STATE
 // ═══════════════════════════════════════════════════
@@ -359,7 +423,7 @@ let YEARS = [];
 let DATA = null, CYM = {}, WORLD = null;
 let mapSvg, mapG, pathFn, proj, colorScl;
 
-const TREND_COLORS = ['#00D4B4','#A78BFA','#FFB400','#F87171','#4ADE80','#38BDF8','#FB923C','#F472B6'];
+const TREND_COLORS = ['#E8B84B','#A78BFA','#FFB400','#F87171','#4ADE80','#38BDF8','#FB923C','#F472B6'];
 
 // ═══════════════════════════════════════════════════
 //  ISO MAP
@@ -608,7 +672,7 @@ function drawBar() {
   const barH = 16, gap = 5, labelW = 100, barW = W - labelW - 44;
   const H = top.length * (barH + gap) + 4;
   const xSc = d3.scaleLinear().domain([0, top[0]?.v || 1]).range([0, barW]);
-  const color = prog === 'immigrant' ? 'var(--violet)' : prog === 'total' ? 'var(--amber)' : 'var(--teal)';
+  const color = prog === 'immigrant' ? 'var(--violet)' : prog === 'total' ? 'var(--amber)' : 'var(--gold)';
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
   const rows = svg.selectAll('g').data(top).join('g')
     .attr('transform', (_, i) => `translate(0,${i * (barH + gap)})`)
@@ -619,7 +683,7 @@ function drawBar() {
   rows.append('rect').attr('width', labelW).attr('height', barH).attr('fill', 'transparent');
   rows.append('text').attr('x', labelW - 4).attr('y', barH / 2 + 1)
     .attr('dominant-baseline', 'middle').attr('text-anchor', 'end')
-    .attr('fill', '#8BAABF').attr('font-size', 10).attr('font-family', 'Outfit')
+    .attr('fill', '#8BAABF').attr('font-size', 10).attr('font-family', 'Inter')
     .text(d => d.c.length > 14 ? d.c.slice(0, 13) + '…' : d.c);
   rows.append('rect').attr('x', labelW).attr('y', 1).attr('height', barH - 2).attr('rx', 3)
     .attr('fill', color).attr('opacity', .75).attr('width', 0)
@@ -655,7 +719,7 @@ function drawMap() {
     .style('position', 'absolute').style('bottom', '8px').style('left', '12px');
   const grad = legSvg.append('defs').append('linearGradient').attr('id', 'leg-grad');
   grad.append('stop').attr('offset', '0%').attr('stop-color', '#132237');
-  grad.append('stop').attr('offset', '100%').attr('stop-color', '#00D4B4');
+  grad.append('stop').attr('offset', '100%').attr('stop-color', '#E8B84B');
   legSvg.append('rect').attr('x', 24).attr('y', 0).attr('width', legW).attr('height', legH).attr('rx', 3).attr('fill', 'url(#leg-grad)');
   legSvg.append('text').attr('x', 20).attr('y', legH / 2 + 1).attr('dominant-baseline', 'middle').attr('text-anchor', 'end').attr('fill', '#3D5C7A').attr('font-size', 8).text('0');
   legSvg.append('text').attr('x', 24 + legW + 4).attr('y', legH / 2 + 1).attr('dominant-baseline', 'middle').attr('fill', '#3D5C7A').attr('font-size', 8).attr('id', 'leg-max').text('max');
@@ -673,7 +737,7 @@ function updateMapColors() {
   }
   vals.sort((a, b) => a - b);
   const maxV = vals[vals.length - 1] || 1;
-  colorScl = d3.scaleSequentialLog([1, maxV], d3.interpolate('#152640', '#00D4B4'));
+  colorScl = d3.scaleSequentialLog([1, maxV], d3.interpolate('#1B2A0D', '#E8B84B'));
   mapG.selectAll('.cpath').transition().duration(350).attr('fill', d => {
     const nm = I2N[+d.id];
     if (!nm) return '#0D1E30';
@@ -754,7 +818,7 @@ function addCovidBand(svg, xSc, iH) {
   svg.append('rect').attr('x', x0).attr('y', 0).attr('width', x1 - x0).attr('height', iH)
     .attr('fill', '#FFB400').attr('fill-opacity', 0.05).attr('pointer-events', 'none');
   svg.append('text').attr('x', (x0 + x1) / 2).attr('y', iH - 5)
-    .attr('text-anchor', 'middle').attr('fill', '#3D5C7A').attr('font-size', 7).attr('font-family', 'Outfit')
+    .attr('text-anchor', 'middle').attr('fill', '#3D5C7A').attr('font-size', 7).attr('font-family', 'Inter')
     .attr('pointer-events', 'none').text('COVID-19');
 }
 
@@ -789,9 +853,9 @@ function drawComparisonLine() {
     ? v => v >= 1e6 ? (v/1e6).toFixed(0)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v
     : v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v >= 1e3 ? (v/1e3).toFixed(0)+'K' : v;
   svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW).tickFormat(fmtTick))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); });
   const safeY = v => ySc(S.logScale ? Math.max(1, v) : v);
   const lineFn = d3.line().x(d => xSc(d.y)).y(d => safeY(d.v)).curve(d3.curveMonotoneX).defined(d => d.v > 0);
   series.forEach(({ c, col, pts }) => {
@@ -803,7 +867,7 @@ function drawComparisonLine() {
       .on('mouseover', (e, d) => tip(e, `${c} (${d.y})${PARTIAL_YEARS.has(d.y) ? ' ⚠ partial' : ''}`, d.v))
       .on('mouseout', hideTip);
     const last = [...pts].filter(d => d.v > 0).pop();
-    if (last) svg.append('text').attr('x', xSc(last.y) + 6).attr('y', safeY(last.v)).attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 9).attr('font-family', 'Outfit').text(c.length > 12 ? c.slice(0, 10) + '…' : c);
+    if (last) svg.append('text').attr('x', xSc(last.y) + 6).attr('y', safeY(last.v)).attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 9).attr('font-family', 'Inter').text(c.length > 12 ? c.slice(0, 10) + '…' : c);
   });
 }
 
@@ -828,9 +892,9 @@ function drawPer100kLine() {
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
   addCovidBand(svg, xSc, iH);
   svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => d3.format('.1f')(v)))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); });
   const lineFn = d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX).defined(d => d.v > 0);
   series.forEach(({ c, col, pts }) => {
     svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', col).attr('stroke-width', 2).attr('opacity', .85).attr('d', lineFn);
@@ -844,7 +908,7 @@ function drawPer100kLine() {
         el.style.display = 'block'; moveTip(e);
       }).on('mouseout', hideTip);
     const last = [...pts].filter(d => d.v > 0).pop();
-    if (last) svg.append('text').attr('x', xSc(last.y) + 6).attr('y', ySc(last.v)).attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 9).attr('font-family', 'Outfit').text(c.length > 12 ? c.slice(0, 10) + '…' : c);
+    if (last) svg.append('text').attr('x', xSc(last.y) + 6).attr('y', ySc(last.v)).attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 9).attr('font-family', 'Inter').text(c.length > 12 ? c.slice(0, 10) + '…' : c);
   });
 }
 
@@ -977,7 +1041,7 @@ function updateDetail() {
 
   const cmpEntry = S.compareCountry ? CYM[S.compareCountry]?.[S.year] : null;
   drawDonut('radar-imm-wrap', entry.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', cmpEntry?.program_types?.immigrant || null);
-  drawDonut('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', cmpEntry?.program_types?.nonimmigrant || null);
+  drawDonut('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--gold)', 'nonimmigrant', cmpEntry?.program_types?.nonimmigrant || null);
   drawTotalTrend();
   drawRightPanel();
 }
@@ -986,7 +1050,7 @@ function updateDetail() {
 const PTYPE_COLORS = {
   'Family-based':'#F87171','Employment-based':'#FACC15',
   'Diversity lottery':'#4ADE80','Special immigrants':'#38BDF8',
-  'Other Immigrants':'#A78BFA','Temporary visitor':'#00D4B4',
+  'Other Immigrants':'#A78BFA','Temporary visitor':'#E8B84B',
   'Temporary worker':'#FB923C','Study & Exchange':'#F472B6',
   'Exchange visitor':'#67E8F9','Humanitarian':'#FCD34D',
   'Diplomatic & Official':'#94A3B8','Transit':'#475569'
@@ -1050,7 +1114,7 @@ function drawDonut(wrapId, ptypes, accentColor, prog, comparePtypes) {
       g.append('text').attr('x', lx).attr('y', ly)
         .attr('dominant-baseline', 'middle')
         .attr('text-anchor', Math.abs(lx) < 6 ? 'middle' : lx > 0 ? 'start' : 'end')
-        .attr('fill', segColor).attr('font-size', 8).attr('font-family', 'Outfit')
+        .attr('fill', segColor).attr('font-size', 8).attr('font-family', 'Inter')
         .style('cursor', 'pointer').on('click', () => showVisaTypes(prog, name))
         .text(name.length > 16 ? name.slice(0, 14) + '…' : name);
     }
@@ -1086,7 +1150,7 @@ function drawDonut(wrapId, ptypes, accentColor, prog, comparePtypes) {
   // Center hole + total
   g.append('circle').attr('r', holeR).attr('fill', '#0B1622');
   g.append('text').attr('text-anchor', 'middle').attr('dy', '-0.3em')
-    .attr('fill', '#4A6A8A').attr('font-size', 7).attr('font-family', 'Outfit').text('TOTAL');
+    .attr('fill', '#4A6A8A').attr('font-size', 7).attr('font-family', 'Inter').text('TOTAL');
   g.append('text').attr('text-anchor', 'middle').attr('dy', '0.9em')
     .attr('fill', accentColor).attr('font-size', 11).attr('font-weight', 600)
     .attr('font-family', 'JetBrains Mono').text(fmt(total));
@@ -1102,7 +1166,7 @@ function drawTotalTrend() {
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
 
   const series = [{ name: c, col: 'var(--amber)', pts: YEARS.map(y => ({ y, v: CYM[c]?.[y]?.total || 0 })) }];
-  if (cc) series.push({ name: cc, col: 'var(--teal)', pts: YEARS.map(y => ({ y, v: CYM[cc]?.[y]?.total || 0 })) });
+  if (cc) series.push({ name: cc, col: 'var(--gold)', pts: YEARS.map(y => ({ y, v: CYM[cc]?.[y]?.total || 0 })) });
 
   const maxV = d3.max(series.flatMap(s => s.pts.map(p => p.v))) || 1;
   const xSc = d3.scalePoint().domain(YEARS).range([0, iW]);
@@ -1110,9 +1174,9 @@ function drawTotalTrend() {
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
 
   svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
 
   svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
     .attr('stroke', '#FFB400').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
@@ -1130,7 +1194,7 @@ function drawTotalTrend() {
     if (cc) {
       const last = pts.filter(p => p.v > 0).pop();
       if (last) svg.append('text').attr('x', xSc(last.y) + 5).attr('y', ySc(last.v))
-        .attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 8.5).attr('font-family', 'Outfit')
+        .attr('dominant-baseline', 'middle').attr('fill', col).attr('font-size', 8.5).attr('font-family', 'Inter')
         .text(name.length > 10 ? name.slice(0, 9) + '…' : name);
     }
   });
@@ -1173,7 +1237,7 @@ function drawComparisonBars() {
     // Two-country line comparison: immigrant line (solid) + nonimmigrant line (dashed)
     const series = [
       { name: c + ' — Imm',  col: 'var(--violet)', dash: null, pts: YEARS.map(y => ({ y, v: CYM[c]?.[y]?.immigrant || 0 })) },
-      { name: c + ' — Non',  col: 'var(--teal)',   dash: '4,2', pts: YEARS.map(y => ({ y, v: CYM[c]?.[y]?.nonimmigrant || 0 })) },
+      { name: c + ' — Non',  col: 'var(--gold)',   dash: '4,2', pts: YEARS.map(y => ({ y, v: CYM[c]?.[y]?.nonimmigrant || 0 })) },
       { name: cc + ' — Imm', col: '#F87171',        dash: null, pts: YEARS.map(y => ({ y, v: CYM[cc]?.[y]?.immigrant || 0 })) },
       { name: cc + ' — Non', col: '#FACC15',        dash: '4,2', pts: YEARS.map(y => ({ y, v: CYM[cc]?.[y]?.nonimmigrant || 0 })) },
     ];
@@ -1182,9 +1246,9 @@ function drawComparisonBars() {
     const ySc = d3.scaleLinear().domain([0, maxV * 1.15]).range([iH, 0]);
     const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
     svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
-      .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+      .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); });
     svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-      .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017','2019','2021','2023','2025'].includes(d)) d3.select(this).select('text').remove(); }); });
+      .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); g.selectAll('.tick').each(function(d) { if (!['2017','2019','2021','2023','2025'].includes(d)) d3.select(this).select('text').remove(); }); });
     svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
       .attr('stroke', '#FFB400').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
     const lineFn = (dash) => d3.line().x(d => xSc(d.y)).y(d => ySc(d.v)).curve(d3.curveMonotoneX);
@@ -1217,21 +1281,21 @@ function drawComparisonBars() {
   const bW = xSc.bandwidth() / 2;
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
   svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(4))
-    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Outfit'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#3D5C7A').attr('font-size', 8).attr('font-family', 'Inter'); g.selectAll('.tick').each(function(d) { if (!['2017', '2019', '2021', '2023', '2025'].includes(d)) d3.select(this).select('text').remove(); }); });
   svg.selectAll('.b-imm').data(immPts).join('rect')
     .attr('x', d => xSc(d.y)).attr('y', d => ySc(d.v)).attr('width', bW - 1).attr('height', d => iH - ySc(d.v))
     .attr('fill', 'var(--violet)').attr('opacity', .75).attr('rx', 2)
     .style('cursor', 'pointer').on('mouseover', (e, d) => tip(e, `${c} ${d.y} — Immigrant`, d.v)).on('mouseout', hideTip);
   svg.selectAll('.b-non').data(nonPts).join('rect')
     .attr('x', d => xSc(d.y) + bW + 1).attr('y', d => ySc(d.v)).attr('width', bW - 1).attr('height', d => iH - ySc(d.v))
-    .attr('fill', 'var(--teal)').attr('opacity', .75).attr('rx', 2)
+    .attr('fill', 'var(--gold)').attr('opacity', .75).attr('rx', 2)
     .style('cursor', 'pointer').on('mouseover', (e, d) => tip(e, `${c} ${d.y} — Nonimmigrant`, d.v)).on('mouseout', hideTip);
   svg.append('rect').attr('x', xSc(S.year) - 2).attr('y', 0).attr('width', xSc.bandwidth() + 4).attr('height', iH)
     .attr('fill', '#FFB400').attr('fill-opacity', .04).attr('stroke', '#FFB400').attr('stroke-opacity', .2).attr('stroke-width', 1).attr('rx', 2);
   const legDiv = d3.select(wrap).append('div').style('display', 'flex').style('gap', '14px').style('margin-top', '4px').style('padding-left', '48px');
-  [{ l: 'Immigrant', c: 'var(--violet)' }, { l: 'Nonimmigrant', c: 'var(--teal)' }].forEach(({ l, c }) => {
+  [{ l: 'Immigrant', c: 'var(--violet)' }, { l: 'Nonimmigrant', c: 'var(--gold)' }].forEach(({ l, c }) => {
     const item = legDiv.append('div').style('display', 'flex').style('align-items', 'center').style('gap', '5px').style('font-size', '9px').style('color', '#5C7A9B');
     item.append('div').style('width', '10px').style('height', '8px').style('background', c).style('border-radius', '2px').style('opacity', '.75');
     item.append('span').text(l);
@@ -1252,7 +1316,7 @@ function drawVisaTypeBreakdown() {
     return;
   }
 
-  const color = prog === 'immigrant' ? 'var(--violet)' : 'var(--teal)';
+  const color = prog === 'immigrant' ? 'var(--violet)' : 'var(--gold)';
   const W = wrap.clientWidth || 280, barH = 15, gap = 4, labelW = 44, valW = 52;
   const barAreaW = W - labelW - valW - 8;
   const H = items.length * (barH + gap) + 8;
@@ -1315,7 +1379,7 @@ window.addEventListener('resize', () => {
     if (S.country) {
       const e = CYM[S.country]?.[S.year]; const ce = S.compareCountry ? CYM[S.compareCountry]?.[S.year] : null;
       drawDonut('radar-imm-wrap', e?.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', ce?.program_types?.immigrant || null);
-      drawDonut('radar-non-wrap', e?.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', ce?.program_types?.nonimmigrant || null);
+      drawDonut('radar-non-wrap', e?.program_types?.nonimmigrant || {}, 'var(--gold)', 'nonimmigrant', ce?.program_types?.nonimmigrant || null);
       drawTotalTrend(); drawRightPanel();
     }
   }, 200);
