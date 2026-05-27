@@ -7,10 +7,11 @@ OUTPUT_PATH = "docs/visa_aggregated.json"
 
 
 def main():
-    df = pd.read_csv(INPUT_PATH, usecols=["year", "visa_program", "program_type", "country", "count", "visa_type"])
+    df = pd.read_csv(INPUT_PATH, usecols=["year", "visa_program", "program_type", "country", "count", "eligibility_pathway"])
 
     df["count"] = pd.to_numeric(df["count"], errors="coerce").fillna(0)
     df["program_type"] = df["program_type"].astype(str).str.strip()
+    df["eligibility_pathway"] = df["eligibility_pathway"].astype(str).str.strip()
     df["year"] = df["year"].astype(str)
 
     # --- totals_by_year ---
@@ -45,10 +46,10 @@ def main():
         .sum()
     )
 
-    # Per-country-year-program-program_type breakdown by visa_type
+    # Per-country-year-program-program_type breakdown by eligibility_pathway
     visa_type_breakdown = (
-        valid[valid["visa_type"].notna()]
-        .groupby(["country", "year", "visa_program", "program_type", "visa_type"])["count"]
+        valid[valid["eligibility_pathway"] != "nan"]
+        .groupby(["country", "year", "visa_program", "program_type", "eligibility_pathway"])["count"]
         .sum()
     )
 

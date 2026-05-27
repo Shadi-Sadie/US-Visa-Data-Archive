@@ -114,7 +114,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 .back-btn{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:5px 11px;border-radius:5px;border:1px solid var(--border);margin-bottom:12px;transition:all .15s;background:var(--surface)}
 .back-btn:hover{color:var(--teal);border-color:var(--teal)}
 .c-name{font-size:24px;font-weight:800;letter-spacing:-.03em;margin-bottom:14px}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;height:calc(100vh - 230px);min-height:380px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;height:calc(100vh - 196px);min-height:380px}
 
 /* ─── TRENDS VIEW ─── */
 .trends-grid{display:grid;grid-template-columns:1fr 340px;gap:10px;height:calc(100vh - 110px);min-height:400px}
@@ -154,6 +154,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
   <div class="brand">US Visa Data</div>
   <div class="nav-tab active" data-v="overview" onclick="setView('overview')">Overview</div>
   <div class="nav-tab" data-v="trends" onclick="setView('trends')">Trends <span class="nav-badge">NEW</span></div>
+  <div class="nav-tab" data-v="country" onclick="setView('country')">Country</div>
 </div>
 
 <div class="shell">
@@ -199,6 +200,28 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
       <div id="chip-search-wrap" style="display:none">
         <input class="chip-search" id="chip-search-input" placeholder="Search…" oninput="filterChipSearch()" autocomplete="off">
         <div class="chip-results" id="chip-search-results"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sb-country" style="display:none">
+    <div>
+      <span class="filter-label">Country</span>
+      <input class="chip-search" id="country-search" placeholder="Search country…" oninput="filterCountrySearch()" autocomplete="off">
+      <div class="chip-results" id="country-search-results"></div>
+    </div>
+    <div>
+      <span class="filter-label">Selected Year</span>
+      <div id="year-opts-c"></div>
+    </div>
+    <div>
+      <span class="filter-label">Compare With</span>
+      <div id="sb-compare-pill-wrap">
+        <div class="compare-add" onclick="openSbCompareSearch()">+ Add country</div>
+      </div>
+      <div id="sb-compare-search-wrap" style="display:none">
+        <input class="chip-search" id="sb-compare-input" placeholder="Search…" oninput="filterSbCompareSearch()" autocomplete="off">
+        <div class="chip-results" id="sb-compare-results"></div>
       </div>
     </div>
   </div>
@@ -262,17 +285,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);heig
 
   <!-- COUNTRY DETAIL -->
   <div class="view hidden" id="v-country">
-    <div class="back-btn" onclick="showDash()">← Back</div>
     <div class="c-name" id="d-country">—</div>
-
-    <div class="compare-bar">
-      <span class="compare-lbl">Compare with:</span>
-      <div id="compare-pill-wrap"></div>
-      <div class="compare-search-wrap" id="compare-search-wrap" style="display:none">
-        <input class="compare-search" id="compare-input" placeholder="Search country…" oninput="filterCompareSearch()" autocomplete="off">
-        <div class="compare-drop" id="compare-drop" style="display:none"></div>
-      </div>
-    </div>
 
     <div class="kpi-row kpi-row-6" style="margin-bottom:14px">
       <div class="kpi-card c-total">
@@ -466,10 +479,12 @@ function setView(name) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.v === name));
   document.getElementById('sb-overview').style.display = name === 'overview' ? '' : 'none';
   document.getElementById('sb-trends').style.display   = name === 'trends'   ? '' : 'none';
+  document.getElementById('sb-country').style.display  = name === 'country'  ? '' : 'none';
   document.getElementById('v-dash').classList.toggle('hidden', name !== 'overview');
   document.getElementById('v-trends').classList.toggle('hidden', name !== 'trends');
-  document.getElementById('v-country').classList.add('hidden');
+  document.getElementById('v-country').classList.toggle('hidden', name !== 'country');
   if (name === 'trends') drawTrendView();
+  if (name === 'country' && S.country) updateDetail();
 }
 
 // ═══════════════════════════════════════════════════
@@ -514,17 +529,22 @@ function buildYears() {
     const prv = DATA.totals_by_year[YEARS[i - 1]]?.total || 0;
     if (prv > 0 && cur < prv * 0.6) PARTIAL_YEARS.add(YEARS[i]);
   }
-  const el = document.getElementById('year-opts');
-  el.innerHTML = '<div class="year-chips">' + YEARS.map(y =>
+  const chipsHTML = '<div class="year-chips">' + YEARS.map(y =>
     `<div class="ychip${y === S.year ? ' active' : ''}" data-v="${y}" onclick="setYear(this)">${y}${PARTIAL_YEARS.has(y) ? '<span class="partial-dot" title="Partial year data"></span>' : ''}</div>`
   ).join('') + '</div>';
+  ['year-opts', 'year-opts-c'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = chipsHTML;
+  });
 }
 
 function setYear(el) {
-  document.querySelectorAll('#year-opts .ychip').forEach(e => e.classList.remove('active'));
-  el.classList.add('active');
-  S.year = el.dataset.v;
-  if (S.country) updateDetail();
+  const v = el.dataset.v;
+  document.querySelectorAll('#year-opts .ychip, #year-opts-c .ychip').forEach(e => {
+    e.classList.toggle('active', e.dataset.v === v);
+  });
+  S.year = v;
+  if (S.view === 'country' && S.country) updateDetail();
   else { renderDash(); updateMapColors(); drawBar(); drawLine(); }
 }
 
@@ -891,77 +911,90 @@ function showCountry(name) {
   S.rightPanel = 'comparison';
   S.selectedProgType = null;
   document.getElementById('d-country').textContent = name;
-  document.getElementById('v-dash').classList.add('hidden');
-  document.getElementById('v-trends').classList.add('hidden');
-  document.getElementById('v-country').classList.remove('hidden');
-  document.getElementById('sb-overview').style.display = '';
-  document.getElementById('sb-trends').style.display = 'none';
-  renderComparePill();
-  updateDetail();
+  const csEl = document.getElementById('country-search');
+  if (csEl) { csEl.value = name; document.getElementById('country-search-results').innerHTML = ''; }
+  renderSbComparePill();
+  setView('country');
 }
 
-// ─── COMPARE COUNTRY PICKER ───
-function renderComparePill() {
-  const pillWrap = document.getElementById('compare-pill-wrap');
+// ─── COUNTRY SEARCH (sidebar) ───
+function filterCountrySearch() {
+  const q = document.getElementById('country-search').value.toLowerCase();
+  const results = Object.keys(CYM).sort().filter(c => c.toLowerCase().includes(q)).slice(0, 8);
+  const wrap = document.getElementById('country-search-results');
+  wrap.innerHTML = '';
+  results.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'chip-result';
+    el.textContent = c;
+    el.onclick = () => showCountry(c);
+    wrap.appendChild(el);
+  });
+}
+
+// ─── SIDEBAR COMPARE PICKER ───
+function renderSbComparePill() {
+  const pillWrap = document.getElementById('sb-compare-pill-wrap');
+  if (!pillWrap) return;
   if (S.compareCountry) {
-    pillWrap.innerHTML = `<div class="compare-pill"><span>${S.compareCountry}</span><span class="compare-pill-x" onclick="clearCompare()">✕</span></div>`;
+    pillWrap.innerHTML = `<div class="compare-pill"><span>${S.compareCountry}</span><span class="compare-pill-x" onclick="clearSbCompare()">✕</span></div>`;
   } else {
-    pillWrap.innerHTML = `<div class="compare-add" onclick="openCompareSearch()">+ Add country</div>`;
+    pillWrap.innerHTML = `<div class="compare-add" onclick="openSbCompareSearch()">+ Add country</div>`;
   }
 }
 
-function openCompareSearch() {
-  const wrap = document.getElementById('compare-search-wrap');
-  wrap.style.display = '';
-  document.getElementById('compare-pill-wrap').innerHTML = '';
-  const inp = document.getElementById('compare-input');
-  inp.value = '';
-  filterCompareSearch();
-  inp.focus();
+function openSbCompareSearch() {
+  document.getElementById('sb-compare-search-wrap').style.display = '';
+  document.getElementById('sb-compare-input').value = '';
+  filterSbCompareSearch();
+  document.getElementById('sb-compare-input').focus();
 }
 
-function filterCompareSearch() {
-  const q = document.getElementById('compare-input').value.toLowerCase();
-  const drop = document.getElementById('compare-drop');
+function filterSbCompareSearch() {
+  const q = document.getElementById('sb-compare-input').value.toLowerCase();
   const results = Object.keys(CYM).sort()
     .filter(c => c !== S.country && c.toLowerCase().includes(q))
     .slice(0, 8);
-  drop.style.display = results.length ? '' : 'none';
-  drop.innerHTML = results.map(c =>
-    `<div class="compare-result" onclick="setCompare('${c.replace(/'/g, "\\'")}')">${c}</div>`
-  ).join('');
+  const wrap = document.getElementById('sb-compare-results');
+  wrap.innerHTML = '';
+  results.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'chip-result';
+    el.textContent = c;
+    el.onclick = () => setSbCompare(c);
+    wrap.appendChild(el);
+  });
 }
 
-function setCompare(name) {
+function setSbCompare(name) {
   S.compareCountry = name;
   S.rightPanel = 'comparison';
-  document.getElementById('compare-search-wrap').style.display = 'none';
-  document.getElementById('compare-drop').style.display = 'none';
-  renderComparePill();
-  updateDetail();
+  document.getElementById('sb-compare-search-wrap').style.display = 'none';
+  renderSbComparePill();
+  if (S.country) updateDetail();
 }
 
-function clearCompare() {
+function clearSbCompare() {
   S.compareCountry = null;
   S.rightPanel = 'comparison';
-  renderComparePill();
-  updateDetail();
+  renderSbComparePill();
+  if (S.country) updateDetail();
 }
 
-// Close compare dropdown on outside click
 document.addEventListener('click', e => {
-  const wrap = document.getElementById('compare-search-wrap');
-  if (wrap && !wrap.contains(e.target) && !e.target.classList.contains('compare-add')) {
-    wrap.style.display = 'none';
-    document.getElementById('compare-drop').style.display = 'none';
-    if (!S.compareCountry) renderComparePill();
+  const sbWrap = document.getElementById('sb-compare-search-wrap');
+  if (sbWrap && sbWrap.style.display !== 'none' && !sbWrap.contains(e.target) && !e.target.classList.contains('compare-add')) {
+    sbWrap.style.display = 'none';
+  }
+  const csResults = document.getElementById('country-search-results');
+  if (csResults && !e.target.closest('#country-search') && !e.target.closest('#country-search-results')) {
+    csResults.innerHTML = '';
   }
 });
 
 function showDash() {
-  document.getElementById('v-country').classList.add('hidden');
   S.country = null;
-  setView(S.view === 'trends' ? 'trends' : 'overview');
+  setView('overview');
 }
 
 function updateDetail() {
@@ -997,8 +1030,8 @@ function updateDetail() {
   document.getElementById('d-rank-non').textContent = rank('nonimmigrant');
 
   const cmpEntry = S.compareCountry ? CYM[S.compareCountry]?.[S.year] : null;
-  drawPolar('radar-imm-wrap', entry.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', cmpEntry?.program_types?.immigrant || null);
-  drawPolar('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', cmpEntry?.program_types?.nonimmigrant || null);
+  drawDonut('radar-imm-wrap', entry.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', cmpEntry?.program_types?.immigrant || null);
+  drawDonut('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', cmpEntry?.program_types?.nonimmigrant || null);
   drawTotalTrend();
   drawRightPanel();
 }
@@ -1013,9 +1046,9 @@ const PTYPE_COLORS = {
   'Diplomatic & Official':'#94A3B8','Transit':'#475569'
 };
 
-// Polar (Nightingale rose) chart — equal angle slices, radius ∝ value
-// If comparePtypes is provided, draws a ghost outline for comparison country
-function drawPolar(wrapId, ptypes, accentColor, prog, comparePtypes) {
+// Polar (Nightingale rose) chart — equal angle slices, radius ∝ % of total
+// If comparePtypes is provided, draws a ghost outline for comparison country (also % of its own total)
+function drawDonut(wrapId, ptypes, accentColor, prog, comparePtypes) {
   const wrap = document.getElementById(wrapId);
   wrap.innerHTML = '';
   const entries = Object.entries(ptypes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
@@ -1025,82 +1058,87 @@ function drawPolar(wrapId, ptypes, accentColor, prog, comparePtypes) {
   }
 
   const W = wrap.clientWidth || 240, H = wrap.clientHeight || 200;
-  // Leave room for labels: shrink radius so labels don't clip
-  const maxR = Math.min(W / 2 - 56, H / 2 - 18);
-  const innerR = Math.max(maxR * 0.12, 6);
+  const hasCompare = comparePtypes && Object.values(comparePtypes).some(v => v > 0);
   const cx = W / 2, cy = H / 2;
-  const N = entries.length;
+  const maxR = Math.min(W / 2 - 34, H / 2 - 18);
+  const holeR = maxR * 0.40;
+
+  // With a compare country: primary = inner ring, compare = outer ring
+  const primaryOuter = hasCompare ? holeR + (maxR - holeR) * 0.54 : maxR;
+  const cmpInner = primaryOuter + 5;
+  const cmpOuter = maxR;
+
   const total = entries.reduce((s, [, v]) => s + v, 0);
-  const maxVal = entries[0][1];
-  const rScale = d3.scaleLinear().domain([0, maxVal]).range([innerR, maxR]);
 
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H);
   const g = svg.append('g').attr('transform', `translate(${cx},${cy})`);
 
-  // Subtle grid rings
-  [0.33, 0.67, 1].forEach(lvl => {
-    g.append('circle').attr('r', innerR + (maxR - innerR) * lvl)
-      .attr('fill', 'none').attr('stroke', '#1A2E48').attr('stroke-width', 0.5);
-  });
+  const pieLayout = d3.pie().value(([, v]) => v).sort(null)(entries);
 
-  const pieLayout = d3.pie().value(() => 1).sort(null)(entries);
-
-  // Main slices
+  // Primary (inner) ring
   pieLayout.forEach((arc, i) => {
     const [name, v] = entries[i];
-    const r = rScale(v);
     const pct = v / total;
     const segColor = PTYPE_COLORS[name] || d3.schemeTableau10[i % 10];
-    const arcFn = d3.arc().innerRadius(innerR).outerRadius(r)
-      .startAngle(arc.startAngle).endAngle(arc.endAngle).padAngle(0.025);
+    const arcFn = d3.arc().innerRadius(holeR).outerRadius(primaryOuter)
+      .startAngle(arc.startAngle).endAngle(arc.endAngle).padAngle(0.02);
 
     g.append('path').attr('d', arcFn)
-      .attr('fill', segColor).attr('fill-opacity', 0.82)
+      .attr('fill', segColor).attr('fill-opacity', 0.85)
       .attr('stroke', '#0B1622').attr('stroke-width', 0.5)
       .style('cursor', 'pointer')
       .on('click', () => showVisaTypes(prog, name))
       .on('mouseover', e => {
-        d3.select(e.target).attr('fill-opacity', 1).attr('stroke', segColor).attr('stroke-width', 1.5);
+        d3.select(e.target).attr('fill-opacity', 1).attr('stroke-width', 1.5);
         tip(e, `${name} — ${(pct * 100).toFixed(1)}%`, v);
       })
       .on('mouseout', e => {
-        d3.select(e.target).attr('fill-opacity', 0.82).attr('stroke', '#0B1622').attr('stroke-width', 0.5);
+        d3.select(e.target).attr('fill-opacity', 0.85).attr('stroke-width', 0.5);
         hideTip();
       });
 
-    // Label for segments ≥ 10%
-    if (pct >= 0.10) {
+    if (pct >= 0.08) {
       const midAngle = (arc.startAngle + arc.endAngle) / 2;
-      const labelR = maxR + 12;
+      const labelR = maxR + 13;
       const lx = labelR * Math.sin(midAngle), ly = -labelR * Math.cos(midAngle);
       g.append('text').attr('x', lx).attr('y', ly)
         .attr('dominant-baseline', 'middle')
-        .attr('text-anchor', Math.abs(lx) < 4 ? 'middle' : lx > 0 ? 'start' : 'end')
+        .attr('text-anchor', Math.abs(lx) < 6 ? 'middle' : lx > 0 ? 'start' : 'end')
         .attr('fill', segColor).attr('font-size', 8).attr('font-family', 'Outfit')
         .style('cursor', 'pointer').on('click', () => showVisaTypes(prog, name))
-        .text(name.length > 14 ? name.slice(0, 12) + '…' : name);
+        .text(name.length > 16 ? name.slice(0, 14) + '…' : name);
     }
   });
 
-  // Ghost outline for comparison country (if provided)
-  if (comparePtypes) {
-    pieLayout.forEach((arc, i) => {
-      const [name] = entries[i];
-      const cv = comparePtypes[name] || 0;
-      if (!cv) return;
-      const compareTotal = Object.values(comparePtypes).reduce((s, v) => s + v, 0);
-      const compareMax = Math.max(...Object.values(comparePtypes));
-      const cr = rScale.copy().domain([0, compareMax])(cv);
-      const arcFn = d3.arc().innerRadius(innerR).outerRadius(cr)
-        .startAngle(arc.startAngle).endAngle(arc.endAngle).padAngle(0.025);
+  // Compare (outer) ring — same colors at lower opacity, independent layout
+  if (hasCompare) {
+    const cmpRaw = Object.entries(comparePtypes).filter(([, v]) => v > 0);
+    const cmpTotal = cmpRaw.reduce((s, [, v]) => s + v, 0);
+    const cmpPie = d3.pie().value(([, v]) => v).sort(null)(cmpRaw);
+
+    cmpPie.forEach((arc, i) => {
+      const [name, v] = cmpRaw[i];
+      const segColor = PTYPE_COLORS[name] || d3.schemeTableau10[i % 10];
+      const arcFn = d3.arc().innerRadius(cmpInner).outerRadius(cmpOuter)
+        .startAngle(arc.startAngle).endAngle(arc.endAngle).padAngle(0.02);
       g.append('path').attr('d', arcFn)
-        .attr('fill', 'none').attr('stroke', '#FFB400').attr('stroke-width', 1.5)
-        .attr('stroke-dasharray', '3,2').attr('opacity', 0.7).attr('pointer-events', 'none');
+        .attr('fill', segColor).attr('fill-opacity', 0.4)
+        .attr('stroke', '#0B1622').attr('stroke-width', 0.5)
+        .style('cursor', 'default')
+        .on('mouseover', e => {
+          d3.select(e.target).attr('fill-opacity', 0.65);
+          tip(e, `${name} — ${(v / cmpTotal * 100).toFixed(1)}% (${S.compareCountry})`, v);
+        })
+        .on('mouseout', e => { d3.select(e.target).attr('fill-opacity', 0.4); hideTip(); });
     });
+
+    // Separator between rings
+    g.append('circle').attr('r', cmpInner - 2.5)
+      .attr('fill', 'none').attr('stroke', '#07101C').attr('stroke-width', 3);
   }
 
-  // Center total
-  g.append('circle').attr('r', innerR).attr('fill', '#0B1622');
+  // Center hole + total
+  g.append('circle').attr('r', holeR).attr('fill', '#0B1622');
   g.append('text').attr('text-anchor', 'middle').attr('dy', '-0.3em')
     .attr('fill', '#4A6A8A').attr('font-size', 7).attr('font-family', 'Outfit').text('TOTAL');
   g.append('text').attr('text-anchor', 'middle').attr('dy', '0.9em')
@@ -1330,8 +1368,8 @@ window.addEventListener('resize', () => {
     if (S.view === 'trends') drawTrendView();
     if (S.country) {
       const e = CYM[S.country]?.[S.year]; const ce = S.compareCountry ? CYM[S.compareCountry]?.[S.year] : null;
-      drawPolar('radar-imm-wrap', e?.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', ce?.program_types?.immigrant || null);
-      drawPolar('radar-non-wrap', e?.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', ce?.program_types?.nonimmigrant || null);
+      drawDonut('radar-imm-wrap', e?.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', ce?.program_types?.immigrant || null);
+      drawDonut('radar-non-wrap', e?.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', ce?.program_types?.nonimmigrant || null);
       drawTotalTrend(); drawRightPanel();
     }
   }, 200);
