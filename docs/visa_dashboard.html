@@ -557,6 +557,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   <div class="view hidden" id="v-compare">
     <div class="dash-header">
       <h1 class="dash-title">Country <span>Compare</span></h1>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <span id="cmp-year-pill" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;background:var(--gold-lo);color:var(--gold);border:1px solid rgba(232,184,75,0.3);letter-spacing:.05em;font-family:'JetBrains Mono',monospace;user-select:none"></span>
+        <span id="cmp-prog-pill" style="font-size:12px;font-weight:600;padding:4px 10px;border-radius:5px;background:var(--violet-lo);color:var(--violet);border:1px solid rgba(129,140,248,0.3);letter-spacing:.04em;user-select:none"></span>
+      </div>
     </div>
     <div id="cmp-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--muted);text-align:center">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.35"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -2237,6 +2241,16 @@ function filterCmpChipSearch() {
   });
 }
 
+function updateCmpCtx() {
+  const yp = document.getElementById('cmp-year-pill');
+  const pp = document.getElementById('cmp-prog-pill');
+  if (yp) yp.textContent = S.year + (PARTIAL_YEARS.has(S.year) ? ' ⚠' : '');
+  if (pp) {
+    const labels = { total: 'All programs', immigrant: 'Immigrant', nonimmigrant: 'Nonimmigrant' };
+    pp.textContent = labels[S.compareProg] || S.compareProg;
+  }
+}
+
 function setCompareProg(el) {
   document.querySelectorAll('#cmp-prog-opts .r-item').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
@@ -2254,6 +2268,7 @@ function setCmpMetric(el, v) {
 
 function drawCompareView() {
   if (!DATA) return;
+  updateCmpCtx();
   renderCmpChips();
   const emptyEl = document.getElementById('cmp-empty');
   const contentEl = document.getElementById('cmp-content');
