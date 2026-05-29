@@ -597,7 +597,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       </div>
       <!-- ranking panel -->
       <div id="cmp-panel-ranking" class="chart-card" style="display:none;flex:1;min-height:350px">
-        <div class="chart-title">Country Ranking Over Time <span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;opacity:.75">— rank 1 = most visas issued</span></div>
+        <div class="chart-title">Country Ranking Over Time <span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;opacity:.75">— rank #1 = most visas issued</span></div>
         <div class="chart-body" id="cmp-bump-wrap"></div>
       </div>
     </div>
@@ -642,7 +642,7 @@ let DATA = null, CYM = {}, WORLD = null;
 let mapSvg, mapG, pathFn, proj, colorScl;
 
 const TREND_COLORS = ['#FB923C','#818CF8','#2DD4BF','#F472B6','#FBBF24','#E879F9','#34D399','#38BDF8'];
-const CMP_COLORS   = ['#FB7185','#67E8F9','#E879F9','#FDE68A','#94A3B8'];
+const CMP_COLORS   = ['#FB7185','#93C5FD','#E879F9','#BEF264','#94A3B8'];
 
 // ═══════════════════════════════════════════════════
 //  ISO MAP
@@ -2642,8 +2642,8 @@ function drawCmpBump() {
   const iW = W-m.l-m.r, iH = H-m.t-m.b;
 
   const xSc = d3.scalePoint().domain(fullYears).range([0,iW]);
-  // rank #1 at top (best), higher rank numbers lower on chart
-  const ySc = d3.scaleLinear().domain([yDom+0.5, 0.5]).range([iH,0]);
+  // rank #1 at bottom (small number = low on axis, natural to read)
+  const ySc = d3.scaleLinear().domain([0.5, yDom+0.5]).range([iH,0]);
 
   const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H)
     .append('g').attr('transform',`translate(${m.l},${m.t})`);
