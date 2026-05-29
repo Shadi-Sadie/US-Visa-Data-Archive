@@ -587,7 +587,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       <!-- composition panel -->
       <div id="cmp-panel-composition" class="chart-card" style="display:none;flex:1;min-height:350px">
         <div class="chart-title">
-          Program Composition — <span id="cmp-comp-year-label"></span>
+          Program Composition
           <div style="display:flex;gap:3px">
             <div class="stgl active" id="cmp-comp-abs-btn" onclick="setCmpCompMetric(this,'absolute')">Absolute</div>
             <div class="stgl" id="cmp-comp-pct-btn" onclick="setCmpCompMetric(this,'percent')">% Share</div>
@@ -635,13 +635,14 @@ const S = {
   cmpMetric: 'absolute',
   cmpSubView: 'trend',
   cmpCompMetric: 'absolute',
+  cmpCompCats: null,
 };
 let YEARS = [];
 let DATA = null, CYM = {}, WORLD = null;
 let mapSvg, mapG, pathFn, proj, colorScl;
 
 const TREND_COLORS = ['#FB923C','#818CF8','#2DD4BF','#F472B6','#FBBF24','#E879F9','#34D399','#38BDF8'];
-const CMP_COLORS   = ['#F43F5E','#FACC15','#3B82F6','#D946EF','#A3E635'];
+const CMP_COLORS   = ['#FB7185','#67E8F9','#E879F9','#FDE68A','#94A3B8'];
 
 // ═══════════════════════════════════════════════════
 //  ISO MAP
@@ -2239,6 +2240,7 @@ function filterCmpChipSearch() {
 function setCompareProg(el) {
   document.querySelectorAll('#cmp-prog-opts .r-item').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
+  S.cmpCompCats = null;
   S.compareProg = el.dataset.v;
   if (S.view === 'compare') drawCompareView();
 }
@@ -2503,9 +2505,6 @@ function drawCmpComposition() {
   const yr = S.year, prog = S.compareProg;
   const isPct = S.cmpCompMetric === 'percent';
 
-  const lbl = document.getElementById('cmp-comp-year-label');
-  if (lbl) lbl.textContent = yr + (PARTIAL_YEARS.has(yr) ? ' ⚠' : '');
-
   const getTypes = c => {
     const entry = CYM[c]?.[yr] || {};
     const out = {};
@@ -2518,16 +2517,48 @@ function drawCmpComposition() {
 
   const totals = {};
   cData.forEach(({types}) => { for (const [k,v] of Object.entries(types)) totals[k]=(totals[k]||0)+v; });
-  const cats = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k])=>k);
+  const allCats = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k])=>k);
 
-  if (!cats.length) {
+  if (!allCats.length) {
     wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:11px">No program type breakdown available</div>';
     return;
   }
 
-  const W = wrap.clientWidth||500, H = wrap.clientHeight||200;
-  const m = {t:10, r:16, b:58, l:52};
-  const iW = W-m.l-m.r, iH = H-m.t-m.b;
+  // active category selection — default top 4
+  let activeCats = S.cmpCompCats
+    ? new Set([...S.cmpCompCats].filter(c => allCats.includes(c)))
+    : null;
+  if (!activeCats || !activeCats.size) activeCats = new Set(allCats.slice(0, 4));
+  const cats = allCats.filter(c => activeCats.has(c));
+
+  // category chips
+  const chipsDiv = document.createElement('div');
+  chipsDiv.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;padding-bottom:12px;flex-shrink:0';
+  allCats.forEach(cat => {
+    const on = activeCats.has(cat);
+    const chip = document.createElement('span');
+    chip.style.cssText = `padding:5px 13px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid ${on?'var(--gold)':'rgba(168,191,204,0.25)'};color:${on?'var(--gold)':'#C8D8E4'};background:${on?'var(--gold-lo)':'rgba(30,53,84,0.55)'};user-select:none;white-space:nowrap;transition:all .12s`;
+    chip.textContent = cat.length > 22 ? cat.slice(0,21)+'…' : cat;
+    chip.onclick = () => {
+      if (!S.cmpCompCats) S.cmpCompCats = new Set(allCats.slice(0, 4));
+      if (S.cmpCompCats.has(cat)) {
+        if (S.cmpCompCats.size > 1) S.cmpCompCats.delete(cat);
+      } else {
+        S.cmpCompCats.add(cat);
+      }
+      drawCmpComposition();
+    };
+    chipsDiv.appendChild(chip);
+  });
+  wrap.appendChild(chipsDiv);
+
+  const W = wrap.clientWidth || 500;
+  const H = wrap.clientHeight || 200;
+  const chipsH = chipsDiv.clientHeight + 10;
+  const svgH = Math.max(80, H - chipsH);
+
+  const m = {t:10, r:16, b: cats.length > 4 ? 60 : 40, l:52};
+  const iW = W-m.l-m.r, iH = svgH-m.t-m.b;
 
   const xCat = d3.scaleBand().domain(cats).range([0,iW]).paddingInner(0.22).paddingOuter(0.1);
   const xCtr = d3.scaleBand().domain(S.compareCountries).range([0,xCat.bandwidth()]).padding(0.07);
@@ -2535,14 +2566,14 @@ function drawCmpComposition() {
   const disp = (d, cat) => {
     const raw = d.types[cat]||0;
     if (!isPct) return raw;
-    const tot = cats.reduce((s,k)=>s+(d.types[k]||0),0)||1;
+    const tot = allCats.reduce((s,k)=>s+(d.types[k]||0),0)||1;
     return raw/tot*100;
   };
 
   const maxV = d3.max(cData.flatMap(d=>cats.map(cat=>disp(d,cat))))||1;
   const ySc = d3.scaleLinear().domain([0, maxV*1.1]).range([iH,0]).nice();
 
-  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H)
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',svgH)
     .append('g').attr('transform',`translate(${m.l},${m.t})`);
 
   const fmtY = isPct
@@ -2550,11 +2581,16 @@ function drawCmpComposition() {
     : v => v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?Math.round(v/1e3)+'K':String(Math.round(v));
 
   svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW).tickFormat(fmtY))
-    .call(g=>{g.select('.domain').remove();g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',10).attr('font-family','Inter');});
+    .call(g=>{g.select('.domain').remove();g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',11).attr('font-family','Inter');});
 
+  const rotate = cats.length > 5;
   svg.append('g').attr('transform',`translate(0,${iH})`)
-    .call(d3.axisBottom(xCat).tickSize(0).tickPadding(5).tickFormat(k=>k.length>13?k.slice(0,12)+'…':k))
-    .call(g=>{g.select('.domain').remove();g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',9).attr('font-family','Inter').attr('text-anchor','end').attr('transform','rotate(-38)');});
+    .call(d3.axisBottom(xCat).tickSize(0).tickPadding(8).tickFormat(k => k.length > 20 ? k.slice(0,19)+'…' : k))
+    .call(g=>{
+      g.select('.domain').remove();
+      const txt = g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',11).attr('font-family','Inter');
+      if (rotate) txt.attr('text-anchor','end').attr('transform','rotate(-35)');
+    });
 
   cats.forEach((cat, ki) => {
     const grp = svg.append('g').attr('transform',`translate(${xCat(cat)},0)`);
@@ -2606,22 +2642,23 @@ function drawCmpBump() {
   const iW = W-m.l-m.r, iH = H-m.t-m.b;
 
   const xSc = d3.scalePoint().domain(fullYears).range([0,iW]);
-  const ySc = d3.scaleLinear().domain([0.5, yDom+0.5]).range([0,iH]);
+  // rank #1 at top (best), higher rank numbers lower on chart
+  const ySc = d3.scaleLinear().domain([yDom+0.5, 0.5]).range([iH,0]);
 
   const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H)
     .append('g').attr('transform',`translate(${m.l},${m.t})`);
 
-  const step = Math.ceil(yDom/8);
-  const tickVals = d3.range(1, yDom+1).filter(v=>v===1||v%step===0);
+  const step = Math.max(1, Math.ceil(yDom/8));
+  const tickVals = d3.range(1, yDom+1).filter(v => v===1 || v%step===0);
   svg.append('g').call(d3.axisLeft(ySc).tickValues(tickVals).tickSize(-iW).tickFormat(v=>'#'+v))
-    .call(g=>{g.select('.domain').remove();g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',9).attr('font-family','Inter');});
+    .call(g=>{g.select('.domain').remove();g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',11).attr('font-family','Inter');});
 
   svg.append('g').attr('transform',`translate(0,${iH})`)
     .call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g=>{g.select('.domain').remove();g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',10).attr('font-family','Inter');});
+    .call(g=>{g.select('.domain').remove();g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',11).attr('font-family','Inter');});
 
   const lineFn = d3.line().x(d=>xSc(d.y)).y(d=>ySc(d.r))
-    .curve(d3.curveCatmullRom.alpha(0.5)).defined(d=>d.r>0&&d.r<=yDom);
+    .curve(d3.curveLinear).defined(d=>d.r>0&&d.r<=yDom);
 
   const endData = [];
   S.compareCountries.forEach((c, i) => {
