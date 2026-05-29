@@ -143,9 +143,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .map-legend-swatch{width:8px;height:8px;border-radius:2px;background:#1C2436;flex-shrink:0}
 .map-legend-nodata{font-size:9px;color:#4A6680}
 .map-legend-sep{width:14px}
-.map-legend-zero{font-size:9px;color:#7A9AB8}
+.map-legend-zero{font-size:9px;color:#A8BFCC}
 .map-legend-grad{width:96px;height:8px;border-radius:3px;flex-shrink:0}
-.map-legend-max{font-size:9px;color:#7A9AB8}
+.map-legend-max{font-size:9px;color:#A8BFCC}
 
 /* ─── MAP RESET BUTTON ─── */
 .map-reset-btn{position:absolute;top:8px;right:8px;background:#0D1E30;border:1px solid var(--border);border-radius:5px;color:var(--muted);cursor:pointer;font-size:10px;font-family:'Inter',sans-serif;padding:3px 8px;letter-spacing:.05em;line-height:1.6;transition:color .15s,border-color .15s;z-index:2}
@@ -174,6 +174,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .trends-side .chart-card{flex:1;min-height:0}
 .stgl{padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;cursor:pointer;border:1px solid var(--border);color:var(--muted);user-select:none;letter-spacing:.06em}
 .stgl.active{background:var(--gold-lo);color:var(--gold);border-color:var(--gold)}
+.cmp-sv-tab{padding:6px 18px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text);opacity:.45;user-select:none;letter-spacing:.01em;transition:opacity .15s,border-color .15s,color .15s}
+.cmp-sv-tab:hover{opacity:.75}
+.cmp-sv-tab.active{background:var(--gold-lo);color:var(--gold);border-color:var(--gold);opacity:1}
 
 /* ─── YEAR CHIPS ─── */
 .year-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
@@ -189,7 +192,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .cmp-kpi-name{font-size:12px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .cmp-kpi-name:hover{text-decoration:underline}
 .cmp-kpi-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:3px}
-.cmp-chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:350px}
+.cmp-chart-grid{display:grid;grid-template-columns:1fr;gap:10px;flex:1;min-height:350px}
 
 /* ─── SCROLLBAR ─── */
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -202,72 +205,73 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .sb-backdrop{display:none;position:fixed;inset:0;top:44px;background:rgba(0,0,0,.65);z-index:499;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
 .sb-backdrop.open{display:block}
 
-/* ─── TABLET ≤900px: auto-collapse sidebar ─── */
+/* ─── TABLET ≤900px: overlay sidebar, scrollable, stacked charts ─── */
 @media(max-width:900px){
-  .sidebar:not(.mobile-open){width:var(--sidebar-collapsed-w)}
-  .sidebar:not(.mobile-open) .sb-section-body{display:none}
-  .sidebar:not(.mobile-open) .sb-lbl{opacity:0;pointer-events:none}
-  .sidebar:not(.mobile-open) .sb-section-hd{justify-content:center;padding:8px 0}
-  .sidebar:not(.mobile-open) .sb-section{padding:0 6px;margin-bottom:18px}
+  .nav-menu-btn{display:flex}
+  .sidebar{position:fixed;left:calc(-1 * var(--sidebar-w));top:44px;bottom:0;width:var(--sidebar-w) !important;z-index:500;transition:left .22s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 32px rgba(0,0,0,.6)}
+  .sidebar.mobile-open{left:0}
+  .sb-toggle{display:none}
+  body{overflow-y:auto;height:auto;min-height:100svh}
+  .shell{overflow:visible;height:auto;flex:none}
+  .views-wrap{overflow:visible;position:static;height:auto;flex:none}
+  .view{position:static !important;transform:none !important;opacity:1 !important;overflow:visible !important;height:auto !important;padding:22px}
+  .view.hidden{display:none !important}
   .kpi-row-6{grid-template-columns:repeat(3,1fr)}
-  .trends-grid{flex-direction:column}
-  .trends-main{flex:none;height:340px}
-  .trends-side{flex-direction:row;height:220px;flex:none}
-  .trends-side .chart-card{flex:1}
+  .chart-grid{display:flex;flex-direction:column;height:auto;gap:12px;flex:none;min-height:0}
+  .chart-grid>.chart-card:first-child{height:300px;flex:none}
+  .chart-grid>div:last-child{height:auto;flex:none;min-height:0}
+  .chart-grid>div:last-child>.chart-card{height:260px !important;flex:none !important}
+  .c-name{font-size:22px}
+  .detail-grid{display:flex;flex-direction:column;height:auto;gap:12px;flex:none;min-height:0}
+  .detail-grid .chart-card{height:290px;flex:none}
+  #country-empty-state{min-height:60vh}
+  #country-content{flex:none}
+  .cmp-chart-grid{display:flex;flex-direction:column;height:auto;gap:12px;flex:none;min-height:0}
+  .cmp-chart-grid>.chart-card{height:310px;flex:none}
+  .cmp-kpi-row{flex-wrap:wrap}
+  .cmp-kpi{min-width:calc(50% - 5px)}
+  #cmp-content{flex:none}
+  .trends-grid{flex-direction:column;flex:none;height:auto;min-height:0}
+  .trends-main{flex:none;height:330px}
+  .trends-side{flex-direction:row !important;height:230px;flex:none;gap:10px}
+  .trends-side .chart-card{flex:1;min-height:0}
 }
 
 /* ─── MOBILE ≤640px ─── */
 @media(max-width:640px){
-  /* Nav scrolls horizontally */
-  .topnav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:0 8px;gap:0}
+  .topnav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:0 6px;gap:0}
   .topnav::-webkit-scrollbar{display:none}
-  .brand{margin-right:4px;font-size:11px}
-  .nav-tab{padding:0 12px;font-size:11px;white-space:nowrap}
-  .nav-menu-btn{display:flex}
-
-  /* Sidebar: fixed overlay */
-  .sidebar{position:fixed;left:calc(-1 * var(--sidebar-w));top:44px;bottom:0;width:var(--sidebar-w) !important;z-index:500;transition:left .22s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 32px rgba(0,0,0,.6)}
-  .sidebar.mobile-open{left:0}
-  .sb-toggle{display:none}
-
-  /* Body becomes scrollable */
-  body{overflow-y:auto;height:auto;min-height:100svh}
-  .shell{overflow:visible;height:auto;flex:none}
-  .views-wrap{overflow:visible;position:static;height:auto;flex:none}
-
-  /* Views: no slide transition on mobile */
-  .view{position:static !important;transform:none !important;opacity:1 !important;overflow:visible !important;height:auto !important;padding:14px}
-  .view.hidden{display:none !important}
-
-  /* KPI grids */
+  .brand{margin-right:6px;font-size:10px;letter-spacing:.1em;white-space:nowrap;flex-shrink:0}
+  .nav-tab{padding:0 14px;font-size:11px;white-space:nowrap;flex-shrink:0}
+  .view{padding:14px}
   .dash-title{font-size:17px}
   .kpi-row-3{grid-template-columns:1fr}
   .kpi-row-6{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi-val{font-size:17px}
   .kpi-lbl{font-size:9px}
+  .kpi-card{padding:12px 14px}
+  .chart-grid>.chart-card:first-child{height:240px}
+  .chart-grid>div:last-child{flex-direction:column;height:auto}
+  .chart-grid>div:last-child>.chart-card{height:240px;flex:none}
+  .c-name{font-size:19px}
+  .detail-grid .chart-card{height:260px}
+  .trends-main{height:280px}
+  .trends-side{flex-direction:column !important;height:auto}
+  .trends-side .chart-card{height:240px;flex:none}
+  .cmp-chart-grid>.chart-card{height:270px}
+  .cmp-kpi-val{font-size:16px}
+}
 
-  /* Chart grid: single column stack */
-  .chart-grid{display:flex;flex-direction:column;height:auto;gap:12px}
-  .chart-card{height:280px}
-  .chart-card.span-rows{height:300px}
-  .chart-body{height:100%;min-height:0}
-
-  /* Country detail */
-  .c-name{font-size:20px}
-  .detail-grid{display:flex;flex-direction:column;height:auto;gap:12px}
-  .detail-grid .chart-card{height:300px}
-
-  /* Trends */
-  .trends-grid{flex-direction:column;flex:none;height:auto}
-  .trends-main{height:300px;flex:none}
-  .trends-side{flex-direction:column !important;height:auto;flex:none}
-  .trends-side .chart-card{height:260px;flex:none}
-
-  /* Compare tab */
-  .cmp-chart-grid{display:flex;flex-direction:column;height:auto;gap:12px}
-  .cmp-chart-grid>.chart-card{height:280px}
-  .cmp-kpi-row{flex-wrap:wrap}
-  .cmp-kpi{min-width:calc(50% - 5px)}
+/* ─── SMALL PHONE ≤400px: extra compact ─── */
+@media(max-width:400px){
+  .brand{display:none}
+  .nav-menu-btn{margin-right:2px}
+  .view{padding:12px}
+  .kpi-val{font-size:16px}
+  .chart-grid>.chart-card:first-child{height:210px}
+  .chart-grid>div:last-child>.chart-card{height:220px}
+  .trends-main{height:250px}
+  .trends-side .chart-card{height:210px}
 }
 </style>
 </head>
@@ -559,9 +563,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       <div style="font-size:15px;font-weight:600;color:var(--text);opacity:.7">No countries selected</div>
       <div style="font-size:12px;max-width:280px;line-height:1.6">Add up to 5 countries using the sidebar to compare their visa issuance side by side.</div>
     </div>
-    <div id="cmp-content" style="display:none">
+    <div id="cmp-content" style="display:none;flex-direction:column;gap:10px">
       <div id="cmp-kpi-row" class="cmp-kpi-row"></div>
-      <div class="cmp-chart-grid">
+      <!-- sub-view toggle -->
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <div class="cmp-sv-tab active" id="cmp-sv-trend-btn" onclick="setCmpSubView(this,'trend')">Trend</div>
+        <div class="cmp-sv-tab" id="cmp-sv-composition-btn" onclick="setCmpSubView(this,'composition')">Composition</div>
+        <div class="cmp-sv-tab" id="cmp-sv-ranking-btn" onclick="setCmpSubView(this,'ranking')">Ranking</div>
+      </div>
+      <!-- trend panel -->
+      <div id="cmp-panel-trend" class="cmp-chart-grid">
         <div class="chart-card">
           <div class="chart-title">
             Visa Issuance Over Time
@@ -572,10 +583,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
           </div>
           <div class="chart-body" id="cmp-trend-wrap"></div>
         </div>
-        <div class="chart-card">
-          <div class="chart-title" id="cmp-bar-title">Year Snapshot</div>
-          <div class="chart-body" id="cmp-bar-wrap"></div>
+      </div>
+      <!-- composition panel -->
+      <div id="cmp-panel-composition" class="chart-card" style="display:none;flex:1;min-height:350px">
+        <div class="chart-title">
+          Program Composition — <span id="cmp-comp-year-label"></span>
+          <div style="display:flex;gap:3px">
+            <div class="stgl active" id="cmp-comp-abs-btn" onclick="setCmpCompMetric(this,'absolute')">Absolute</div>
+            <div class="stgl" id="cmp-comp-pct-btn" onclick="setCmpCompMetric(this,'percent')">% Share</div>
+          </div>
         </div>
+        <div class="chart-body" id="cmp-comp-wrap"></div>
+      </div>
+      <!-- ranking panel -->
+      <div id="cmp-panel-ranking" class="chart-card" style="display:none;flex:1;min-height:350px">
+        <div class="chart-title">Country Ranking Over Time <span style="font-size:9px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;opacity:.75">— rank 1 = most visas issued</span></div>
+        <div class="chart-body" id="cmp-bump-wrap"></div>
       </div>
     </div>
   </div>
@@ -610,6 +633,8 @@ const S = {
   compareCountries: ['India', 'China', 'Mexico', 'Philippines', 'Brazil'],
   compareProg: 'total',
   cmpMetric: 'absolute',
+  cmpSubView: 'trend',
+  cmpCompMetric: 'absolute',
 };
 let YEARS = [];
 let DATA = null, CYM = {}, WORLD = null;
@@ -957,7 +982,7 @@ function drawBar() {
   rows.append('text')
     .attr('x', d => Math.min(labelW + xSc(d.v) + 5, W - valReserve + 4))
     .attr('y', barH / 2 + 1)
-    .attr('dominant-baseline', 'middle').attr('fill', '#7A9AB8')
+    .attr('dominant-baseline', 'middle').attr('fill', '#A8BFCC')
     .attr('font-size', 11).attr('font-family', 'JetBrains Mono').text(d => fmt(d.v));
 
   rows.on('mouseover', function(e, d) {
@@ -1090,7 +1115,7 @@ function addCovidBand(svg, xSc, iH) {
   svg.append('rect').attr('x', x0).attr('y', 0).attr('width', x1 - x0).attr('height', iH)
     .attr('fill', '#F97316').attr('fill-opacity', 0.05).attr('pointer-events', 'none');
   svg.append('text').attr('x', (x0 + x1) / 2).attr('y', iH - 5)
-    .attr('text-anchor', 'middle').attr('fill', '#7A9AB8').attr('font-size', 9).attr('font-family', 'Inter')
+    .attr('text-anchor', 'middle').attr('fill', '#A8BFCC').attr('font-size', 9).attr('font-family', 'Inter')
     .attr('pointer-events', 'none').text('COVID-19');
 }
 
@@ -1135,9 +1160,9 @@ function drawGlobalTrend() {
 
   const fmtTick = v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v;
   svg.append('g').call(d3.axisLeft(ySc).ticks(6).tickSize(-iW).tickFormat(fmtTick))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 11).attr('font-family', 'Inter'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 11).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(6))
-    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 11).attr('font-family', 'Inter'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 11).attr('font-family', 'Inter'); });
 
   const safeY = v => ySc(S.logScale ? Math.max(1, v) : v);
   const curve = d3.curveMonotoneX;
@@ -1245,13 +1270,13 @@ function drawYoYChart() {
     .attr('stroke', '#263348').attr('stroke-width', 1);
 
   svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW).tickFormat(v => (v > 0 ? '+' : '') + v.toFixed(0) + '%'))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 10).attr('font-family', 'Inter'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 10).attr('font-family', 'Inter'); });
 
   // Show all ticks, rotate labels when dense so none are hidden
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
     .call(g => {
       g.select('.domain').remove();
-      const labels = g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 9).attr('font-family', 'Inter');
+      const labels = g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 9).attr('font-family', 'Inter');
       if (pts.length > 12) labels.attr('transform', 'rotate(-40)').attr('text-anchor', 'end').attr('dy', '0.3em');
     });
 
@@ -1318,11 +1343,11 @@ function drawProgramMixChart() {
     .append('g').attr('transform', `translate(${m.l},${m.t})`);
 
   svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v.toFixed(0) + '%'))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 10).attr('font-family', 'Inter'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 10).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
     .call(g => {
       g.select('.domain').remove();
-      const labels = g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 10).attr('font-family', 'Inter');
+      const labels = g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 10).attr('font-family', 'Inter');
       if (pts.length > 10) labels.attr('transform', 'rotate(-40)').attr('text-anchor', 'end').attr('dy', '0.3em');
     });
 
@@ -1615,9 +1640,9 @@ function drawTotalTrend() {
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
 
   svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 10).attr('font-family', 'Inter'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 10).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 10).attr('font-family', 'Inter'); g.selectAll('.tick text').attr('transform', 'rotate(-35)').attr('text-anchor', 'end').attr('dy', '0.5em'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 10).attr('font-family', 'Inter'); g.selectAll('.tick text').attr('transform', 'rotate(-35)').attr('text-anchor', 'end').attr('dy', '0.5em'); });
 
   svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
     .attr('stroke', '#F97316').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
@@ -1661,7 +1686,7 @@ function drawTotalTrend() {
   // Legend
   const legDiv = d3.select(wrap).append('div').style('display', 'flex').style('gap', '14px').style('margin-top', '4px').style('padding-left', '44px');
   [{ l: 'Nonimmigrant', c: 'var(--teal)' }, { l: 'Immigrant', c: 'var(--violet)' }].forEach(({ l, c: col }) => {
-    const item = legDiv.append('div').style('display', 'flex').style('align-items', 'center').style('gap', '5px').style('font-size', '11px').style('color', '#7A9AB8');
+    const item = legDiv.append('div').style('display', 'flex').style('align-items', 'center').style('gap', '5px').style('font-size', '11px').style('color', '#A8BFCC');
     item.append('div').style('width', '10px').style('height', '8px').style('background', col).style('border-radius', '2px').style('opacity', '.75');
     item.append('span').text(l);
   });
@@ -1721,7 +1746,7 @@ function showOtherBreakdown(prog, entries, grandTotal) {
     .attr('fill', '#3D5470').attr('opacity', .7).attr('width', 0)
     .transition().duration(350).attr('width', ([, v]) => xSc(v));
   rows.append('text').attr('x', labelW + barAreaW + 6).attr('y', barH / 2 + 1)
-    .attr('dominant-baseline', 'middle').attr('fill', '#7A9AB8')
+    .attr('dominant-baseline', 'middle').attr('fill', '#A8BFCC')
     .attr('font-size', 11).attr('font-family', 'JetBrains Mono')
     .text(([, v]) => fmtN(v));
   rows.on('mouseover', (e, [n, v]) => {
@@ -1878,7 +1903,7 @@ function drawVisaTypeBreakdown() {
     .transition().duration(350).attr('width', ([, v]) => xSc(v));
 
   rows.append('text').attr('x', labelW + barAreaW + 6).attr('y', barH / 2 + 1)
-    .attr('dominant-baseline', 'middle').attr('fill', '#7A9AB8')
+    .attr('dominant-baseline', 'middle').attr('fill', '#A8BFCC')
     .attr('font-size', 11).attr('font-family', 'JetBrains Mono')
     .text(([, v]) => fmtN(v));
 
@@ -2222,8 +2247,7 @@ function setCmpMetric(el, v) {
   S.cmpMetric = v;
   document.getElementById('cmp-abs-btn').classList.toggle('active', v === 'absolute');
   document.getElementById('cmp-p100k-btn').classList.toggle('active', v === 'per100k');
-  drawCmpTrend();
-  drawCmpBar();
+  if (S.cmpSubView === 'trend') { drawCmpTrend(); }
 }
 
 function drawCompareView() {
@@ -2238,11 +2262,16 @@ function drawCompareView() {
   }
   emptyEl.style.display = 'none';
   contentEl.style.display = 'flex';
-  const barTitle = document.getElementById('cmp-bar-title');
-  if (barTitle) barTitle.textContent = 'Snapshot — ' + S.year;
+  contentEl.style.flexDirection = 'column';
+  // ensure correct panel is visible before reading clientWidth/clientHeight
+  ['trend','composition','ranking'].forEach(k => {
+    document.getElementById('cmp-sv-'+k+'-btn').classList.toggle('active', k===S.cmpSubView);
+    document.getElementById('cmp-panel-'+k).style.display = k===S.cmpSubView ? '' : 'none';
+  });
   drawCmpScoreCards();
-  drawCmpTrend();
-  drawCmpBar();
+  if (S.cmpSubView === 'trend') { drawCmpTrend(); }
+  else if (S.cmpSubView === 'composition') drawCmpComposition();
+  else drawCmpBump();
 }
 
 function drawCmpScoreCards() {
@@ -2283,8 +2312,8 @@ function drawCmpScoreCards() {
       '<div style="position:absolute;top:0;left:0;right:0;height:2px;background:' + col + ';border-radius:2px 2px 0 0"></div>' +
       '<div class="cmp-kpi-name" style="color:' + col + '" onclick="showCountry(\'' + safe + '\')">' + c + '</div>' +
       '<div class="cmp-kpi-val" style="color:' + col + '">' + fmt(mainVal) + '</div>' +
-      '<div style="font-size:10px;margin-bottom:8px;color:' + yoyColor + '">' + yoyStr + '</div>' +
-      '<div style="display:flex;gap:10px;font-size:10px;color:var(--muted);flex-wrap:wrap">' +
+      '<div style="font-size:11px;margin-bottom:8px;color:' + yoyColor + '">' + yoyStr + '</div>' +
+      '<div style="display:flex;gap:10px;font-size:11px;color:#A8BFCC;flex-wrap:wrap">' +
         '<span>Imm: <b style="color:#A5B4FC;font-family:\'JetBrains Mono\',monospace;font-weight:600">' + fmt(imm) + '</b></span>' +
         '<span>Non: <b style="color:#5EEAD4;font-family:\'JetBrains Mono\',monospace;font-weight:600">' + fmt(non) + '</b></span>' +
         '<span>Global: <b style="color:var(--gold);font-weight:600">' + shareStr + '</b></span>' +
@@ -2333,9 +2362,9 @@ function drawCmpTrend() {
     ? v => v >= 1000 ? Math.round(v / 1000) + 'K' : String(Math.round(v))
     : v => v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v;
   svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW).tickFormat(fmtTick))
-    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 10).attr('font-family', 'Inter'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 10).attr('font-family', 'Inter'); });
   svg.append('g').attr('transform', 'translate(0,' + iH + ')').call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
-    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#7A9AB8').attr('font-size', 10).attr('font-family', 'Inter'); });
+    .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 10).attr('font-family', 'Inter'); });
   if (YEARS.includes(S.year)) {
     svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
       .attr('stroke', '#F97316').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
@@ -2447,6 +2476,188 @@ function drawCmpBar() {
       .attr('fill', 'var(--amber)').attr('font-size', 9).attr('font-family', 'Inter').attr('opacity', .7)
       .text('⚠ ' + yr + ' is a partial year (Jan–May only)');
   }
+}
+
+function setCmpSubView(el, v) {
+  S.cmpSubView = v;
+  ['trend','composition','ranking'].forEach(k => {
+    document.getElementById('cmp-sv-'+k+'-btn').classList.toggle('active', k===v);
+    document.getElementById('cmp-panel-'+k).style.display = k===v ? '' : 'none';
+  });
+  if (v==='trend') { drawCmpTrend(); }
+  else if (v==='composition') drawCmpComposition();
+  else drawCmpBump();
+}
+
+function setCmpCompMetric(el, v) {
+  S.cmpCompMetric = v;
+  document.getElementById('cmp-comp-abs-btn').classList.toggle('active', v==='absolute');
+  document.getElementById('cmp-comp-pct-btn').classList.toggle('active', v==='percent');
+  drawCmpComposition();
+}
+
+function drawCmpComposition() {
+  const wrap = document.getElementById('cmp-comp-wrap');
+  wrap.innerHTML = '';
+  if (!S.compareCountries.length) return;
+  const yr = S.year, prog = S.compareProg;
+  const isPct = S.cmpCompMetric === 'percent';
+
+  const lbl = document.getElementById('cmp-comp-year-label');
+  if (lbl) lbl.textContent = yr + (PARTIAL_YEARS.has(yr) ? ' ⚠' : '');
+
+  const getTypes = c => {
+    const entry = CYM[c]?.[yr] || {};
+    const out = {};
+    if (prog !== 'nonimmigrant') for (const [k,v] of Object.entries(entry.program_types?.immigrant||{})) out[k]=(out[k]||0)+v;
+    if (prog !== 'immigrant') for (const [k,v] of Object.entries(entry.program_types?.nonimmigrant||{})) out[k]=(out[k]||0)+v;
+    return out;
+  };
+
+  const cData = S.compareCountries.map((c,i) => ({ c, col: CMP_COLORS[i%CMP_COLORS.length], types: getTypes(c) }));
+
+  const totals = {};
+  cData.forEach(({types}) => { for (const [k,v] of Object.entries(types)) totals[k]=(totals[k]||0)+v; });
+  const cats = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k])=>k);
+
+  if (!cats.length) {
+    wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:11px">No program type breakdown available</div>';
+    return;
+  }
+
+  const W = wrap.clientWidth||500, H = wrap.clientHeight||200;
+  const m = {t:10, r:16, b:58, l:52};
+  const iW = W-m.l-m.r, iH = H-m.t-m.b;
+
+  const xCat = d3.scaleBand().domain(cats).range([0,iW]).paddingInner(0.22).paddingOuter(0.1);
+  const xCtr = d3.scaleBand().domain(S.compareCountries).range([0,xCat.bandwidth()]).padding(0.07);
+
+  const disp = (d, cat) => {
+    const raw = d.types[cat]||0;
+    if (!isPct) return raw;
+    const tot = cats.reduce((s,k)=>s+(d.types[k]||0),0)||1;
+    return raw/tot*100;
+  };
+
+  const maxV = d3.max(cData.flatMap(d=>cats.map(cat=>disp(d,cat))))||1;
+  const ySc = d3.scaleLinear().domain([0, maxV*1.1]).range([iH,0]).nice();
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H)
+    .append('g').attr('transform',`translate(${m.l},${m.t})`);
+
+  const fmtY = isPct
+    ? v => v.toFixed(0)+'%'
+    : v => v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?Math.round(v/1e3)+'K':String(Math.round(v));
+
+  svg.append('g').call(d3.axisLeft(ySc).ticks(5).tickSize(-iW).tickFormat(fmtY))
+    .call(g=>{g.select('.domain').remove();g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',10).attr('font-family','Inter');});
+
+  svg.append('g').attr('transform',`translate(0,${iH})`)
+    .call(d3.axisBottom(xCat).tickSize(0).tickPadding(5).tickFormat(k=>k.length>13?k.slice(0,12)+'…':k))
+    .call(g=>{g.select('.domain').remove();g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',9).attr('font-family','Inter').attr('text-anchor','end').attr('transform','rotate(-38)');});
+
+  cats.forEach((cat, ki) => {
+    const grp = svg.append('g').attr('transform',`translate(${xCat(cat)},0)`);
+    cData.forEach(d => {
+      const v = disp(d, cat);
+      const raw = d.types[cat]||0;
+      grp.append('rect')
+        .attr('x', xCtr(d.c)).attr('y', iH).attr('width', xCtr.bandwidth()).attr('height', 0)
+        .attr('fill', d.col).attr('opacity', 0.85).attr('rx', 2)
+        .style('cursor','pointer')
+        .on('mouseover', e => showRichTip(e, d.c+' — '+cat, [[isPct?'Share':'Visas', isPct?d3.format('.1f')(v)+'%':fmtN(raw)]]))
+        .on('mouseout', hideTip)
+        .transition().duration(400).delay(ki*25)
+        .attr('y', ySc(v)).attr('height', Math.max(0, iH-ySc(v)));
+    });
+  });
+}
+
+function drawCmpBump() {
+  const wrap = document.getElementById('cmp-bump-wrap');
+  wrap.innerHTML = '';
+  if (!S.compareCountries.length) return;
+  const prog = S.compareProg;
+  const fullYears = YEARS.filter(y => !PARTIAL_YEARS.has(y));
+  if (fullYears.length < 2) {
+    wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:11px">Not enough years for ranking</div>';
+    return;
+  }
+
+  // rank all countries per year
+  const ranks = {};
+  fullYears.forEach(y => {
+    Object.entries(CYM)
+      .map(([c, yrs]) => ({ c, v: getVal(yrs[y], prog) }))
+      .filter(x => x.v > 0)
+      .sort((a,b) => b.v-a.v)
+      .forEach(({ c }, i) => { if (!ranks[c]) ranks[c]={}; ranks[c][y]=i+1; });
+  });
+
+  // y-domain: cover all selected countries' ranks + buffer
+  let maxRank = 5;
+  S.compareCountries.forEach(c => {
+    fullYears.forEach(y => { const r=ranks[c]?.[y]||0; if (r>maxRank) maxRank=r; });
+  });
+  const yDom = Math.min(maxRank+4, 50);
+
+  const W = wrap.clientWidth||500, H = wrap.clientHeight||200;
+  const m = {t:10, r:80, b:28, l:36};
+  const iW = W-m.l-m.r, iH = H-m.t-m.b;
+
+  const xSc = d3.scalePoint().domain(fullYears).range([0,iW]);
+  const ySc = d3.scaleLinear().domain([0.5, yDom+0.5]).range([0,iH]);
+
+  const svg = d3.select(wrap).append('svg').attr('width',W).attr('height',H)
+    .append('g').attr('transform',`translate(${m.l},${m.t})`);
+
+  const step = Math.ceil(yDom/8);
+  const tickVals = d3.range(1, yDom+1).filter(v=>v===1||v%step===0);
+  svg.append('g').call(d3.axisLeft(ySc).tickValues(tickVals).tickSize(-iW).tickFormat(v=>'#'+v))
+    .call(g=>{g.select('.domain').remove();g.selectAll('.tick line').attr('stroke','#1E3554').attr('stroke-dasharray','2,3');g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',9).attr('font-family','Inter');});
+
+  svg.append('g').attr('transform',`translate(0,${iH})`)
+    .call(d3.axisBottom(xSc).tickSize(0).tickPadding(5))
+    .call(g=>{g.select('.domain').remove();g.selectAll('text').attr('fill','#A8BFCC').attr('font-size',10).attr('font-family','Inter');});
+
+  const lineFn = d3.line().x(d=>xSc(d.y)).y(d=>ySc(d.r))
+    .curve(d3.curveCatmullRom.alpha(0.5)).defined(d=>d.r>0&&d.r<=yDom);
+
+  const endData = [];
+  S.compareCountries.forEach((c, i) => {
+    const col = CMP_COLORS[i%CMP_COLORS.length];
+    const pts = fullYears.map(y=>({y, r:ranks[c]?.[y]||0})).filter(d=>d.r>0&&d.r<=yDom);
+    if (!pts.length) return;
+
+    svg.append('path').datum(pts).attr('fill','none').attr('stroke',col)
+      .attr('stroke-width',2.5).attr('opacity',0.85).attr('d',lineFn);
+
+    svg.selectAll(null).data(pts).join('circle')
+      .attr('cx',d=>xSc(d.y)).attr('cy',d=>ySc(d.r)).attr('r',4)
+      .attr('fill',col).attr('stroke','var(--bg)').attr('stroke-width',1.5)
+      .style('cursor','pointer')
+      .on('mouseover',(e,d)=>showRichTip(e,c+' ('+d.y+')',[['Rank','#'+d.r],['Visas',fmtN(getVal(CYM[c]?.[d.y],prog))]]))
+      .on('mouseout',hideTip);
+
+    const last = pts[pts.length-1];
+    if (last) endData.push({c, col, rawY: ySc(last.r)});
+  });
+
+  // stagger end-of-line labels (same pattern as drawCmpTrend)
+  endData.sort((a,b)=>a.rawY-b.rawY);
+  const G = 11;
+  for (let i=1;i<endData.length;i++) if(endData[i].rawY-endData[i-1].rawY<G) endData[i].rawY=endData[i-1].rawY+G;
+  for (let i=endData.length-1;i>=0;i--) {
+    if (endData[i].rawY>iH) endData[i].rawY=iH;
+    if (i>0&&endData[i].rawY-endData[i-1].rawY<G) endData[i-1].rawY=endData[i].rawY-G;
+  }
+  const lastX = xSc(fullYears[fullYears.length-1]);
+  endData.forEach(({c,col,rawY})=>{
+    svg.append('text').attr('x',lastX+6).attr('y',rawY)
+      .attr('dominant-baseline','middle').attr('fill',col)
+      .attr('font-size',9).attr('font-family','Inter')
+      .text(c.length>12?c.slice(0,10)+'…':c);
+  });
 }
 
 init();
