@@ -130,7 +130,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .tt-row{display:flex;justify-content:space-between;gap:14px;color:var(--muted);margin-top:2px}
 .tt-val{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px}
 .info-icon{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1.5px solid var(--muted);color:var(--muted);font-size:11px;font-weight:700;font-style:normal;font-family:sans-serif;cursor:default;position:relative;margin-left:5px;vertical-align:middle;flex-shrink:0;line-height:1}
-.info-icon::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#1C2436;border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;line-height:1.55;padding:8px 11px;border-radius:6px;width:250px;white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.info-icon::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#1C2436;border:1px solid var(--border);color:var(--text);font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;line-height:1.55;padding:8px 11px;border-radius:6px;width:250px;max-width:calc(100vw - 28px);white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.4)}
 .info-icon:hover::after{opacity:1}
 .chart-title .info-icon::after{bottom:auto;top:calc(100% + 7px);left:auto;right:0;transform:none}
 
@@ -208,7 +208,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 /* ─── TABLET ≤900px: overlay sidebar, scrollable, stacked charts ─── */
 @media(max-width:900px){
   .nav-menu-btn{display:flex}
-  .sidebar{position:fixed;left:calc(-1 * var(--sidebar-w));top:44px;bottom:0;width:var(--sidebar-w) !important;z-index:500;transition:left .22s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 32px rgba(0,0,0,.6)}
+  .sidebar{position:fixed;left:calc(-1 * var(--sidebar-w));top:44px;bottom:0;width:var(--sidebar-w) !important;max-width:calc(100vw - 40px);z-index:500;transition:left .22s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 32px rgba(0,0,0,.6)}
   .sidebar.mobile-open{left:0}
   .sb-toggle{display:none}
   body{overflow-y:auto;height:auto;min-height:100svh}
@@ -241,14 +241,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 @media(max-width:640px){
   .topnav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;padding:0 6px;gap:0}
   .topnav::-webkit-scrollbar{display:none}
-  .brand{margin-right:6px;font-size:12px;letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
-  .nav-tab{padding:0 14px;font-size:12px;white-space:nowrap;flex-shrink:0}
+  .brand{margin-right:6px;font-size:14px;letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
+  .nav-tab{padding:0 14px;font-size:13px;white-space:nowrap;flex-shrink:0}
   .view{padding:14px}
   .dash-title{font-size:18px}
   .kpi-row-3{grid-template-columns:1fr}
   .kpi-row-6{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi-val{font-size:17px}
-  .kpi-lbl{font-size:11px}
+  .kpi-lbl{font-size:12px}
   .kpi-card{padding:12px 14px}
   .chart-grid>.chart-card:first-child{height:240px}
   .chart-grid>div:last-child{flex-direction:column;height:auto}
@@ -260,14 +260,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   .trends-side .chart-card{height:240px;flex:none}
   .cmp-chart-grid>.chart-card{height:270px}
   .cmp-kpi-val{font-size:16px}
+  /* Touch targets ≥44px */
+  .nav-menu-btn{padding:10px 8px}
+  .r-item{padding:12px 10px}
+  .ychip{padding:10px 12px}
+  .stgl{padding:8px 12px}
+  .cmp-sv-tab{padding:10px 18px}
+  .back-btn{padding:10px 14px}
+  .chart-back{padding:8px 12px}
+  .map-reset-btn{padding:8px 14px;font-size:13px}
+  /* Tooltip — left-anchor to stay in viewport */
+  .info-icon::after{left:0;transform:none;right:auto}
+  .chart-title .info-icon::after{left:auto;right:0;transform:none}
 }
 
 /* ─── SMALL PHONE ≤400px: extra compact ─── */
 @media(max-width:400px){
-  .brand{font-size:10px;letter-spacing:.05em;margin-right:4px}
+  .brand{font-size:12px;letter-spacing:.05em;margin-right:4px}
   .nav-menu-btn{margin-right:2px}
   .view{padding:12px}
   .kpi-val{font-size:16px}
+  .kpi-row-6{grid-template-columns:1fr}
   .chart-grid>.chart-card:first-child{height:210px}
   .chart-grid>div:last-child>.chart-card{height:220px}
   .trends-main{height:250px}
