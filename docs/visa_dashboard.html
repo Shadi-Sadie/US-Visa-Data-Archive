@@ -1058,8 +1058,6 @@ function drawMap() {
   pathFn = d3.geoPath().projection(proj);
   mapSvg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).style('display', 'block');
   mapSvg.append('rect').attr('width', W).attr('height', H).attr('fill', '#141824');
-  mapSvg.append('path').datum(d3.geoGraticule()())
-    .attr('fill', 'none').attr('stroke', '#1E2E42').attr('stroke-width', .4).attr('d', pathFn);
   mapG = mapSvg.append('g');
   mapG.selectAll('.cpath').data(topojson.feature(WORLD, WORLD.objects.countries).features).join('path')
     .attr('class', 'cpath').attr('d', pathFn).attr('stroke', '#141824').attr('stroke-width', .3)
