@@ -178,6 +178,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .trends-side{flex:2;min-width:0;display:flex;flex-direction:column;gap:12px}
 .trends-side .chart-card{flex:1;min-height:0}
 .stgl{padding:4px 9px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);color:var(--muted);user-select:none;letter-spacing:.05em}
+.sb-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;font-family:Inter,sans-serif;padding:7px 28px 7px 10px;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237A9CBF' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;outline:none}
+.sb-select:focus{border-color:var(--gold)}
 .stgl.active{background:var(--gold-lo);color:var(--gold);border-color:var(--gold)}
 .cmp-sv-tab{padding:7px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text);opacity:.45;user-select:none;letter-spacing:.01em;transition:opacity .15s,border-color .15s,color .15s}
 .cmp-sv-tab:hover{opacity:.75}
@@ -301,6 +303,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   .trends-main{height:250px}
   .trends-side .chart-card{height:210px}
 }
+.data-note{font-size:13px;color:#A8BFCC;line-height:1.7;padding:12px 16px;border-top:1px solid var(--border);margin-top:12px}
+.data-note b{color:#818CF8}
+.vwp-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:rgba(129,140,248,0.12);color:#818CF8;border:1px solid rgba(129,140,248,0.3);letter-spacing:.06em;cursor:default;flex-shrink:0;vertical-align:middle}
+.cmp-vwp-note{font-size:11px;color:#818CF8;background:rgba(129,140,248,0.07);border:1px solid rgba(129,140,248,0.2);border-radius:6px;padding:8px 13px;line-height:1.55;margin-bottom:6px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -365,6 +371,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 
   <div id="sb-trends" style="display:none">
     <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Filter trends to a single country. Leave blank for global totals.">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span class="sb-lbl">Country</span>
+      </div>
+      <div class="sb-section-body">
+        <div id="trend-country-chip" style="display:none;align-items:center;justify-content:space-between;background:var(--gold-lo);border:1px solid rgba(232,184,75,0.3);border-radius:6px;padding:7px 10px;font-size:13px;color:var(--gold);font-weight:600">
+          <span id="trend-country-chip-name"></span>
+          <span style="color:var(--muted);font-size:12px;cursor:pointer;padding-left:8px" onclick="clearTrendCountry()">&#x2715;</span>
+        </div>
+        <div id="trend-country-search-wrap">
+          <input class="chip-search" id="trend-country-search" placeholder="Search country…" oninput="filterTrendCountrySearch()" onfocus="filterTrendCountrySearch()" autocomplete="off">
+          <div class="chip-results" id="trend-country-results"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sb-section">
       <div class="sb-section-hd" data-tip="Visa Program">
         <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
         <span class="sb-lbl">Visa Program</span>
@@ -375,6 +397,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
           <div class="r-item" data-v="immigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Immigrant</span></div>
           <div class="r-item" data-v="nonimmigrant" onclick="setTrendProg(this)"><div class="r-dot"></div><span>Nonimmigrant</span></div>
         </div>
+      </div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-hd" data-tip="Drill into a specific visa category to see its trend in the main chart.">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span class="sb-lbl">Category</span>
+      </div>
+      <div class="sb-section-body">
+        <select id="trend-cat-select" class="sb-select" onchange="setTrendCategory(this.value)">
+          <option value="all">All categories</option>
+        </select>
+      </div>
+    </div>
+    <div class="sb-section" id="trend-subcat-section" style="display:none">
+      <div class="sb-section-hd" data-tip="Drill into a specific eligibility pathway within the selected category.">
+        <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="sb-lbl">Sub-type</span>
+      </div>
+      <div class="sb-section-body">
+        <select id="trend-subcat-select" class="sb-select" onchange="setTrendSubCat(this.value)">
+          <option value="all">All types</option>
+        </select>
       </div>
     </div>
   </div>
@@ -470,12 +514,19 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
         </div>
       </div>
     </div>
+    <div class="data-note">
+      <b>Data scope:</b> Covers only US State Dept. visa issuances at consulates and embassies abroad.
+      Citizens of the <b>42 Visa Waiver Program (VWP)</b> countries — including the UK, Germany, France, Japan, South Korea, Australia, and most of Western Europe — can enter the US for tourism or business up to 90 days via <b>ESTA</b> without a visa.
+      Those entries are not captured here, so VWP countries appear smaller than non-VWP countries like India or Mexico even if travel volumes are comparable.
+      Canadian citizens are also exempt from tourist/business visas. Citizens of Micronesia, Marshall Islands, and Palau enter freely under Compact of Free Association agreements and are likewise absent from this data.
+      Visa numbers are also shaped by US executive orders, travel bans, and bilateral consular restrictions — sudden drops for specific countries in specific years often reflect policy changes rather than travel demand. The Country view marks known events directly on the timeline.
+    </div>
   </div>
 
   <!-- TRENDS -->
   <div class="view hidden" id="v-trends">
     <div class="dash-header">
-      <h1 class="dash-title">Global <span>Trends</span></h1>
+      <h1 class="dash-title"><span id="trend-title-country">Global</span> <span>Trends</span></h1>
       <div id="trend-prog-pill" style="font-size:12px;font-weight:600;padding:5px 11px;border-radius:5px;background:var(--gold-lo);color:var(--gold);border:1px solid rgba(232,184,75,0.3);letter-spacing:.05em;user-select:none"></div>
     </div>
     <div class="trends-grid">
@@ -516,8 +567,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
     <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
       <div class="c-name" id="d-country">—</div>
       <span id="d-year-badge" style="font-size:13px;font-weight:600;padding:4px 10px;border-radius:4px;background:var(--gold-lo);color:var(--gold);border:1px solid rgba(232,184,75,0.3);letter-spacing:.05em;font-family:'JetBrains Mono',monospace;flex-shrink:0"></span>
+      <span id="d-vwp-badge" class="vwp-badge" style="display:none" title="Visa Waiver Program member — citizens enter for tourism/business via ESTA without a US visa. Those entries are not captured in this dataset, so visa numbers reflect only work, student, and other non-waiver categories.">VWP</span>
     </div>
     <div class="summary" id="d-insight" style="display:none;margin-bottom:8px"></div>
+    <div class="summary" id="d-vwp-insight" style="display:none;margin-bottom:8px;border-left-color:#818CF8;font-size:13px"></div>
 
     <div class="kpi-row kpi-row-6" style="margin-bottom:10px">
       <div class="kpi-card c-total">
@@ -598,6 +651,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
     </div>
     <div id="cmp-content" style="display:none;flex-direction:column;gap:10px">
       <div id="cmp-kpi-row" class="cmp-kpi-row"></div>
+      <div id="cmp-vwp-note" class="cmp-vwp-note" style="display:none"></div>
       <!-- sub-view toggle -->
       <div style="display:flex;gap:4px;flex-shrink:0">
         <div class="cmp-sv-tab active" id="cmp-sv-trend-btn" onclick="setCmpSubView(this,'trend')">Trend</div>
@@ -659,7 +713,7 @@ const S = {
   year: '2024', program: 'nonimmigrant', metric: 'count',
   country: null,
   view: 'overview',
-  trendProg: 'total', logScale: false,
+  trendProg: 'total', trendCategory: 'all', trendSubCat: 'all', trendCountry: null, logScale: false,
   rightPanel: 'comparison', // 'comparison' | 'visa_types'
   selectedProgType: null,
   selectedProgTypeFrom: null,
@@ -671,11 +725,54 @@ const S = {
   cmpCompCats: null,
 };
 let YEARS = [];
-let DATA = null, CYM = {}, WORLD = null;
+let DATA = null, CYM = {}, WORLD = null, GVTY = {};
 let mapSvg, mapG, pathFn, proj, colorScl;
 
 const TREND_COLORS = ['#FB923C','#818CF8','#2DD4BF','#F472B6','#FBBF24','#E879F9','#34D399','#38BDF8'];
 const CMP_COLORS   = ['#FB7185','#93C5FD','#6EE7B7','#FDBA74','#94A3B8'];
+
+// Policy events that visibly affect specific countries' visa data
+const BAN_DESC    = 'US Presidential Proclamation suspended immigrant and most nonimmigrant visas (tourist B, worker H/L/O, student F/J, etc.). Diplomatic & Official visas (A, G, NATO) were explicitly exempt.';
+const LIFT_DESC   = 'Biden administration rescinded the travel ban (Jan 2021). Visa processing resumed.';
+const NEWBAN_DESC = 'New travel restrictions under 2025 executive order. Affected visa categories mirror the 2017 ban.';
+const POLICY_MARKERS = {
+  'Iran':        [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   },
+                  { y:'2025', label:'New ban',          col:'#F97316', desc:NEWBAN_DESC }],
+  'Libya':       [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   }],
+  'Somalia':     [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   },
+                  { y:'2025', label:'New ban',          col:'#F97316', desc:NEWBAN_DESC }],
+  'Syria':       [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   },
+                  { y:'2025', label:'New ban',          col:'#F97316', desc:NEWBAN_DESC }],
+  'Yemen':       [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   },
+                  { y:'2025', label:'New ban',          col:'#F97316', desc:NEWBAN_DESC }],
+  'North Korea': [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   }],
+  'Venezuela':   [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   },
+                  { y:'2025', label:'New ban',          col:'#F97316', desc:NEWBAN_DESC }],
+  'Sudan':       [{ y:'2017', label:'Travel ban',      col:'#F97316', desc:BAN_DESC    },
+                  { y:'2021', label:'Ban lifted',       col:'#2DD4BF', desc:LIFT_DESC   }],
+  'Afghanistan': [{ y:'2021', label:'Embassy closure', col:'#F97316', desc:'US Embassy Kabul evacuated following Taliban takeover in August 2021. Visa processing ceased.' },
+                  { y:'2025', label:'New ban',          col:'#F97316', desc:NEWBAN_DESC }],
+  'Cuba':        [{ y:'2018', label:'NIV suspended',   col:'#F97316', desc:'US suspended all routine nonimmigrant visa (NIV) services at the Havana embassy (March 2018) after staff were withdrawn following "Havana Syndrome" incidents. Cuban nationals must apply at a third-country US embassy.' }],
+  'China':       [{ y:'2020', label:'PP 10043',        col:'#F97316', desc:'Presidential Proclamation 10043 restricted F (academic student) and J (exchange visitor) visas for Chinese nationals affiliated with military-civil fusion institutions. Other visa categories were unaffected.' }],
+};
+
+// Countries whose citizens can enter without a US visa via ESTA (Visa Waiver Program)
+const VWP_COUNTRIES = new Set([
+  'Andorra','Australia','Austria','Belgium','Brunei','Chile','Croatia',
+  'Czech Republic','Denmark','Estonia','Finland','France','Germany','Greece',
+  'Hungary','Iceland','Ireland','Israel','Italy','Japan','Latvia',
+  'Liechtenstein','Lithuania','Luxembourg','Malta','Monaco','Netherlands',
+  'New Zealand','Norway','Poland','Portugal','San Marino','Singapore',
+  'Slovakia','Slovenia','South Korea','Spain','Sweden','Switzerland',
+  'Taiwan','United Kingdom','Uruguay'
+]);
 
 // ═══════════════════════════════════════════════════
 //  ISO MAP
@@ -850,6 +947,17 @@ async function init() {
     for (const e of DATA.country_data) {
       if (!CYM[e.country]) CYM[e.country] = {};
       CYM[e.country][e.year] = e;
+      // Accumulate global visa sub-type totals by year
+      if (!GVTY[e.year]) GVTY[e.year] = {};
+      for (const [prog, cats] of Object.entries(e.visa_types || {})) {
+        if (!GVTY[e.year][prog]) GVTY[e.year][prog] = {};
+        for (const [cat, subtypes] of Object.entries(cats)) {
+          if (!GVTY[e.year][prog][cat]) GVTY[e.year][prog][cat] = {};
+          for (const [sub, cnt] of Object.entries(subtypes)) {
+            GVTY[e.year][prog][cat][sub] = (GVTY[e.year][prog][cat][sub] || 0) + cnt;
+          }
+        }
+      }
     }
     WORLD = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
     buildYears();
@@ -909,6 +1017,7 @@ function setMetric(el) {
   el.classList.add('active');
   S.metric = el.dataset.v;
   updateMapColors();
+  renderDash();
 }
 
 function updateKpiHighlight() {
@@ -968,8 +1077,9 @@ function renderDash() {
   const partialNote = PARTIAL_YEARS.has(yr)
     ? ` <span style="color:var(--amber);font-weight:600">⚠ ${yr} is a partial year (Jan–May only) — totals are not comparable to prior years</span>`
     : '';
-  document.getElementById('summary-txt').innerHTML =
-    `In <strong>${yr}</strong>, <span class="hl">${pct}%</span> of${lbl} visas were issued to just 10 countries${partialNote}`;
+  document.getElementById('summary-txt').innerHTML = S.metric === 'per100k'
+    ? `In <strong>${yr}</strong>, showing top 10 nationalities by${lbl} visas per 100K population${partialNote}`
+    : `In <strong>${yr}</strong>, <span class="hl">${pct}%</span> of${lbl} visas were issued to just 10 countries${partialNote}`;
   drawBar();
   drawProgTypeBar();
 }
@@ -978,8 +1088,11 @@ function renderDash() {
 //  TOP 10 BAR
 // ═══════════════════════════════════════════════════
 function getTop10(yr, prog) {
-  return Object.entries(CYM).map(([c, yrs]) => ({ c, v: getVal(yrs[yr], prog) }))
-    .filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 10);
+  return Object.entries(CYM).map(([c, yrs]) => {
+    const raw = getVal(yrs[yr], prog);
+    const v = S.metric === 'per100k' ? (POP[c] > 0 ? raw / (POP[c] * 1e6) * 1e5 : 0) : raw;
+    return { c, v };
+  }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 10);
 }
 
 function drawBar() {
@@ -992,18 +1105,19 @@ function drawBar() {
   const titleEl = document.getElementById('bar-chart-title');
   if (titleEl) {
     const progLabel = prog === 'total' ? 'All' : prog === 'immigrant' ? 'Immigrant' : 'Nonimmigrant';
-    titleEl.textContent = `Top 10 Nationalities — ${progLabel}`;
+    const metricSuffix = S.metric === 'per100k' ? ' — Per 100K' : '';
+    titleEl.textContent = `Top 10 Nationalities — ${progLabel}${metricSuffix}`;
   }
   const { W, H: availH } = chartDims(wrap, 270, 200);
   const mobile = isMobileView();
-  const gap = mobile ? 5 : 6, labelW = mobile ? 84 : 100, valReserve = mobile ? 44 : 52;
+  const gap = mobile ? 5 : 6, labelW = mobile ? 96 : 124, valReserve = mobile ? 44 : 52;
   const barW = Math.max(60, W - labelW - valReserve);
   const barH = Math.min(28, Math.max(14, Math.floor((availH - top.length * gap) / top.length)));
   const H = top.length * (barH + gap);
   const xSc = d3.scaleLinear().domain([0, top[0]?.v || 1]).range([0, barW]);
   const color = prog === 'immigrant' ? 'var(--violet)' : prog === 'total' ? 'var(--amber)' : 'var(--teal)';
-  // Fix 6: include program in map tooltip label (used by rows mouseover below)
   const progTipLabel = prog === 'total' ? 'Visas (all)' : prog === 'immigrant' ? 'Immigrant visas' : 'Nonimmigrant visas';
+  const maxLblChars = mobile ? 14 : 19;
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H)
     .style('overflow', 'visible');
   const rows = svg.selectAll('g').data(top).join('g')
@@ -1021,7 +1135,7 @@ function drawBar() {
     .attr('x', labelW - 4).attr('y', barH / 2 + 1)
     .attr('dominant-baseline', 'middle').attr('text-anchor', 'end')
     .attr('fill', '#8BAABF').attr('font-size', mobile ? 11 : 12).attr('font-family', 'Inter')
-    .text(d => d.c.length > (mobile ? 13 : 17) ? d.c.slice(0, mobile ? 12 : 16) + '…' : d.c);
+    .text(d => d.c.length > maxLblChars ? d.c.slice(0, maxLblChars - 1) + '…' : d.c);
 
   rows.append('rect').attr('x', labelW).attr('y', 1).attr('height', barH - 2).attr('rx', 3)
     .attr('fill', color).attr('opacity', .75).attr('width', 0)
@@ -1031,13 +1145,14 @@ function drawBar() {
     .attr('x', d => Math.min(labelW + xSc(d.v) + 5, W - valReserve + 4))
     .attr('y', barH / 2 + 1)
     .attr('dominant-baseline', 'middle').attr('fill', '#A8BFCC')
-    .attr('font-size', mobile ? 11 : 12).attr('font-family', 'JetBrains Mono').text(d => fmt(d.v));
+    .attr('font-size', mobile ? 11 : 12).attr('font-family', 'JetBrains Mono').text(d => S.metric === 'per100k' ? d3.format('.2f')(d.v) : fmt(d.v));
 
   rows.on('mouseover', function(e, d) {
     d3.select(this).select('.bar-row-bg').attr('opacity', 1);
     d3.select(this).select('.bar-lbl-text').attr('fill', '#C8DCF0');
     const t = document.getElementById('tt');
-    t.innerHTML = `<div class="tt-name">${d.c}</div><div class="tt-b"><div class="tt-row"><span>${progTipLabel}</span><span class="tt-val">${fmtN(d.v)}</span></div></div><div style="font-size:11px;color:var(--muted);margin-top:6px;padding-top:5px;border-top:1px solid var(--border)">↗ click to view country detail</div>`;
+    const tipValStr = S.metric === 'per100k' ? d3.format('.2f')(d.v) + ' / 100K' : fmtN(d.v);
+    t.innerHTML = `<div class="tt-name">${d.c}</div><div class="tt-b"><div class="tt-row"><span>${progTipLabel}</span><span class="tt-val">${tipValStr}</span></div></div><div style="font-size:11px;color:var(--muted);margin-top:6px;padding-top:5px;border-top:1px solid var(--border)">↗ click to view country detail</div>`;
     t.style.display = 'block'; moveTip(e);
   }).on('mouseout', function(e, d) {
     d3.select(this).select('.bar-row-bg').attr('opacity', 0);
@@ -1133,23 +1248,152 @@ function updateMapColors() {
 // ═══════════════════════════════════════════════════
 //  TRENDS VIEW
 // ═══════════════════════════════════════════════════
+// Returns the data object for a given year — either country-scoped or global
+function getTrendYearData(y) {
+  if (S.trendCountry) return CYM[S.trendCountry]?.[y] || {};
+  return DATA.totals_by_year[y] || {};
+}
+
+function setTrendCountry(name) {
+  S.trendCountry = name;
+  S.trendCategory = 'all';
+  S.trendSubCat = 'all';
+  // Update UI
+  const chip = document.getElementById('trend-country-chip');
+  const wrap = document.getElementById('trend-country-search-wrap');
+  const chipName = document.getElementById('trend-country-chip-name');
+  if (chip) { chip.style.display = 'flex'; chipName.textContent = name; }
+  if (wrap) wrap.style.display = 'none';
+  const titleEl = document.getElementById('trend-title-country');
+  if (titleEl) titleEl.textContent = name;
+  updateTrendPill();
+  drawTrendView();
+}
+
+function clearTrendCountry() {
+  S.trendCountry = null;
+  S.trendCategory = 'all';
+  S.trendSubCat = 'all';
+  const chip = document.getElementById('trend-country-chip');
+  const wrap = document.getElementById('trend-country-search-wrap');
+  const input = document.getElementById('trend-country-search');
+  if (chip) chip.style.display = 'none';
+  if (wrap) wrap.style.display = '';
+  if (input) input.value = '';
+  document.getElementById('trend-country-results').innerHTML = '';
+  const titleEl = document.getElementById('trend-title-country');
+  if (titleEl) titleEl.textContent = 'Global';
+  updateTrendPill();
+  drawTrendView();
+}
+
+function filterTrendCountrySearch() {
+  const q = document.getElementById('trend-country-search').value.toLowerCase();
+  const results = !q && DATA
+    ? Object.entries(CYM).map(([c, yrs]) => ({ c, v: yrs[S.year]?.total || 0 })).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 8).map(x => x.c)
+    : Object.keys(CYM).sort().filter(c => c.toLowerCase().includes(q)).slice(0, 8);
+  const wrap = document.getElementById('trend-country-results');
+  wrap.innerHTML = '';
+  results.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'chip-result';
+    el.textContent = c;
+    el.onclick = () => setTrendCountry(c);
+    wrap.appendChild(el);
+  });
+}
+
 function setTrendProg(el) {
   document.querySelectorAll('#sb-trends .r-item').forEach(e => e.classList.remove('active'));
   el.classList.add('active');
   S.trendProg = el.dataset.v;
+  S.trendCategory = 'all';
+  S.trendSubCat = 'all';
   updateTrendPill();
   drawTrendView();
+}
+
+function setTrendCategory(val) {
+  S.trendCategory = val;
+  S.trendSubCat = 'all';
+  updateTrendSubCatOptions();
+  updateTrendPill();
+  drawGlobalTrend();
+}
+
+function setTrendSubCat(val) {
+  S.trendSubCat = val;
+  updateTrendPill();
+  drawGlobalTrend();
+}
+
+function updateTrendCategoryOptions() {
+  const sel = document.getElementById('trend-cat-select');
+  if (!sel || !DATA) return;
+  const prog = S.trendProg;
+  const categories = new Set();
+  YEARS.forEach(y => {
+    const d = getTrendYearData(y);
+    if (!d.program_types) return;
+    if (prog === 'total') {
+      Object.keys(d.program_types.immigrant || {}).forEach(k => categories.add(k));
+      Object.keys(d.program_types.nonimmigrant || {}).forEach(k => categories.add(k));
+    } else {
+      Object.keys(d.program_types[prog] || {}).forEach(k => categories.add(k));
+    }
+  });
+  const sorted = [...categories].sort();
+  sel.innerHTML = '<option value="all">All categories</option>' +
+    sorted.map(c => `<option value="${c}"${c === S.trendCategory ? ' selected' : ''}>${c}</option>`).join('');
+  if (S.trendCategory !== 'all' && !categories.has(S.trendCategory)) S.trendCategory = 'all';
+  updateTrendSubCatOptions();
+}
+
+function updateTrendSubCatOptions() {
+  const section = document.getElementById('trend-subcat-section');
+  const sel = document.getElementById('trend-subcat-select');
+  if (!sel || !section) return;
+  if (S.trendCategory === 'all') {
+    section.style.display = 'none';
+    S.trendSubCat = 'all';
+    return;
+  }
+  const subtypes = new Set();
+  const progs = S.trendProg === 'total' ? ['immigrant', 'nonimmigrant'] : [S.trendProg];
+  YEARS.forEach(y => {
+    progs.forEach(p => {
+      if (S.trendCountry) {
+        Object.keys(CYM[S.trendCountry]?.[y]?.visa_types?.[p]?.[S.trendCategory] || {}).forEach(k => subtypes.add(k));
+      } else {
+        Object.keys(GVTY[y]?.[p]?.[S.trendCategory] || {}).forEach(k => subtypes.add(k));
+      }
+    });
+  });
+  const sorted = [...subtypes].sort();
+  sel.innerHTML = '<option value="all">All types</option>' +
+    sorted.map(s => `<option value="${s}"${s === S.trendSubCat ? ' selected' : ''}>${s}</option>`).join('');
+  if (S.trendSubCat !== 'all' && !subtypes.has(S.trendSubCat)) S.trendSubCat = 'all';
+  section.style.display = sorted.length > 0 ? '' : 'none';
 }
 
 function updateTrendPill() {
   const pill = document.getElementById('trend-prog-pill');
   if (!pill) return;
-  const labels = { total: 'All programs', immigrant: 'Immigrant only', nonimmigrant: 'Nonimmigrant only' };
-  pill.textContent = 'Showing: ' + (labels[S.trendProg] || S.trendProg);
+  const progLabels = { total: 'All programs', immigrant: 'Immigrant', nonimmigrant: 'Nonimmigrant' };
+  const base = progLabels[S.trendProg] || S.trendProg;
+  const countryPrefix = S.trendCountry ? `${S.trendCountry} · ` : '';
+  if (S.trendSubCat && S.trendSubCat !== 'all') {
+    pill.textContent = `${countryPrefix}${S.trendCategory} — ${S.trendSubCat}`;
+  } else if (S.trendCategory && S.trendCategory !== 'all') {
+    pill.textContent = `${countryPrefix}${base} — ${S.trendCategory}`;
+  } else {
+    pill.textContent = `${countryPrefix}${base}`;
+  }
 }
 
 function drawTrendView() {
   if (!DATA) return;
+  updateTrendCategoryOptions();
   drawGlobalTrend();
   drawYoYChart();
   drawProgramMixChart();
@@ -1164,6 +1408,31 @@ function addCovidBand(svg, xSc, iH) {
   svg.append('text').attr('x', (x0 + x1) / 2).attr('y', iH - 5)
     .attr('text-anchor', 'middle').attr('fill', '#A8BFCC').attr('font-size', 11).attr('font-family', 'Inter')
     .attr('pointer-events', 'none').text('COVID-19');
+}
+
+function addPolicyMarkers(svg, xSc, iH, country) {
+  const markers = POLICY_MARKERS[country];
+  if (!markers) return;
+  markers.forEach((mk, i) => {
+    if (!YEARS.includes(mk.y)) return;
+    const x = xSc(mk.y);
+    // Dashed vertical line
+    svg.append('line')
+      .attr('x1', x).attr('x2', x).attr('y1', 14).attr('y2', iH)
+      .attr('stroke', mk.col).attr('stroke-width', 1).attr('stroke-dasharray', '3,3')
+      .attr('opacity', 0.5).attr('pointer-events', 'none');
+    // Diamond marker at top — hoverable
+    const dy = i % 2 === 0 ? 0 : 14;
+    svg.append('path')
+      .attr('d', `M${x},${dy + 2} L${x + 5},${dy + 8} L${x},${dy + 14} L${x - 5},${dy + 8} Z`)
+      .attr('fill', mk.col).attr('opacity', 0.9).style('cursor', 'pointer')
+      .on('mouseover', e => {
+        const t = document.getElementById('tt');
+        t.innerHTML = `<div class="tt-name" style="color:${mk.col}">${mk.label} — ${mk.y}</div><div class="tt-b"><div style="font-size:12px;color:#A8BFCC;line-height:1.55;margin-top:2px">${mk.desc}</div></div>`;
+        t.style.display = 'block'; moveTip(e);
+      })
+      .on('mouseout', hideTip);
+  });
 }
 
 function setLogScale(v) {
@@ -1184,9 +1453,33 @@ function drawGlobalTrend() {
   const m = mobile ? { t: 10, r: 10, b: 30, l: 48 } : { t: 10, r: 20, b: 32, l: 62 };
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
   const prog = S.trendProg;
+  const cat = S.trendCategory !== 'all' ? S.trendCategory : null;
+  const sub = S.trendSubCat !== 'all' ? S.trendSubCat : null;
 
   const pts = YEARS.map(y => {
-    const d = DATA.totals_by_year[y] || {};
+    const d = getTrendYearData(y);
+    if (cat && sub) {
+      const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
+      let v = 0;
+      progs.forEach(p => {
+        if (S.trendCountry) {
+          v += CYM[S.trendCountry]?.[y]?.visa_types?.[p]?.[cat]?.[sub] || 0;
+        } else {
+          v += GVTY[y]?.[p]?.[cat]?.[sub] || 0;
+        }
+      });
+      return prog === 'immigrant' ? { y, non: 0, imm: v } : { y, non: v, imm: 0 };
+    }
+    if (cat) {
+      const pt = d.program_types || {};
+      let v = 0;
+      if (prog === 'total') {
+        v = ((pt.immigrant || {})[cat] || 0) + ((pt.nonimmigrant || {})[cat] || 0);
+      } else {
+        v = ((pt[prog] || {})[cat] || 0);
+      }
+      return prog === 'immigrant' ? { y, non: 0, imm: v } : { y, non: v, imm: 0 };
+    }
     return { y, non: d.nonimmigrant || 0, imm: d.immigrant || 0 };
   });
 
@@ -1261,6 +1554,7 @@ function drawGlobalTrend() {
   // Interactive dots on top line
   const topColor = prog === 'nonimmigrant' ? 'var(--teal)' : 'var(--violet)';
   const tipRows = d => {
+    if (cat) return [[cat, fmtN(topVal(d))]];
     if (prog === 'total') return [['Total', fmtN(d.non + d.imm)], ['Nonimmigrant', fmtN(d.non)], ['Immigrant', fmtN(d.imm)]];
     if (prog === 'nonimmigrant') return [['Nonimmigrant', fmtN(d.non)]];
     return [['Immigrant', fmtN(d.imm)]];
@@ -1273,10 +1567,12 @@ function drawGlobalTrend() {
     .on('mouseout', hideTip);
 
   // Legend as DOM element below the SVG — avoids overlap with x-axis labels
-  const legItems = prog === 'total'
-    ? [{ l: 'Nonimmigrant', c: 'var(--teal)' }, { l: 'Immigrant added on top', c: 'var(--violet)' }]
-    : prog === 'nonimmigrant' ? [{ l: 'Nonimmigrant', c: 'var(--teal)' }]
-    : [{ l: 'Immigrant', c: 'var(--violet)' }];
+  const legItems = cat
+    ? [{ l: cat, c: topColor }]
+    : prog === 'total'
+      ? [{ l: 'Nonimmigrant', c: 'var(--teal)' }, { l: 'Immigrant added on top', c: 'var(--violet)' }]
+      : prog === 'nonimmigrant' ? [{ l: 'Nonimmigrant', c: 'var(--teal)' }]
+      : [{ l: 'Immigrant', c: 'var(--violet)' }];
   const legDiv = d3.select(wrap).append('div')
     .style('display', 'flex').style('gap', mobile ? '10px' : '16px').style('padding-left', mobile ? '0' : m.l + 'px')
     .style('margin-top', '4px').style('flex-shrink', '0');
@@ -1298,8 +1594,8 @@ function drawYoYChart() {
   const prog = S.trendProg;
 
   const getV = y => {
-    const d = DATA.totals_by_year[y] || {};
-    return prog === 'immigrant' ? d.immigrant || 0 : prog === 'nonimmigrant' ? d.nonimmigrant || 0 : d.total || 0;
+    const d = getTrendYearData(y);
+    return prog === 'immigrant' ? d.immigrant || 0 : prog === 'nonimmigrant' ? d.nonimmigrant || 0 : (d.total || (d.immigrant || 0) + (d.nonimmigrant || 0));
   };
 
   const pts = YEARS.slice(1).map(y => {
@@ -1378,7 +1674,7 @@ function drawProgramMixChart() {
   if (mixTitleEl) mixTitleEl.textContent = showImmShare ? 'Immigrant Share Over Time' : 'Nonimmigrant Share Over Time';
 
   const pts = YEARS.map(y => {
-    const d = DATA.totals_by_year[y] || {};
+    const d = getTrendYearData(y);
     const tot = (d.nonimmigrant || 0) + (d.immigrant || 0);
     const share = tot > 0
       ? showImmShare ? (d.immigrant || 0) / tot * 100 : (d.nonimmigrant || 0) / tot * 100
@@ -1470,6 +1766,10 @@ document.addEventListener('click', e => {
   if (csResults && !e.target.closest('#country-search') && !e.target.closest('#country-search-results')) {
     csResults.innerHTML = '';
   }
+  const tcResults = document.getElementById('trend-country-results');
+  if (tcResults && !e.target.closest('#trend-country-search') && !e.target.closest('#trend-country-results')) {
+    tcResults.innerHTML = '';
+  }
   const cmpWrap = document.getElementById('cmp-chip-search-wrap');
   if (cmpWrap && cmpWrap.style.display !== 'none' && !cmpWrap.contains(e.target) && !e.target.classList.contains('cchip-add')) {
     cmpWrap.style.display = 'none';
@@ -1508,6 +1808,10 @@ function updateDetail() {
   const ybadge = document.getElementById('d-year-badge');
   if (ybadge) ybadge.textContent = yr + (PARTIAL_YEARS.has(yr) ? ' ⚠' : '');
 
+  // VWP badge
+  const vwpBadge = document.getElementById('d-vwp-badge');
+  if (vwpBadge) vwpBadge.style.display = VWP_COUNTRIES.has(c) ? '' : 'none';
+
   // Ranks with denominators
   function rankOf(prog) {
     const sorted = Object.entries(CYM).map(([n, yrs]) => ({ n, v: getVal(yrs[yr], prog) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
@@ -1537,6 +1841,18 @@ function updateDetail() {
   if (topType) insightParts.push(`Top category: <span class="hl">${topType[0]}</span>`);
   const insightEl = document.getElementById('d-insight');
   if (insightEl) { insightEl.innerHTML = insightParts.join(' &nbsp;·&nbsp; '); insightEl.style.display = insightParts.length ? '' : 'none'; }
+
+  // VWP temporary-visitor context note
+  const vwpInsightEl = document.getElementById('d-vwp-insight');
+  if (vwpInsightEl) {
+    const tempVisitorNon = entry.program_types?.nonimmigrant?.['Temporary visitor'] || 0;
+    if (VWP_COUNTRIES.has(c) && tempVisitorNon > 0) {
+      vwpInsightEl.innerHTML = '<b style="color:#818CF8">VWP member</b> — The <span style="color:#818CF8;font-weight:600">Temporary visitor</span> visas shown (' + fmtN(tempVisitorNon) + ') are issued only to nationals who cannot use ESTA: prior overstays or deportations, certain criminal records, travel to US-restricted countries (Iran, Cuba, North Korea, Syria, etc. since 2011), or needed stays beyond 90 days. The far larger volume of ' + c + ' tourist and business entries via ESTA is not captured in this dataset.';
+      vwpInsightEl.style.display = '';
+    } else {
+      vwpInsightEl.style.display = 'none';
+    }
+  }
 
   drawDonut('radar-imm-wrap', entry.program_types?.immigrant || {}, 'var(--violet)', 'immigrant', null);
   drawDonut('radar-non-wrap', entry.program_types?.nonimmigrant || {}, 'var(--teal)', 'nonimmigrant', null);
@@ -1740,6 +2056,8 @@ function drawTotalTrend() {
     .style('cursor', 'crosshair')
     .on('mouseover mousemove', (e, d) => showTotalTrendTip(e, c, d, nonPts))
     .on('mouseout', hideTip);
+
+  addPolicyMarkers(svg, xSc, iH, c);
 
   // Legend
   const legDiv = d3.select(wrap).append('div').style('display', 'flex').style('gap', '14px').style('margin-top', '4px').style('padding-left', '44px');
@@ -2393,6 +2711,22 @@ function drawCmpScoreCards() {
       '</div>';
     wrap.appendChild(card);
   });
+
+  // VWP callout
+  const vwpNote = document.getElementById('cmp-vwp-note');
+  if (vwpNote) {
+    const vwpInCmp = S.compareCountries.filter(c => VWP_COUNTRIES.has(c));
+    if (vwpInCmp.length > 0) {
+      const names = vwpInCmp.join(', ');
+      const plural = vwpInCmp.length > 1;
+      vwpNote.innerHTML = '<b>VWP note:</b> ' + names + (plural ? ' are' : ' is a') + ' Visa Waiver Program member' + (plural ? 's' : '') + '. ' +
+        (plural ? 'Their' : 'Its') + ' tourist and business entries via ESTA do not require a visa and are <b>not captured</b> in this dataset — ' +
+        (plural ? 'their' : 'its') + ' visa numbers here reflect only work, student, and other non-waiver categories.';
+      vwpNote.style.display = '';
+    } else {
+      vwpNote.style.display = 'none';
+    }
+  }
 }
 
 function drawCmpTrend() {
@@ -2501,7 +2835,7 @@ function drawCmpBar() {
   const n = S.compareCountries.length;
   const contentH = n * (barH + gap) - gap + noteH;
   const topPad = Math.max(10, (H - contentH) / 2);
-  const labelW = 100, valReserve = 62;
+  const labelW = 124, valReserve = 62;
   const barW = W - labelW - valReserve;
   const vals = S.compareCountries.map(c => {
     const raw = getVal(CYM[c]?.[yr], prog);
@@ -2523,7 +2857,7 @@ function drawCmpBar() {
     row.append('text').attr('x', labelW - 6).attr('y', y + barH / 2)
       .attr('dominant-baseline', 'middle').attr('text-anchor', 'end')
       .attr('fill', v === null ? '#4A6580' : col).attr('font-size', 12).attr('font-family', 'Inter')
-      .text(c.length > 13 ? c.slice(0, 12) + '…' : c);
+      .text(c.length > 19 ? c.slice(0, 18) + '…' : c);
     if (v === null) {
       row.append('rect').attr('x', labelW).attr('y', y + 2).attr('width', barW).attr('height', barH - 4)
         .attr('fill', '#0D1B2A').attr('rx', 3);

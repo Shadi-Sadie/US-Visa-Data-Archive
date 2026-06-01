@@ -19,14 +19,26 @@ def main():
     by_year.columns = [c for c in by_year.columns]
     by_year["total"] = by_year.sum(axis=1)
 
-    totals_by_year = {
-        year: {
+    valid = df[df["program_type"] != "nan"]
+    category_by_year = (
+        valid.groupby(["year", "visa_program", "program_type"])["count"].sum()
+    )
+
+    totals_by_year = {}
+    for year, row in by_year.iterrows():
+        prog_types = {"immigrant": {}, "nonimmigrant": {}}
+        for program in ("immigrant", "nonimmigrant"):
+            try:
+                pt = category_by_year.loc[year, program]
+                prog_types[program] = {k: int(v) for k, v in pt.items()}
+            except KeyError:
+                pass
+        totals_by_year[year] = {
             "immigrant": int(row.get("immigrant", 0)),
             "nonimmigrant": int(row.get("nonimmigrant", 0)),
             "total": int(row["total"]),
+            "program_types": prog_types,
         }
-        for year, row in by_year.iterrows()
-    }
 
     # --- country_data ---
     # Per-country-year totals per program
@@ -37,8 +49,6 @@ def main():
         .reset_index()
     )
     totals["total"] = totals.get("immigrant", 0) + totals.get("nonimmigrant", 0)
-
-    valid = df[df["program_type"] != "nan"]
 
     # Per-country-year-program breakdown by program_type
     breakdown = (
