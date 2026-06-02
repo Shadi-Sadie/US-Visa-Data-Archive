@@ -92,6 +92,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .kpi-card.c-rank-total::before{background:rgba(249,115,22,0.55)}
 .kpi-card.c-rank-imm::before{background:rgba(129,140,248,0.55)}
 .kpi-card.c-rank-non::before{background:rgba(45,212,191,0.55)}
+.kpi-row-2{grid-template-columns:repeat(2,1fr)}
+.kpi-card.c-drop::before{background:var(--red)}.kpi-card.c-drop .kpi-val{color:var(--red)}.kpi-card.c-drop .kpi-icon{color:var(--red)}
+.kpi-card.c-gain::before{background:var(--green)}.kpi-card.c-gain .kpi-val{color:var(--green)}.kpi-card.c-gain .kpi-icon{color:var(--green)}
+.kpi-ctry{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kpi-lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .kpi-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;letter-spacing:-.02em}
 .kpi-card.c-total .kpi-val{color:var(--amber)}
@@ -255,6 +259,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
   .view{padding:14px}
   .dash-header{align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
   .dash-title{font-size:18px;line-height:1.2}
+  .kpi-row-2{grid-template-columns:1fr}
   .kpi-row-3{grid-template-columns:1fr}
   .kpi-row-6{grid-template-columns:repeat(2,1fr);gap:8px}
   .kpi-val{font-size:17px}
@@ -528,6 +533,22 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
     <div class="dash-header">
       <h1 class="dash-title"><span id="trend-title-country">Global</span> <span>Trends</span></h1>
       <div id="trend-prog-pill" style="font-size:12px;font-weight:600;padding:5px 11px;border-radius:5px;background:var(--gold-lo);color:var(--gold);border:1px solid rgba(232,184,75,0.3);letter-spacing:.05em;user-select:none"></div>
+    </div>
+    <div class="kpi-row kpi-row-2" id="trend-impact-row" style="display:none;margin-bottom:14px">
+      <div class="kpi-card c-drop" id="trend-drop-card" style="cursor:pointer" onclick="trendImpactClick('drop')">
+        <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        <div class="kpi-lbl" id="trend-drop-lbl">Biggest Decline</div>
+        <div class="kpi-ctry" id="trend-drop-ctry">—</div>
+        <div class="kpi-val" id="trend-drop-val">—</div>
+        <div class="kpi-sub flat" id="trend-drop-sub">—</div>
+      </div>
+      <div class="kpi-card c-gain" id="trend-gain-card" style="cursor:pointer" onclick="trendImpactClick('gain')">
+        <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        <div class="kpi-lbl" id="trend-gain-lbl">Biggest Gain</div>
+        <div class="kpi-ctry" id="trend-gain-ctry">—</div>
+        <div class="kpi-val" id="trend-gain-val">—</div>
+        <div class="kpi-sub flat" id="trend-gain-sub">—</div>
+      </div>
     </div>
     <div class="trends-grid">
       <div class="chart-card trends-main">
@@ -1322,12 +1343,16 @@ function setTrendCategory(val) {
   updateTrendSubCatOptions();
   updateTrendPill();
   drawGlobalTrend();
+  drawYoYChart();
+  drawProgramMixChart();
 }
 
 function setTrendSubCat(val) {
   S.trendSubCat = val;
   updateTrendPill();
   drawGlobalTrend();
+  drawYoYChart();
+  drawProgramMixChart();
 }
 
 function updateTrendCategoryOptions() {
@@ -1397,9 +1422,78 @@ function updateTrendPill() {
 function drawTrendView() {
   if (!DATA) return;
   updateTrendCategoryOptions();
+  drawTrendImpactCards();
   drawGlobalTrend();
   drawYoYChart();
   drawProgramMixChart();
+}
+
+function drawTrendImpactCards() {
+  const row = document.getElementById('trend-impact-row');
+  if (!row || !CYM) return;
+
+  const completeYears = YEARS.filter(y => !PARTIAL_YEARS.has(y));
+  if (completeYears.length < 2) { row.style.display = 'none'; return; }
+  const yr2 = completeYears[completeYears.length - 1];
+  const yr1 = completeYears[completeYears.length - 2];
+
+  const cat = S.trendCategory !== 'all' ? S.trendCategory : null;
+  const sub = S.trendSubCat !== 'all' ? S.trendSubCat : null;
+  const prog = S.trendProg;
+  const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
+
+  function countryValue(country, year) {
+    let v = 0;
+    progs.forEach(p => {
+      if (cat && sub) {
+        v += CYM[country]?.[year]?.visa_types?.[p]?.[cat]?.[sub] || 0;
+      } else if (cat) {
+        v += CYM[country]?.[year]?.program_types?.[p]?.[cat] || 0;
+      } else {
+        v += CYM[country]?.[year]?.[p] || 0;
+      }
+    });
+    return v;
+  }
+
+  let maxDrop = null, maxGain = null;
+  for (const country of Object.keys(CYM)) {
+    const v1 = countryValue(country, yr1);
+    const v2 = countryValue(country, yr2);
+    if (!v1 && !v2) continue;
+    const delta = v2 - v1;
+    if (delta < 0 && (!maxDrop || delta < maxDrop.delta)) maxDrop = { country, v1, v2, delta };
+    if (delta > 0 && (!maxGain || delta > maxGain.delta)) maxGain = { country, v1, v2, delta };
+  }
+
+  const yearLabel = `${yr1} → ${yr2}`;
+  const catLabel = sub ? `${cat} — ${sub}` : cat ? cat : 'All Visas';
+
+  function fillCard(prefix, data, sign) {
+    document.getElementById(`trend-${prefix}-lbl`).textContent = `${sign > 0 ? 'Biggest Gain' : 'Biggest Decline'} · ${catLabel}`;
+    if (!data) {
+      document.getElementById(`trend-${prefix}-ctry`).textContent = 'N/A';
+      document.getElementById(`trend-${prefix}-val`).textContent = '—';
+      document.getElementById(`trend-${prefix}-sub`).textContent = yearLabel;
+      return;
+    }
+    const abs = Math.abs(data.delta);
+    const pct = data.v1 > 0 ? (Math.abs(data.delta) / data.v1 * 100).toFixed(1) : null;
+    document.getElementById(`trend-${prefix}-ctry`).textContent = data.country;
+    document.getElementById(`trend-${prefix}-val`).textContent = (sign > 0 ? '+' : '−') + fmtN(abs);
+    document.getElementById(`trend-${prefix}-sub`).textContent = yearLabel + (pct ? ` · ${pct}%` : '');
+    document.getElementById(`trend-${prefix}-card`).dataset.country = data.country;
+  }
+
+  fillCard('drop', maxDrop, -1);
+  fillCard('gain', maxGain, +1);
+  row.style.display = '';
+}
+
+function trendImpactClick(which) {
+  const card = document.getElementById(`trend-${which}-card`);
+  const country = card?.dataset?.country;
+  if (country && CYM[country]) showCountry(country);
 }
 
 function addCovidBand(svg, xSc, iH) {
@@ -1595,9 +1689,24 @@ function drawYoYChart() {
   const m = mobile ? { t: 14, r: 8, b: 32, l: 44 } : { t: 14, r: 12, b: 36, l: 54 };
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
   const prog = S.trendProg;
+  const cat = S.trendCategory !== 'all' ? S.trendCategory : null;
+  const sub = S.trendSubCat !== 'all' ? S.trendSubCat : null;
 
   const getV = y => {
     const d = getTrendYearData(y);
+    if (cat && sub) {
+      const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
+      let v = 0;
+      progs.forEach(p => {
+        v += S.trendCountry ? (CYM[S.trendCountry]?.[y]?.visa_types?.[p]?.[cat]?.[sub] || 0) : (GVTY[y]?.[p]?.[cat]?.[sub] || 0);
+      });
+      return v;
+    }
+    if (cat) {
+      const pt = d.program_types || {};
+      if (prog === 'total') return ((pt.immigrant || {})[cat] || 0) + ((pt.nonimmigrant || {})[cat] || 0);
+      return ((pt[prog] || {})[cat] || 0);
+    }
     return prog === 'immigrant' ? d.immigrant || 0 : prog === 'nonimmigrant' ? d.nonimmigrant || 0 : (d.total || (d.immigrant || 0) + (d.nonimmigrant || 0));
   };
 
@@ -1667,23 +1776,58 @@ function drawProgramMixChart() {
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
 
   const prog = S.trendProg;
-  // Derive metric based on active filter:
-  //   total/nonimmigrant → immigrant share (the minority worth watching)
-  //   immigrant → nonimmigrant share (same ratio, inverted label)
-  const showImmShare = prog !== 'immigrant';
-  const chartColor = showImmShare ? 'var(--violet)' : 'var(--teal)';
-  const chartLabel = showImmShare ? 'Immigrant share' : 'Nonimmigrant share';
+  const cat = S.trendCategory !== 'all' ? S.trendCategory : null;
+  const sub = S.trendSubCat !== 'all' ? S.trendSubCat : null;
   const mixTitleEl = document.getElementById('tc-mix-title');
-  if (mixTitleEl) mixTitleEl.textContent = showImmShare ? 'Immigrant Share Over Time' : 'Nonimmigrant Share Over Time';
 
-  const pts = YEARS.map(y => {
-    const d = getTrendYearData(y);
-    const tot = (d.nonimmigrant || 0) + (d.immigrant || 0);
-    const share = tot > 0
-      ? showImmShare ? (d.immigrant || 0) / tot * 100 : (d.nonimmigrant || 0) / tot * 100
-      : 0;
-    return { y, share };
-  }).filter(d => d.share > 0);
+  let chartColor, chartLabel;
+  let pts;
+
+  if (cat && sub) {
+    // Show subtype as % of its parent category
+    chartColor = prog === 'immigrant' ? 'var(--violet)' : 'var(--teal)';
+    chartLabel = sub + ' share';
+    if (mixTitleEl) mixTitleEl.textContent = 'Share Within Category';
+    pts = YEARS.map(y => {
+      const d = getTrendYearData(y);
+      const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
+      let subV = 0, catV = 0;
+      progs.forEach(p => {
+        subV += S.trendCountry ? (CYM[S.trendCountry]?.[y]?.visa_types?.[p]?.[cat]?.[sub] || 0) : (GVTY[y]?.[p]?.[cat]?.[sub] || 0);
+        catV += ((d.program_types?.[p] || {})[cat] || 0);
+      });
+      return { y, share: catV > 0 ? subV / catV * 100 : 0 };
+    }).filter(d => d.share > 0);
+  } else if (cat) {
+    // Show category as % of its program total
+    chartColor = prog === 'immigrant' ? 'var(--violet)' : 'var(--teal)';
+    chartLabel = cat + ' share';
+    if (mixTitleEl) mixTitleEl.textContent = 'Share Within Program';
+    pts = YEARS.map(y => {
+      const d = getTrendYearData(y);
+      const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
+      let catV = 0, totV = 0;
+      progs.forEach(p => {
+        catV += ((d.program_types?.[p] || {})[cat] || 0);
+        totV += (d[p] || 0);
+      });
+      return { y, share: totV > 0 ? catV / totV * 100 : 0 };
+    }).filter(d => d.share > 0);
+  } else {
+    // Default: immigrant share of total
+    const showImmShare = prog !== 'immigrant';
+    chartColor = showImmShare ? 'var(--violet)' : 'var(--teal)';
+    chartLabel = showImmShare ? 'Immigrant share' : 'Nonimmigrant share';
+    if (mixTitleEl) mixTitleEl.textContent = showImmShare ? 'Immigrant Share Over Time' : 'Nonimmigrant Share Over Time';
+    pts = YEARS.map(y => {
+      const d = getTrendYearData(y);
+      const tot = (d.nonimmigrant || 0) + (d.immigrant || 0);
+      const share = tot > 0
+        ? showImmShare ? (d.immigrant || 0) / tot * 100 : (d.nonimmigrant || 0) / tot * 100
+        : 0;
+      return { y, share };
+    }).filter(d => d.share > 0);
+  }
 
   if (!pts.length) { wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:12px">No data</div>'; return; }
 
