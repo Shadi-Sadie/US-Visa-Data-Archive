@@ -1,38 +1,53 @@
-# US-Visa-Data-Archive
+# US Visa Data Archive
 
-This project converts monthly U.S. Department of State visa issuance PDFs into a structured dataset for analysis and dashboarding.
+An interactive dashboard and open dataset tracking every US visa issued at consulates and embassies worldwide, from 2017 to the present. Data is sourced directly from the US Department of State and updated automatically each month.
 
-## What it does
+**[View the live dashboard](https://shadi-sadie.github.io/US-Visa-Data-Archive/visa_dashboard.html)**
 
-- Scrapes immigrant and nonimmigrant visa PDF links from the official State Department pages
-- Downloads new PDFs
-- Extracts tabular data from each file
-- Standardizes country names
-- Parses month/year fields
-- Enriches visa classes using a reference codebook
-- Merges with existing processed data and re-aggregates to prevent duplicate inflation
-- Tracks processed source files
-- Publishes updates through GitHub Actions
+---
 
-## Output
+## What you can explore
 
-- `data/processed/visa_data.csv`: final longitudinal dataset
-- `data/processed/processed_files.json`: source-file state tracker
+The dashboard covers immigrant and nonimmigrant visas issued across 204 countries and territories, spanning 257 distinct visa types grouped into meaningful categories.
 
-Main dataset columns include:
+**Overview**
+See global issuance totals for any year, mapped by country. Switch between absolute counts and per-100K population to compare countries of vastly different sizes. A ranked list of the top 10 nationalities updates with every filter change.
 
-- `country`
-- `visa_type`
-- `visa_program` (`immigrant` or `nonimmigrant`)
-- `count`
-- `date`, `month`, `year`
-- visa metadata from `data/reference/visa_codebook.csv` (for example: `program_type`, `eligibility_pathway`, `visa_description`)
+**Trends**
+Track how visa issuance has changed year over year from 2017 through the present. Drill into specific program types such as Temporary Worker, Study and Exchange, Family-based, or Employment-based to see how individual categories have evolved over time. Annotated markers highlight known policy events, travel bans, and embassy closures that caused visible shifts in the data.
+
+**Country detail**
+Select any country to see its full visa history: total issuance by year, a breakdown of visa categories as a donut chart, rank among all countries, and year-over-year change. A timeline chart shows the full arc from 2017 to today.
+
+**Compare**
+Place up to five countries side by side to compare absolute issuance or per-100K rates for any given year.
+
+---
+
+## Data scope and coverage
+
+| | |
+|---|---|
+| Source | US Department of State monthly PDF reports |
+| Coverage | January 2017 to present |
+| Countries | 204 countries and territories |
+| Visa types | 257 types across immigrant and nonimmigrant programs |
+| Update cadence | Automatically updated on the 1st of each month |
+
+### Important limitations
+
+**Visa Waiver Program countries are underrepresented.** Citizens of the 42 VWP countries (including the UK, Germany, France, Japan, South Korea, and most of Western Europe) can enter the US for tourism or business for up to 90 days via ESTA without a visa. Those entries are not captured here. This means VWP countries will appear smaller than non-VWP countries like India or Mexico even when overall travel volumes are comparable. Canadian citizens are similarly exempt from tourist and business visas.
+
+**Visa numbers reflect policy, not just demand.** Sudden drops for specific countries in specific years often reflect executive orders, travel bans, embassy closures, or bilateral consular restrictions rather than changes in travel interest. The Country view marks known events directly on the timeline.
+
+---
 
 ## Project structure
 
-```text
+```
 .
-├── build_visa_dataset.py
+├── build_visa_dataset.py       # Main pipeline: scrape, extract, transform
+├── build_visualization.py      # Builds visa_aggregated.json from processed CSV
 ├── requirements.txt
 ├── src/
 │   ├── scrape.py
@@ -40,17 +55,22 @@ Main dataset columns include:
 │   ├── transform.py
 │   └── tracker.py
 ├── data/
-│   ├── raw/
+│   ├── raw/                    # Downloaded PDFs
 │   ├── reference/
-│   │   └── visa_codebook.csv
+│   │   └── visa_codebook.csv   # Visa type to category mappings
 │   └── processed/
 │       ├── visa_data.csv
 │       └── processed_files.json
+├── docs/
+│   ├── visa_dashboard.html     # Interactive dashboard (served via GitHub Pages)
+│   └── visa_aggregated.json    # Pre-aggregated JSON loaded by the dashboard
 └── .github/workflows/
     └── monthly_update.yml
 ```
 
-## Run locally
+---
+
+## Running locally
 
 Install dependencies:
 
@@ -58,38 +78,64 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the pipeline:
+Run the data pipeline:
 
 ```bash
 python build_visa_dataset.py
 ```
 
+Rebuild the visualization data after any pipeline run:
+
+```bash
+python build_visualization.py
+```
+
+Serve the dashboard locally:
+
+```bash
+python -m http.server 8765 --directory docs
+```
+
+Then open `http://localhost:8765/visa_dashboard.html` in your browser.
+
+---
+
 ## Automation
 
-GitHub Actions workflow: `.github/workflows/monthly_update.yml`
+The GitHub Actions workflow at `.github/workflows/monthly_update.yml` runs on the 1st of each month at 05:00 UTC. It can also be triggered manually from the Actions tab.
 
-- Scheduled run: day 1 of each month at `05:00 UTC`
-- Manual trigger: `workflow_dispatch`
-- Executes `python build_visa_dataset.py`
-- Commits updated `data/processed/visa_data.csv` and `data/processed/processed_files.json` back to the repository when changes exist
+Each run:
+1. Scrapes the State Department website for new PDF links
+2. Downloads and parses any PDFs not yet in the archive
+3. Rebuilds `visa_data.csv`
+4. Rebuilds `visa_aggregated.json` for the dashboard
+5. Commits and pushes all changed files back to the repository
 
-For automated commits, repository Actions permissions must allow write access to contents.
+If the State Department publishes data mid-month (which is typical), the next scheduled run or a manual trigger will pick it up.
 
-## Data integrity behavior
+---
 
-- Fails if visa codebook has duplicate `visa_type + visa_program` keys
-- Fails if extracted rows contain unmapped visa classes (writes `data/processed/unknown_visa_types.csv` for inspection)
-- Requires valid extractable rows per processed PDF in strict mode
-- Re-aggregates by business key (`date`, `visa_program`, `country`, `visa_type`) to avoid duplicate count inflation
+## Data integrity
+
+The pipeline enforces several checks at each run:
+
+- Fails if `visa_codebook.csv` contains duplicate `visa_type + visa_program` keys
+- Writes `data/processed/unknown_visa_types.csv` and exits with an error if any extracted visa types are not present in the codebook, so that new visa types introduced by the State Department are caught and categorized before the data goes live
+- Re-aggregates by business key (`date`, `visa_program`, `country`, `visa_type`) to prevent duplicate count inflation if a source PDF is processed more than once
+
+---
 
 ## Data sources
 
 - [Monthly Immigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/monthly-immigrant-visa-issuances.html)
 - [Monthly Nonimmigrant Visa Issuances](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics/monthly-nonimmigrant-visa-issuances.html)
 
-Visa codebook reference was manually compiled from State Department visa classification resources [1](https://fam.state.gov/FAM/09FAM/09FAM050201.html) and [2](https://fam.state.gov/FAM/09FAM/09FAM040201.html).
+The visa codebook was compiled manually from the State Department's Foreign Affairs Manual, specifically [9 FAM 502](https://fam.state.gov/FAM/09FAM/09FAM050201.html) and [9 FAM 402](https://fam.state.gov/FAM/09FAM/09FAM040201.html).
 
-## Why this exists
+---
 
-The State Department publishes high-value visa statistics mostly as PDFs.  
-This project provides a reproducible pipeline to keep those data in analysis-ready CSV form.
+## Why this project exists
+
+The State Department publishes detailed visa statistics every month, but exclusively as PDFs. This makes longitudinal analysis difficult: comparing 2017 to 2024, tracking how a policy change affected a specific country, or simply asking how many student visas were issued last year all require manual work that most people will not do.
+
+This project converts that entire archive into a clean, analysis-ready dataset and keeps it current automatically. The interactive dashboard makes the data accessible without requiring any technical setup.

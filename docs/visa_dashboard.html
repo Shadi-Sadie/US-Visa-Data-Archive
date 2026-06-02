@@ -39,9 +39,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .sb-toggle:hover{color:var(--gold);border-color:var(--gold);background:var(--gold-lo)}
 .sb-inner{overflow-y:auto;overflow-x:hidden;flex:1;padding:20px 0}
 .sb-section{padding:0 12px;margin-bottom:26px}
-.sb-section-hd{display:flex;align-items:center;gap:9px;padding:6px 8px;margin-bottom:10px;border-radius:6px;position:relative}
+.sb-section-hd{display:flex;align-items:center;gap:9px;padding:6px 8px;margin-bottom:10px;border-radius:6px;position:relative;user-select:none}
 .sb-icon{width:15px;height:15px;flex-shrink:0;color:var(--muted)}
-.sb-lbl{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap;transition:opacity .12s}
+.sb-lbl{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap;transition:opacity .12s;user-select:none}
 .sidebar.collapsed .sb-lbl{opacity:0;pointer-events:none}
 .sidebar.collapsed .sb-section-body{display:none}
 .sidebar.collapsed .sb-section-hd{justify-content:center;padding:8px 0}
@@ -112,7 +112,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 
 /* ─── CHART CARDS ─── */
 .chart-grid{display:grid;grid-template-columns:1fr minmax(280px,340px);gap:10px;flex:1;min-height:380px}
-.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;min-width:0}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;min-width:0;overflow:hidden}
 .chart-title{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;position:relative;z-index:10;min-width:0;line-height:1.35}
 .chart-title span{min-width:0}
 .chart-title .mobile-hint{font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0;text-transform:none;opacity:.75}
@@ -166,7 +166,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
 .back-btn{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:7px 13px;border-radius:5px;border:1px solid var(--border);margin-bottom:12px;transition:all .15s;background:var(--surface)}
 .back-btn:hover{color:var(--gold);border-color:var(--gold)}
 .c-name{font-size:28px;font-weight:800;letter-spacing:-.03em}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;flex:1;min-height:300px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;flex:1;min-height:300px;min-height:0}
 #v-country{display:flex;flex-direction:column}
 #country-empty-state{flex:1;display:flex;flex-direction:column}
 #country-content{flex:1;display:flex;flex-direction:column;min-height:0}
@@ -569,9 +569,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       <span id="d-year-badge" style="font-size:13px;font-weight:600;padding:4px 10px;border-radius:4px;background:var(--gold-lo);color:var(--gold);border:1px solid rgba(232,184,75,0.3);letter-spacing:.05em;font-family:'JetBrains Mono',monospace;flex-shrink:0"></span>
       <span id="d-vwp-badge" class="vwp-badge" style="display:none" title="Visa Waiver Program member — citizens enter for tourism/business via ESTA without a US visa. Those entries are not captured in this dataset, so visa numbers reflect only work, student, and other non-waiver categories.">VWP</span>
     </div>
-    <div class="summary" id="d-insight" style="display:none;margin-bottom:8px"></div>
-    <div class="summary" id="d-vwp-insight" style="display:none;margin-bottom:8px;border-left-color:#818CF8;font-size:13px"></div>
-
     <div class="kpi-row kpi-row-6" style="margin-bottom:10px">
       <div class="kpi-card c-total">
         <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 2.5C8.5 5.5 7 8.7 7 12s1.5 6.5 5 9.5M12 2.5c3.5 3 5 6.2 5 9.5s-1.5 6.5-5 9.5M2.5 12h19"/></svg>
@@ -632,6 +629,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
         <div class="chart-body" id="right-panel-wrap"></div>
       </div>
     </div>
+    <div class="summary" id="d-insight" style="display:none;margin-top:10px;flex-shrink:0"></div>
+    <div class="summary" id="d-vwp-insight" style="display:none;margin-top:8px;border-left-color:#818CF8;font-size:13px;flex-shrink:0"></div>
     </div><!-- /country-content -->
   </div>
 
@@ -994,7 +993,11 @@ function buildYears() {
   });
 }
 
+let _yearClickGuard = false;
 function setYear(el) {
+  if (_yearClickGuard) return;
+  _yearClickGuard = true;
+  setTimeout(() => { _yearClickGuard = false; }, 300);
   const v = el.dataset.v;
   document.querySelectorAll('#year-opts .ychip, #year-opts-c .ychip, #year-opts-cmp .ychip').forEach(e => {
     e.classList.toggle('active', e.dataset.v === v);
@@ -2003,7 +2006,7 @@ function drawTotalTrend() {
   wrap.innerHTML = '';
   const LEGEND_H = 22;
   const W = wrap.clientWidth || 280, H = (wrap.clientHeight || 160) - LEGEND_H;
-  const m = { t: 10, r: 14, b: 26, l: 44 };
+  const m = { t: 10, r: 14, b: 38, l: 44 };
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
 
   // Stacked area — nonimmigrant (base) + immigrant (stacked on top)
@@ -2011,7 +2014,7 @@ function drawTotalTrend() {
   const maxV = d3.max(nonPts, d => d.non + d.imm) || 1;
   const xSc = d3.scalePoint().domain(YEARS).range([0, iW]).padding(0.15);
   const ySc = d3.scaleLinear().domain([0, maxV * 1.15]).range([iH, 0]);
-  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', `translate(${m.l},${m.t})`);
+  const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).style('overflow', 'hidden').append('g').attr('transform', `translate(${m.l},${m.t})`);
 
   svg.append('g').call(d3.axisLeft(ySc).ticks(4).tickSize(-iW).tickFormat(v => v === 0 ? '' : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v))
     .call(g => { g.select('.domain').remove(); g.selectAll('.tick line').attr('stroke', '#1E3554').attr('stroke-dasharray', '2,3'); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 12).attr('font-family', 'Inter'); });
@@ -2069,11 +2072,13 @@ function drawTotalTrend() {
 }
 
 // ─── RIGHT PANEL ───
+let _rpTimer = null;
 function drawRightPanel() {
+  clearTimeout(_rpTimer);
   const wrap = document.getElementById('right-panel-wrap');
   wrap.style.opacity = '0';
   wrap.style.transform = 'translateX(8px)';
-  setTimeout(() => {
+  _rpTimer = setTimeout(() => {
     if (S.rightPanel === 'comparison') drawComparisonBars();
     else drawVisaTypeBreakdown();
     wrap.style.opacity = '1';
