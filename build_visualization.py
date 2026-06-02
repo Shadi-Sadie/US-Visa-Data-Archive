@@ -7,16 +7,22 @@ OUTPUT_PATH = "docs/visa_aggregated.json"
 
 
 def main():
-    df = pd.read_csv(INPUT_PATH, usecols=["year", "visa_program", "program_type", "country", "count", "eligibility_pathway"])
+    df = pd.read_csv(INPUT_PATH, usecols=["year", "month", "visa_program", "program_type", "country", "count", "eligibility_pathway"])
 
     df["count"] = pd.to_numeric(df["count"], errors="coerce").fillna(0)
     df["program_type"] = df["program_type"].astype(str).str.strip()
     df["eligibility_pathway"] = df["eligibility_pathway"].astype(str).str.strip()
     df["year"] = df["year"].astype(str)
+    df["month"] = pd.to_numeric(df["month"], errors="coerce")
+
+    # month_count per year — used by the dashboard to detect partial years (< 12).
+    months_by_year = (
+        df.groupby("year")["month"]
+        .apply(lambda s: s.dropna().astype(int).nunique(), include_groups=False)
+    )
 
     # --- totals_by_year ---
     by_year = df.groupby(["year", "visa_program"])["count"].sum().unstack(fill_value=0)
-    by_year.columns = [c for c in by_year.columns]
     by_year["total"] = by_year.sum(axis=1)
 
     valid = df[df["program_type"] != "nan"]
@@ -38,10 +44,10 @@ def main():
             "nonimmigrant": int(row.get("nonimmigrant", 0)),
             "total": int(row["total"]),
             "program_types": prog_types,
+            "month_count": int(months_by_year.get(year, 0)),
         }
 
     # --- country_data ---
-    # Per-country-year totals per program
     totals = (
         df.groupby(["country", "year", "visa_program"])["count"]
         .sum()
@@ -50,13 +56,11 @@ def main():
     )
     totals["total"] = totals.get("immigrant", 0) + totals.get("nonimmigrant", 0)
 
-    # Per-country-year-program breakdown by program_type
     breakdown = (
         valid.groupby(["country", "year", "visa_program", "program_type"])["count"]
         .sum()
     )
 
-    # Per-country-year-program-program_type breakdown by eligibility_pathway
     visa_type_breakdown = (
         valid[valid["eligibility_pathway"] != "nan"]
         .groupby(["country", "year", "visa_program", "program_type", "eligibility_pathway"])["count"]
@@ -95,7 +99,7 @@ def main():
             "visa_types": visa_types,
         })
 
-    os.makedirs("visualization", exist_ok=True)
+    os.makedirs("docs", exist_ok=True)
     with open(OUTPUT_PATH, "w") as f:
         json.dump({"totals_by_year": totals_by_year, "country_data": country_data}, f, separators=(",", ":"))
 

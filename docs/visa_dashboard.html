@@ -1499,8 +1499,10 @@ function drawTrendImpactCards() {
     const v2 = countryValue(country, yr2);
     if (Math.max(v1, v2) < minVol) continue;
     const delta = v2 - v1;
-    if (delta < 0 && (!maxDrop || delta < maxDrop.delta)) maxDrop = { country, v1, v2, delta };
-    if (delta > 0 && (!maxGain || delta > maxGain.delta)) maxGain = { country, v1, v2, delta };
+    const pct = v1 > 0 ? delta / v1 : null;
+    if (pct === null) continue;
+    if (delta < 0 && (!maxDrop || pct < maxDrop.pct)) maxDrop = { country, v1, v2, delta, pct };
+    if (delta > 0 && (!maxGain || pct > maxGain.pct)) maxGain = { country, v1, v2, delta, pct };
   }
 
   const partialSuffix = isPartial ? ' · partial yr' : '';
@@ -1516,11 +1518,11 @@ function drawTrendImpactCards() {
       document.getElementById(`trend-${prefix}-sub`).textContent = yearLabel;
       return;
     }
-    const abs = Math.abs(data.delta);
-    const pct = data.v1 > 0 ? (abs / data.v1 * 100).toFixed(1) : data.v2 > 0 ? '∞' : null;
+    const pctStr = (Math.abs(data.pct) * 100).toFixed(1);
+    const absStr = fmtN(Math.abs(data.delta));
     document.getElementById(`trend-${prefix}-ctry`).textContent = data.country;
-    document.getElementById(`trend-${prefix}-val`).textContent = (sign > 0 ? '+' : '−') + fmtN(abs);
-    document.getElementById(`trend-${prefix}-sub`).textContent = yearLabel + (pct !== null ? ` · ${pct}%` : '');
+    document.getElementById(`trend-${prefix}-val`).textContent = (sign > 0 ? '+' : '−') + pctStr + '%';
+    document.getElementById(`trend-${prefix}-sub`).textContent = `${yearLabel} · ${sign > 0 ? '+' : '−'}${absStr} visas`;
     document.getElementById(`trend-${prefix}-card`).dataset.country = data.country;
   }
 
