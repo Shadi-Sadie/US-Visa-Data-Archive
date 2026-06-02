@@ -1,6 +1,6 @@
 # US Visa Data Archive
 
-An interactive dashboard and open dataset tracking every US visa issued at consulates and embassies worldwide, from 2017 to the present. Data is sourced directly from the US Department of State and updated automatically each month.
+An interactive dashboard and open dataset tracking US visa issuance by applicant's country of birth and visa class, from 2017 to the present. Data is sourced directly from the US Department of State monthly reports and updated automatically each month.
 
 **[View the live dashboard](https://shadi-sadie.github.io/US-Visa-Data-Archive/visa_dashboard.html)**
 
@@ -8,7 +8,7 @@ An interactive dashboard and open dataset tracking every US visa issued at consu
 
 ## What you can explore
 
-The dashboard covers immigrant and nonimmigrant visas issued across 204 countries and territories, spanning 257 distinct visa types grouped into meaningful categories.
+The dashboard covers immigrant and nonimmigrant visas broken down by applicant's country of birth across 204 countries and territories, spanning 257 distinct visa types grouped into meaningful categories. Note: the data reflects country of birth, not the consulate or post where the visa was issued.
 
 **Overview**
 See global issuance totals for any year, mapped by country. Switch between absolute counts and per-100K population to compare countries of vastly different sizes. A ranked list of the top 10 nationalities updates with every filter change.
@@ -30,7 +30,7 @@ Place up to five countries side by side to compare absolute issuance or per-100K
 |---|---|
 | Source | US Department of State monthly PDF reports |
 | Coverage | January 2017 to present |
-| Countries | 204 countries and territories |
+| Countries (by birth) | 204 countries and territories |
 | Visa types | 257 types across immigrant and nonimmigrant programs |
 | Update cadence | Automatically updated on the 1st of each month |
 
