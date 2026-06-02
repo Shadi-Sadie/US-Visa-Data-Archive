@@ -992,19 +992,16 @@ async function init() {
 // ═══════════════════════════════════════════════════
 //  OVERVIEW FILTERS
 // ═══════════════════════════════════════════════════
-// Track which years are partial — only the last year can be partial (still collecting data).
-// Earlier years are complete regardless of how low their totals were (e.g. COVID 2020).
+// Track which years have fewer than 12 months of data.
+// Only the last year can be genuinely partial (still collecting); earlier years
+// with missing months simply have gaps in the source data that won't be filled.
 let PARTIAL_YEARS = new Set();
 
 function buildYears() {
   PARTIAL_YEARS = new Set();
-  if (YEARS.length >= 2) {
-    const last = YEARS[YEARS.length - 1];
-    const prev = YEARS[YEARS.length - 2];
-    const cur = DATA.totals_by_year[last]?.total || 0;
-    const prv = DATA.totals_by_year[prev]?.total || 0;
-    if (prv > 0 && cur < prv * 0.6) PARTIAL_YEARS.add(last);
-  }
+  const last = YEARS[YEARS.length - 1];
+  const mc = DATA.totals_by_year[last]?.month_count ?? 12;
+  if (mc < 12) PARTIAL_YEARS.add(last);
   const chipsHTML = '<div class="year-chips">' + YEARS.map(y =>
     `<div class="ychip${y === S.year ? ' active' : ''}" data-v="${y}" onclick="setYear(this)">${y}${PARTIAL_YEARS.has(y) ? '<span class="partial-dot" title="Partial year data"></span>' : ''}</div>`
   ).join('') + '</div>';
@@ -1342,6 +1339,7 @@ function setTrendCategory(val) {
   S.trendSubCat = 'all';
   updateTrendSubCatOptions();
   updateTrendPill();
+  drawTrendImpactCards();
   drawGlobalTrend();
   drawYoYChart();
   drawProgramMixChart();
@@ -1350,6 +1348,7 @@ function setTrendCategory(val) {
 function setTrendSubCat(val) {
   S.trendSubCat = val;
   updateTrendPill();
+  drawTrendImpactCards();
   drawGlobalTrend();
   drawYoYChart();
   drawProgramMixChart();
@@ -1432,10 +1431,14 @@ function drawTrendImpactCards() {
   const row = document.getElementById('trend-impact-row');
   if (!row || !CYM) return;
 
+  // Always use the most recent year (even if partial) so the KPI shows the
+  // latest trend. The yr1 anchor is always a complete year for a valid base.
   const completeYears = YEARS.filter(y => !PARTIAL_YEARS.has(y));
-  if (completeYears.length < 2) { row.style.display = 'none'; return; }
-  const yr2 = completeYears[completeYears.length - 1];
-  const yr1 = completeYears[completeYears.length - 2];
+  if (completeYears.length < 1) { row.style.display = 'none'; return; }
+  const yr2 = YEARS[YEARS.length - 1];
+  const yr1 = completeYears[completeYears.length - (PARTIAL_YEARS.has(yr2) ? 1 : 2)] || completeYears[0];
+  if (!yr1 || yr1 === yr2) { row.style.display = 'none'; return; }
+  const isPartial = PARTIAL_YEARS.has(yr2);
 
   const cat = S.trendCategory !== 'all' ? S.trendCategory : null;
   const sub = S.trendSubCat !== 'all' ? S.trendSubCat : null;
@@ -1456,18 +1459,54 @@ function drawTrendImpactCards() {
     return v;
   }
 
+  // When a single country is focused in Trends, show that country's own change
+  // rather than scanning all countries for the global best/worst.
+  if (S.trendCountry) {
+    const v1 = countryValue(S.trendCountry, yr1);
+    const v2 = countryValue(S.trendCountry, yr2);
+    const delta = v2 - v1;
+    const _pLabel = { immigrant: 'Immigrant', nonimmigrant: 'Nonimmigrant' }[prog] || null;
+    const catLabel = sub ? `${cat} — ${sub}` : cat ? cat : (_pLabel || 'All Visas');
+    const partialNote = isPartial ? ' · partial yr' : '';
+    const yearLabel = `${yr1} → ${yr2}${partialNote}`;
+    const pct = v1 > 0 ? (Math.abs(delta) / v1 * 100).toFixed(1) : v2 > 0 ? '∞' : null;
+    const sign = delta >= 0 ? 1 : -1;
+    const prefix = delta >= 0 ? 'gain' : 'drop';
+    const opposite = delta >= 0 ? 'drop' : 'gain';
+    document.getElementById(`trend-${prefix}-lbl`).textContent = `${delta >= 0 ? 'Gain' : 'Decline'} · ${catLabel}`;
+    document.getElementById(`trend-${prefix}-ctry`).textContent = S.trendCountry;
+    document.getElementById(`trend-${prefix}-val`).textContent = (sign > 0 ? '+' : '−') + fmtN(Math.abs(delta));
+    document.getElementById(`trend-${prefix}-sub`).textContent = yearLabel + (pct ? ` · ${pct}%` : '');
+    document.getElementById(`trend-${prefix}-card`).dataset.country = S.trendCountry;
+    document.getElementById(`trend-${opposite}-lbl`).textContent = `Baseline · ${catLabel}`;
+    document.getElementById(`trend-${opposite}-ctry`).textContent = S.trendCountry;
+    document.getElementById(`trend-${opposite}-val`).textContent = fmtN(v1);
+    document.getElementById(`trend-${opposite}-sub`).textContent = yr1;
+    document.getElementById(`trend-${opposite}-card`).dataset.country = S.trendCountry;
+    row.style.display = '';
+    return;
+  }
+
+  // Compute a minimum volume threshold so trivially small countries don't
+  // dominate the KPI when a narrow subcategory is selected.
+  const allVols = Object.keys(CYM).map(c => Math.max(countryValue(c, yr1), countryValue(c, yr2)));
+  const globalMax = Math.max(...allVols);
+  const minVol = Math.max(50, globalMax * 0.005); // 0.5% of the top country, floor 50
+
   let maxDrop = null, maxGain = null;
   for (const country of Object.keys(CYM)) {
     const v1 = countryValue(country, yr1);
     const v2 = countryValue(country, yr2);
-    if (!v1 && !v2) continue;
+    if (Math.max(v1, v2) < minVol) continue;
     const delta = v2 - v1;
     if (delta < 0 && (!maxDrop || delta < maxDrop.delta)) maxDrop = { country, v1, v2, delta };
     if (delta > 0 && (!maxGain || delta > maxGain.delta)) maxGain = { country, v1, v2, delta };
   }
 
-  const yearLabel = `${yr1} → ${yr2}`;
-  const catLabel = sub ? `${cat} — ${sub}` : cat ? cat : 'All Visas';
+  const partialSuffix = isPartial ? ' · partial yr' : '';
+  const yearLabel = `${yr1} → ${yr2}${partialSuffix}`;
+  const progLabel = { immigrant: 'Immigrant', nonimmigrant: 'Nonimmigrant' }[prog] || null;
+  const catLabel = sub ? `${cat} — ${sub}` : cat ? cat : (progLabel || 'All Visas');
 
   function fillCard(prefix, data, sign) {
     document.getElementById(`trend-${prefix}-lbl`).textContent = `${sign > 0 ? 'Biggest Gain' : 'Biggest Decline'} · ${catLabel}`;
@@ -1478,10 +1517,10 @@ function drawTrendImpactCards() {
       return;
     }
     const abs = Math.abs(data.delta);
-    const pct = data.v1 > 0 ? (Math.abs(data.delta) / data.v1 * 100).toFixed(1) : null;
+    const pct = data.v1 > 0 ? (abs / data.v1 * 100).toFixed(1) : data.v2 > 0 ? '∞' : null;
     document.getElementById(`trend-${prefix}-ctry`).textContent = data.country;
     document.getElementById(`trend-${prefix}-val`).textContent = (sign > 0 ? '+' : '−') + fmtN(abs);
-    document.getElementById(`trend-${prefix}-sub`).textContent = yearLabel + (pct ? ` · ${pct}%` : '');
+    document.getElementById(`trend-${prefix}-sub`).textContent = yearLabel + (pct !== null ? ` · ${pct}%` : '');
     document.getElementById(`trend-${prefix}-card`).dataset.country = data.country;
   }
 
