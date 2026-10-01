@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -6,11 +7,28 @@ from urllib.parse import urljoin
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 DOWNLOAD_DIR = "data/raw"
+MAX_RETRIES = 3
+RETRY_BACKOFF_SECONDS = 10
+
+
+def _get_with_retries(url, timeout):
+    last_exc = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            response = requests.get(url, headers=HEADERS, timeout=timeout)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            last_exc = e
+            if attempt < MAX_RETRIES:
+                wait = RETRY_BACKOFF_SECONDS * attempt
+                print(f"Request to {url} failed ({e}); retrying in {wait}s...")
+                time.sleep(wait)
+    raise last_exc
 
 
 def scrape_pdfs(base_url, required_keywords):
-    response = requests.get(base_url, headers=HEADERS, timeout=10)
-    response.raise_for_status()
+    response = _get_with_retries(base_url, timeout=10)
 
     soup = BeautifulSoup(response.text, "html.parser")
     pdfs = []
@@ -35,8 +53,7 @@ def download_pdf(url):
     if os.path.exists(path):
         return path
 
-    response = requests.get(url, headers=HEADERS, timeout=30)
-    response.raise_for_status()
+    response = _get_with_retries(url, timeout=30)
 
     with open(path, "wb") as f:
         f.write(response.content)

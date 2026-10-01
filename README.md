@@ -1,6 +1,6 @@
 # US Visa Data Archive
 
-An interactive dashboard and open dataset tracking US visa issuance by applicant's country of birth and visa class, from 2017 to the present. Data is sourced directly from the US Department of State monthly reports and updated automatically each month.
+An interactive dashboard and open dataset tracking US visa issuance by applicant's country of birth and visa class, from 2017 to the present. Data is sourced directly from the US Department of State monthly reports.
 
 **[View the live dashboard](https://shadi-sadie.github.io/US-Visa-Data-Archive/visa_dashboard.html)**
 
@@ -8,7 +8,7 @@ An interactive dashboard and open dataset tracking US visa issuance by applicant
 
 ## What you can explore
 
-The dashboard covers immigrant and nonimmigrant visas broken down by applicant's country of birth across 204 countries and territories, spanning 257 distinct visa types grouped into meaningful categories. Note: the data reflects country of birth, not the consulate or post where the visa was issued.
+The dashboard covers immigrant and nonimmigrant visas broken down by applicant's country of birth across 205 countries and territories, spanning 237 distinct visa types grouped into meaningful categories. Note: the data reflects country of birth, not the consulate or post where the visa was issued.
 
 **Overview**
 See global issuance totals for any year, mapped by country. Switch between absolute counts and per-100K population to compare countries of vastly different sizes. A ranked list of the top 10 nationalities updates with every filter change.
@@ -28,11 +28,11 @@ Place up to five countries side by side to compare absolute issuance or per-100K
 
 | | |
 |---|---|
-| Source | US Department of State monthly PDF reports |
-| Coverage | January 2017 to present |
-| Countries (by birth) | 204 countries and territories |
-| Visa types | 257 types across immigrant and nonimmigrant programs |
-| Update cadence | Automatically updated on the 1st of each month |
+| Source | US Department of State monthly reports (PDF, and `.xlsx` from FY2026 onward) |
+| Coverage | March 2017 through February 2026 |
+| Countries (by birth) | 205 countries and territories |
+| Visa types | 237 types across immigrant and nonimmigrant programs |
+| Update cadence | Manual — see [Automation](#automation) |
 
 ### Important limitations
 
@@ -47,6 +47,7 @@ Place up to five countries side by side to compare absolute issuance or per-100K
 ```
 .
 ├── build_visa_dataset.py       # Main pipeline: scrape, extract, transform
+├── ingest_local.py             # Ingests manually downloaded .xlsx files from data/raw/
 ├── build_visualization.py      # Builds visa_aggregated.json from processed CSV
 ├── requirements.txt
 ├── src/
@@ -55,7 +56,7 @@ Place up to five countries side by side to compare absolute issuance or per-100K
 │   ├── transform.py
 │   └── tracker.py
 ├── data/
-│   ├── raw/                    # Downloaded PDFs
+│   ├── raw/                    # Source documents (.pdf, and .xlsx from FY2026)
 │   ├── reference/
 │   │   └── visa_codebook.csv   # Visa type to category mappings
 │   └── processed/
@@ -78,10 +79,16 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the data pipeline:
+Run the data pipeline (scrapes upstream; currently blocked by Cloudflare — see [Automation](#automation)):
 
 ```bash
 python build_visa_dataset.py
+```
+
+Or ingest source files you downloaded by hand into `data/raw/`:
+
+```bash
+python ingest_local.py
 ```
 
 Rebuild the visualization data after any pipeline run:
@@ -102,16 +109,44 @@ Then open `http://localhost:8765/visa_dashboard.html` in your browser.
 
 ## Automation
 
+> **Automated collection is currently blocked.** travel.state.gov now sits behind a Cloudflare bot
+> challenge that returns `403 Forbidden` to automated clients, so the scheduled workflow can no
+> longer fetch new releases. New months must be downloaded by hand — see
+> [Updating manually](#updating-manually) below.
+
 The GitHub Actions workflow at `.github/workflows/monthly_update.yml` runs on the 1st of each month at 05:00 UTC. It can also be triggered manually from the Actions tab.
 
 Each run:
-1. Scrapes the State Department website for new PDF links
-2. Downloads and parses any PDFs not yet in the archive
+1. Scrapes the State Department website for new source links
+2. Downloads and parses any files not yet in the archive
 3. Rebuilds `visa_data.csv`
 4. Rebuilds `visa_aggregated.json` for the dashboard
-5. Commits and pushes all changed files back to the repository
+5. Commits and pushes the updated data files back to the repository
 
-If the State Department publishes data mid-month (which is typical), the next scheduled run or a manual trigger will pick it up.
+When the upstream site is unreachable, the pipeline retries with backoff and then exits cleanly
+rather than failing the job, so a blocked month is a no-op instead of a red build. The practical
+consequence is that a persistent block is silent — if the dashboard looks stale, check whether new
+months are actually being ingested.
+
+### Updating manually
+
+Because a real browser passes the Cloudflare challenge that automated clients cannot:
+
+1. Open the [immigrant](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/immigrant-visa-statistics/monthly-immigrant-visa-issuances.html)
+   and [nonimmigrant](https://travel.state.gov/content/travel/en/legal/visa-law0/visa-statistics/nonimmigrant-visa-statistics/monthly-nonimmigrant-visa-issuances.html)
+   pages in a browser and clear the challenge.
+2. Download any months newer than the latest in `visa_data.csv`. Prefer the `.xlsx` versions —
+   they parse far more reliably than the PDF table extraction.
+3. Save them into `data/raw/` without renaming; the month and year are parsed from the filename.
+4. Run the ingest and rebuild the dashboard data:
+
+```bash
+python ingest_local.py
+python build_visualization.py
+```
+
+`ingest_local.py` skips months already present in the dataset. Pass `--replace` to re-ingest a
+month; it replaces rather than appends, so re-running it never double-counts.
 
 ---
 
@@ -120,8 +155,13 @@ If the State Department publishes data mid-month (which is typical), the next sc
 The pipeline enforces several checks at each run:
 
 - Fails if `visa_codebook.csv` contains duplicate `visa_type + visa_program` keys
-- Writes `data/processed/unknown_visa_types.csv` and exits with an error if any extracted visa types are not present in the codebook, so that new visa types introduced by the State Department are caught and categorized before the data goes live
-- Re-aggregates by business key (`date`, `visa_program`, `country`, `visa_type`) to prevent duplicate count inflation if a source PDF is processed more than once
+- Writes `data/processed/unknown_visa_types.csv` and prints a warning if any extracted visa types are not present in the codebook, so that new visa types introduced by the State Department are caught and categorized. These rows are still included, with null metadata columns
+- Prints a warning for any country name that survives standardization without matching the reference list, so new or renamed source spellings surface rather than silently fragmenting a country's history
+- Collapses rows to one per business key (`date`, `visa_program`, `country`, `visa_type`), so country remapping (for example several China spellings folding into one) sums into a single row
+
+Note that this collapse **sums** counts, so ingesting the same month twice would inflate it. Guarding
+against that is the job of `processed_files.json`, which records what has already been consumed;
+`ingest_local.py` additionally replaces rather than appends any month it re-ingests.
 
 ---
 
@@ -136,6 +176,6 @@ The visa codebook was compiled manually from the State Department's Foreign Affa
 
 ## Why this project exists
 
-The State Department publishes detailed visa statistics every month, but exclusively as PDFs. This makes longitudinal analysis difficult: comparing 2017 to 2024, tracking how a policy change affected a specific country, or simply asking how many student visas were issued last year all require manual work that most people will not do.
+The State Department publishes detailed visa statistics every month, historically as PDFs only (spreadsheets were added alongside them from FY2026). This makes longitudinal analysis difficult: comparing 2017 to 2024, tracking how a policy change affected a specific country, or simply asking how many student visas were issued last year all require manual work that most people will not do.
 
-This project converts that entire archive into a clean, analysis-ready dataset and keeps it current automatically. The interactive dashboard makes the data accessible without requiring any technical setup.
+This project converts that entire archive into a clean, analysis-ready dataset, and preserves the original source documents in `data/raw/` so every figure stays traceable back to the release it came from. The interactive dashboard makes the data accessible without requiring any technical setup.

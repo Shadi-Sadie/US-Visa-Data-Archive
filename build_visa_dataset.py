@@ -2,6 +2,7 @@ import time
 
 import os
 import pandas as pd
+import requests
 
 from src.scrape import scrape_pdfs
 from src.extract import process_pdfs
@@ -29,8 +30,13 @@ def main():
     processed = load_state()
 
     # --- Scrape links ---
-    immigrant_links = scrape_pdfs(IMMIGRANT_URL, ["FSC"])
-    nonimmigrant_links = scrape_pdfs(NONIMMIGRANT_URL, ["nationality"])
+    try:
+        immigrant_links = scrape_pdfs(IMMIGRANT_URL, ["FSC"])
+        nonimmigrant_links = scrape_pdfs(NONIMMIGRANT_URL, ["nationality"])
+    except requests.exceptions.RequestException as e:
+        print(f"Could not reach travel.state.gov after retries: {e}")
+        print("Skipping this run; will retry on the next scheduled run.")
+        return
 
     all_links = immigrant_links + nonimmigrant_links
 

@@ -117,6 +117,60 @@ def table_to_dataframe(table):
 
 
 
+def drop_non_country_rows(df):
+    """Remove totals, header repeats, footnotes and unusable rows."""
+    df["country"] = df["country"].astype(str)
+    country_lower = df["country"].str.lower().str.strip()
+
+    df = df[
+        ~country_lower.str.contains("total", na=False)
+        & ~country_lower.str.contains("nationality", na=False)
+        & ~country_lower.str.contains("nationlity", na=False)  # Catch misspelled version
+        & ~country_lower.str.contains("unknown", na=False)
+        & ~country_lower.str.contains("other", na=False)
+        & ~country_lower.str.contains("non-nationality", na=False)
+        & ~country_lower.str.contains("non nationality", na=False)
+        & ~df["country"].str.startswith("*")  # Filter asterisk-prefixed rows
+    ]
+
+    return df[df["visa_type"].notna()]
+
+
+def process_excel(paths, visa_program):
+    """Extract issuance rows from the .xlsx releases (title row 0, header row 1)."""
+    all_rows = []
+
+    for path in paths:
+        filename = os.path.basename(path)
+        date = extract_date_from_filename(filename)
+
+        if date is None:
+            raise ValueError(f"Could not parse month/year from filename: {filename}")
+
+        df = pd.read_excel(path, sheet_name=0, header=1)
+        df.columns = [str(c).strip() if c else "unnamed" for c in df.columns]
+        df = normalize_columns(df)
+
+        if not REQUIRED_COLUMNS.issubset(df.columns):
+            raise RuntimeError(
+                f"Missing required columns in {filename}. Found: {list(df.columns)}"
+            )
+
+        df = drop_non_country_rows(df)
+
+        if df.empty:
+            raise RuntimeError(f"No valid rows extracted from {filename}.")
+
+        df["date"] = date
+        df["visa_program"] = visa_program
+        all_rows.append(df)
+
+    if not all_rows:
+        return pd.DataFrame()
+
+    return pd.concat(all_rows, ignore_index=True)
+
+
 def process_pdfs(pdf_urls, visa_program):
 
     all_rows = []
@@ -158,24 +212,7 @@ def process_pdfs(pdf_urls, visa_program):
                                 skip_counts["missing_required_columns"] += 1
                                 continue
 
-                            # Ensure country is string for filtering
-                            df["country"] = df["country"].astype(str)
-
-                            # Remove footnote/metadata rows and invalid entries
-                            country_lower = df["country"].str.lower().str.strip()
-
-                            df = df[
-                                ~country_lower.str.contains("total", na=False)
-                                & ~country_lower.str.contains("nationality", na=False)
-                                & ~country_lower.str.contains("nationlity", na=False)  # Catch misspelled version
-                                & ~country_lower.str.contains("unknown", na=False)
-                                & ~country_lower.str.contains("other", na=False)
-                                & ~country_lower.str.contains("non-nationality", na=False)
-                                & ~country_lower.str.contains("non nationality", na=False)
-                                & ~df["country"].str.startswith("*")  # Filter asterisk-prefixed rows
-                            ]
-
-                            df = df[df["visa_type"].notna()]
+                            df = drop_non_country_rows(df)
                             if df.empty:
                                 skip_counts["empty_after_cleaning"] += 1
                                 continue
