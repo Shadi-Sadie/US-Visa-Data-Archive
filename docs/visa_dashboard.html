@@ -1729,9 +1729,9 @@ function drawGlobalTrend() {
   };
   svg.selectAll('.dot-g').data(pts.filter(d => topVal(d) > 0)).join('circle')
     .attr('cx', d => xSc(d.y)).attr('cy', d => safeY(topVal(d))).attr('r', 3.5)
-    .attr('fill', d => PARTIAL_YEARS.has(d.y) ? 'var(--bg)' : topColor)
+    .attr('fill', topColor)
     .attr('stroke', topColor).attr('stroke-width', 1.5).style('cursor', 'pointer')
-    .on('mouseover', (e, d) => showRichTip(e, d.y + (PARTIAL_YEARS.has(d.y) ? ' ⚠ partial' : ''), tipRows(d)))
+    .on('mouseover', (e, d) => showRichTip(e, d.y, tipRows(d)))
     .on('mouseout', hideTip);
 
   // Legend as DOM element below the SVG — avoids overlap with x-axis labels
@@ -1897,9 +1897,8 @@ function drawProgramMixChart() {
 
   if (!pts.length) { wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:12px">No data</div>'; return; }
 
-  const fullPts = pts.filter(d => !PARTIAL_YEARS.has(d.y));
-  const maxPct = d3.max(fullPts.length ? fullPts : pts, d => d.share) || 1;
-  const minPct = d3.min(fullPts.length ? fullPts : pts, d => d.share) || 0;
+  const maxPct = d3.max(pts, d => d.share) || 1;
+  const minPct = d3.min(pts, d => d.share) || 0;
   // Start Y-axis below the actual minimum to show variance, not from 0
   const yFloor = Math.max(0, minPct * 0.7);
   const xSc = d3.scalePoint().domain(pts.map(d => d.y)).range([0, iW]).padding(0.15);
@@ -1927,9 +1926,9 @@ function drawProgramMixChart() {
 
   svg.selectAll('.mix-dot').data(pts).join('circle')
     .attr('cx', d => xSc(d.y)).attr('cy', d => ySc(d.share)).attr('r', 3)
-    .attr('fill', d => PARTIAL_YEARS.has(d.y) ? 'var(--bg)' : chartColor)
+    .attr('fill', chartColor)
     .attr('stroke', chartColor).attr('stroke-width', 1.5).style('cursor', 'pointer')
-    .on('mouseover', (e, d) => showRichTip(e, d.y + (PARTIAL_YEARS.has(d.y) ? ' ⚠ partial' : ''), [
+    .on('mouseover', (e, d) => showRichTip(e, d.y, [
       [chartLabel, d.share.toFixed(1) + '%'],
       [showImmShare ? 'Nonimmigrant share' : 'Immigrant share', (100 - d.share).toFixed(1) + '%'],
     ]))
@@ -2005,14 +2004,17 @@ function updateDetail() {
   document.getElementById('d-imm').textContent = fmtN(imm);
   document.getElementById('d-non').textContent = fmtN(non);
 
-  // Deltas — suppress YoY for partial years (misleading)
+  // Deltas — suppress YoY unless both years are complete, otherwise the change
+  // just measures the missing months of whichever year is short.
+  const prevYr = String(+yr - 1);
   function setDelta(id, cur, prev) {
     const el = document.getElementById(id);
     if (PARTIAL_YEARS.has(yr)) { el.className = 'kpi-sub flat'; el.textContent = 'partial year'; return; }
-    if (prev > 0) { const p = ((cur - prev) / prev * 100).toFixed(1); el.className = 'kpi-sub ' + (+p >= 0 ? 'up' : 'down'); el.textContent = (+p >= 0 ? '▲ +' : '▼ ') + p + '% vs ' + (+yr - 1); }
+    if (PARTIAL_YEARS.has(prevYr)) { el.className = 'kpi-sub flat'; el.textContent = `${prevYr} incomplete`; return; }
+    if (prev > 0) { const p = ((cur - prev) / prev * 100).toFixed(1); el.className = 'kpi-sub ' + (+p >= 0 ? 'up' : 'down'); el.textContent = (+p >= 0 ? '▲ +' : '▼ ') + p + '% vs ' + prevYr; }
     else { el.className = 'kpi-sub flat'; el.textContent = 'No prior year'; }
   }
-  const prev = CYM[c]?.[String(+yr - 1)] || {};
+  const prev = CYM[c]?.[prevYr] || {};
   setDelta('d-total-d', tot, prev.total || 0);
   setDelta('d-imm-d', imm, prev.immigrant || 0);
   setDelta('d-non-d', non, prev.nonimmigrant || 0);
@@ -2042,8 +2044,10 @@ function updateDetail() {
   // Insight sentence
   const allYrTotals = YEARS.map(y => ({ y, v: CYM[c]?.[y]?.total || 0 })).filter(x => x.v > 0);
   const peak = allYrTotals.reduce((a, b) => b.v > a.v ? b : a, { y: null, v: 0 });
-  const prevTot = CYM[c]?.[String(+yr - 1)]?.total || 0;
-  const yoyPct = tot > 0 && prevTot > 0 && !PARTIAL_YEARS.has(yr) ? (tot - prevTot) / prevTot * 100 : null;
+  const prevTot = CYM[c]?.[prevYr]?.total || 0;
+  // Both sides must be full years, or the change is an artefact of the shorter one.
+  const comparable = !PARTIAL_YEARS.has(yr) && !PARTIAL_YEARS.has(prevYr);
+  const yoyPct = tot > 0 && prevTot > 0 && comparable ? (tot - prevTot) / prevTot * 100 : null;
   const allPtypes = {};
   for (const [k, v] of Object.entries(entry.program_types?.immigrant || {})) allPtypes[k] = (allPtypes[k] || 0) + v;
   for (const [k, v] of Object.entries(entry.program_types?.nonimmigrant || {})) allPtypes[k] = (allPtypes[k] || 0) + v;
@@ -2220,9 +2224,9 @@ function drawTotalTrend() {
   const iW = W - m.l - m.r, iH = H - m.t - m.b;
 
   // Stacked area — nonimmigrant (base) + immigrant (stacked on top)
-  const nonPts = YEARS.map(y => ({ y, non: CYM[c]?.[y]?.nonimmigrant || 0, imm: CYM[c]?.[y]?.immigrant || 0 }));
+  const nonPts = TREND_YEARS.map(y => ({ y, non: CYM[c]?.[y]?.nonimmigrant || 0, imm: CYM[c]?.[y]?.immigrant || 0 }));
   const maxV = d3.max(nonPts, d => d.non + d.imm) || 1;
-  const xSc = d3.scalePoint().domain(YEARS).range([0, iW]).padding(0.15);
+  const xSc = d3.scalePoint().domain(TREND_YEARS).range([0, iW]).padding(0.15);
   const ySc = d3.scaleLinear().domain([0, maxV * 1.15]).range([iH, 0]);
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).style('overflow', 'hidden').append('g').attr('transform', `translate(${m.l},${m.t})`);
 
@@ -2231,8 +2235,11 @@ function drawTotalTrend() {
   svg.append('g').attr('transform', `translate(0,${iH})`).call(d3.axisBottom(xSc).tickSize(0).tickPadding(10))
     .call(g => { g.select('.domain').remove(); g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', 12).attr('font-family', 'Inter'); g.selectAll('.tick text').attr('transform', 'rotate(-35)').attr('text-anchor', 'end').attr('dy', '0.5em'); });
 
-  svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
-    .attr('stroke', '#F97316').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
+  // The selected year may be a partial one, which this chart does not plot.
+  if (TREND_YEARS.includes(S.year)) {
+    svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
+      .attr('stroke', '#F97316').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
+  }
 
   // Nonimmigrant area (base layer)
   svg.append('path').datum(nonPts)
@@ -2257,7 +2264,7 @@ function drawTotalTrend() {
     .on('mouseover', (e, d) => showTotalTrendTip(e, c, d, nonPts))
     .on('mouseout', hideTip);
 
-  const step = YEARS.length > 1 ? iW / (YEARS.length - 1) : iW;
+  const step = TREND_YEARS.length > 1 ? iW / (TREND_YEARS.length - 1) : iW;
   const hitW = Math.max(14, step * 0.72);
   svg.selectAll('.trend-hit').data(nonPts).join('rect')
     .attr('class', 'trend-hit')
@@ -2725,12 +2732,12 @@ function showTotalTrendTip(e, country, d, pts) {
   const prev = pts.find(p => +p.y === +d.y - 1);
   const prevTotal = prev ? prev.non + prev.imm : 0;
   const share = v => total > 0 ? (v / total * 100).toFixed(1) + '%' : '—';
-  const yoy = PARTIAL_YEARS.has(d.y)
-    ? 'partial year'
-    : prevTotal > 0
-      ? ((total - prevTotal) / prevTotal * 100 >= 0 ? '+' : '') + ((total - prevTotal) / prevTotal * 100).toFixed(1) + '%'
-      : 'no prior year';
-  showRichTip(e, `${country} (${d.y})${PARTIAL_YEARS.has(d.y) ? ' partial' : ''}`, [
+  // `pts` holds complete years only, so a missing neighbour means there is no
+  // comparable prior year rather than simply no data.
+  const yoy = prevTotal > 0
+    ? ((total - prevTotal) / prevTotal * 100 >= 0 ? '+' : '') + ((total - prevTotal) / prevTotal * 100).toFixed(1) + '%'
+    : 'no prior year';
+  showRichTip(e, `${country} (${d.y})`, [
     ['Total', fmtN(total)],
     ['Nonimmigrant', `${fmtN(d.non)} (${share(d.non)})`],
     ['Immigrant', `${fmtN(d.imm)} (${share(d.imm)})`],
@@ -2959,7 +2966,7 @@ function drawCmpTrend() {
     const noPop = isPer100k && !POP[c];
     return {
       c, col: CMP_COLORS[i % CMP_COLORS.length], noPop,
-      pts: YEARS.map(y => {
+      pts: TREND_YEARS.map(y => {
         const raw = getVal(CYM[c]?.[y], prog);
         if (noPop) return { y, v: 0 };
         const v = isPer100k ? (POP[c] > 0 ? raw / (POP[c] * 1e6) * 1e5 : 0) : raw;
@@ -2977,7 +2984,7 @@ function drawCmpTrend() {
     return;
   }
   const maxV = d3.max(allVals) || 1;
-  const xSc = d3.scalePoint().domain(YEARS).range([0, iW]).padding(0.15);
+  const xSc = d3.scalePoint().domain(TREND_YEARS).range([0, iW]).padding(0.15);
   const ySc = d3.scaleLinear().domain([0, maxV * 1.1]).range([iH, 0]);
   const svg = d3.select(wrap).append('svg').attr('width', W).attr('height', H).append('g').attr('transform', 'translate(' + m.l + ',' + m.t + ')');
   addCovidBand(svg, xSc, iH);
@@ -2992,7 +2999,7 @@ function drawCmpTrend() {
       const labels = g.selectAll('text').attr('fill', '#A8BFCC').attr('font-size', mobile ? 11 : 12).attr('font-family', 'Inter');
       if (mobile) labels.filter((_, i) => i % 2 === 1).remove();
     });
-  if (YEARS.includes(S.year)) {
+  if (TREND_YEARS.includes(S.year)) {
     svg.append('line').attr('x1', xSc(S.year)).attr('x2', xSc(S.year)).attr('y1', 0).attr('y2', iH)
       .attr('stroke', '#F97316').attr('stroke-width', 1).attr('stroke-dasharray', '3,2').attr('opacity', .4);
   }
@@ -3009,11 +3016,11 @@ function drawCmpTrend() {
     svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', col).attr('stroke-width', 2).attr('opacity', .85).attr('d', lineFn);
     svg.selectAll(null).data(pts.filter(d => d.v > 0)).join('circle')
       .attr('cx', d => xSc(d.y)).attr('cy', d => ySc(d.v)).attr('r', 3)
-      .attr('fill', d => PARTIAL_YEARS.has(d.y) ? 'var(--bg)' : col)
+      .attr('fill', col)
       .attr('stroke', col).attr('stroke-width', 1.5).style('cursor', 'pointer')
       .on('mouseover', (e, d) => {
         const valStr = isPer100k ? d3.format('.2f')(d.v) + ' / 100K' : fmtN(d.v);
-        showRichTip(e, c + ' (' + d.y + ')' + (PARTIAL_YEARS.has(d.y) ? ' ⚠ partial' : ''), [[metricLabel, valStr]]);
+        showRichTip(e, c + ' (' + d.y + ')', [[metricLabel, valStr]]);
       })
       .on('mouseout', hideTip);
     const last = [...pts].filter(d => d.v > 0).pop();
