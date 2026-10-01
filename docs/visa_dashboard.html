@@ -534,6 +534,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);heigh
       <h1 class="dash-title"><span id="trend-title-country">Global</span> <span>Trends</span></h1>
       <div id="trend-prog-pill" style="font-size:12px;font-weight:600;padding:5px 11px;border-radius:5px;background:var(--gold-lo);color:var(--gold);border:1px solid rgba(232,184,75,0.3);letter-spacing:.05em;user-select:none"></div>
     </div>
+    <div id="trend-scope-note" style="font-size:11.5px;color:var(--muted);margin:-4px 0 12px;line-height:1.5"></div>
     <div class="kpi-row kpi-row-2" id="trend-impact-row" style="display:none;margin-bottom:14px">
       <div class="kpi-card c-drop" id="trend-drop-card" style="cursor:pointer" onclick="trendImpactClick('drop')">
         <svg class="kpi-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
@@ -992,25 +993,38 @@ async function init() {
 // ═══════════════════════════════════════════════════
 //  OVERVIEW FILTERS
 // ═══════════════════════════════════════════════════
-// Track which years have fewer than 12 months of data.
-// Only the last year can be genuinely partial (still collecting); earlier years
-// with missing months simply have gaps in the source data that won't be filled.
+// Track which years have fewer than 12 months of data. The latest year is still
+// being collected; earlier short years (2017 starts in March) are permanent source
+// gaps. Either way a short total cannot be compared against a 12-month one.
 let PARTIAL_YEARS = new Set();
+
+// Years safe to plot on the Trends tab, where every mark is a cross-year comparison.
+let TREND_YEARS = [];
 
 const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-// "Jan–Feb" / "Jan only" — built from month_count so the label tracks the data.
+// "Mar–Dec" / "Feb" — built from the months actually present, not from the count:
+// 2017 covers Mar–Dec, so a count of 10 must not be read as Jan–Oct.
 function partialRange(yr) {
-  const mc = DATA.totals_by_year[yr]?.month_count ?? 12;
-  if (mc <= 1) return 'Jan only';
-  return 'Jan–' + MONTH_ABBR[Math.min(mc, 12) - 1];
+  const y = DATA.totals_by_year[yr] || {};
+  const ms = y.months;
+  if (!Array.isArray(ms) || !ms.length) {
+    const mc = y.month_count ?? 12;
+    return mc + ' of 12 months';
+  }
+  const first = MONTH_ABBR[ms[0] - 1], last = MONTH_ABBR[ms[ms.length - 1] - 1];
+  if (ms.length === 1) return first;
+  // Gaps in the middle would make a range label a lie; state the count instead.
+  const contiguous = ms[ms.length - 1] - ms[0] + 1 === ms.length;
+  return contiguous ? `${first}–${last}` : `${ms.length} of 12 months`;
 }
 
 function buildYears() {
   PARTIAL_YEARS = new Set();
-  const last = YEARS[YEARS.length - 1];
-  const mc = DATA.totals_by_year[last]?.month_count ?? 12;
-  if (mc < 12) PARTIAL_YEARS.add(last);
+  YEARS.forEach(y => {
+    if ((DATA.totals_by_year[y]?.month_count ?? 12) < 12) PARTIAL_YEARS.add(y);
+  });
+  TREND_YEARS = YEARS.filter(y => !PARTIAL_YEARS.has(y));
   const chipsHTML = '<div class="year-chips">' + YEARS.map(y =>
     `<div class="ychip${y === S.year ? ' active' : ''}" data-v="${y}" onclick="setYear(this)">${y}${PARTIAL_YEARS.has(y) ? '<span class="partial-dot" title="Partial year data"></span>' : ''}</div>`
   ).join('') + '</div>';
@@ -1430,24 +1444,33 @@ function updateTrendPill() {
 function drawTrendView() {
   if (!DATA) return;
   updateTrendCategoryOptions();
+  drawTrendScopeNote();
   drawTrendImpactCards();
   drawGlobalTrend();
   drawYoYChart();
   drawProgramMixChart();
 }
 
+function drawTrendScopeNote() {
+  const el = document.getElementById('trend-scope-note');
+  if (!el) return;
+  const omitted = YEARS.filter(y => PARTIAL_YEARS.has(y));
+  if (!omitted.length) { el.textContent = ''; return; }
+  const list = omitted.map(y => `${y} (${partialRange(y)})`).join(', ');
+  el.innerHTML = `Showing complete years only — ${list} ${omitted.length > 1 ? 'are' : 'is'} excluded here, `
+    + `since a part-year total can't be compared against a full one. `
+    + `${omitted.length > 1 ? 'Those years remain' : 'That year remains'} available on Overview, Country and Compare.`;
+}
+
 function drawTrendImpactCards() {
   const row = document.getElementById('trend-impact-row');
   if (!row || !CYM) return;
 
-  // Always use the most recent year (even if partial) so the KPI shows the
-  // latest trend. The yr1 anchor is always a complete year for a valid base.
-  const completeYears = YEARS.filter(y => !PARTIAL_YEARS.has(y));
-  if (completeYears.length < 1) { row.style.display = 'none'; return; }
-  const yr2 = YEARS[YEARS.length - 1];
-  const yr1 = completeYears[completeYears.length - (PARTIAL_YEARS.has(yr2) ? 1 : 2)] || completeYears[0];
-  if (!yr1 || yr1 === yr2) { row.style.display = 'none'; return; }
-  const isPartial = PARTIAL_YEARS.has(yr2);
+  // Compare the two latest complete years. Measuring a part-year against a full
+  // one makes almost every country show a decline that is pure arithmetic.
+  if (TREND_YEARS.length < 2) { row.style.display = 'none'; return; }
+  const yr2 = TREND_YEARS[TREND_YEARS.length - 1];
+  const yr1 = TREND_YEARS[TREND_YEARS.length - 2];
 
   const cat = S.trendCategory !== 'all' ? S.trendCategory : null;
   const sub = S.trendSubCat !== 'all' ? S.trendSubCat : null;
@@ -1476,8 +1499,7 @@ function drawTrendImpactCards() {
     const delta = v2 - v1;
     const _pLabel = { immigrant: 'Immigrant', nonimmigrant: 'Nonimmigrant' }[prog] || null;
     const catLabel = sub ? `${cat} — ${sub}` : cat ? cat : (_pLabel || 'All Visas');
-    const partialNote = isPartial ? ' · partial yr' : '';
-    const yearLabel = `${yr1} → ${yr2}${partialNote}`;
+    const yearLabel = `${yr1} → ${yr2}`;
     const pct = v1 > 0 ? (Math.abs(delta) / v1 * 100).toFixed(1) : v2 > 0 ? '∞' : null;
     const sign = delta >= 0 ? 1 : -1;
     const prefix = delta >= 0 ? 'gain' : 'drop';
@@ -1514,8 +1536,7 @@ function drawTrendImpactCards() {
     if (delta > 0 && (!maxGain || pct > maxGain.pct)) maxGain = { country, v1, v2, delta, pct };
   }
 
-  const partialSuffix = isPartial ? ' · partial yr' : '';
-  const yearLabel = `${yr1} → ${yr2}${partialSuffix}`;
+  const yearLabel = `${yr1} → ${yr2}`;
   const progLabel = { immigrant: 'Immigrant', nonimmigrant: 'Nonimmigrant' }[prog] || null;
   const catLabel = sub ? `${cat} — ${sub}` : cat ? cat : (progLabel || 'All Visas');
 
@@ -1603,7 +1624,7 @@ function drawGlobalTrend() {
   const cat = S.trendCategory !== 'all' ? S.trendCategory : null;
   const sub = S.trendSubCat !== 'all' ? S.trendSubCat : null;
 
-  const pts = YEARS.map(y => {
+  const pts = TREND_YEARS.map(y => {
     const d = getTrendYearData(y);
     if (cat && sub) {
       const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
@@ -1637,7 +1658,7 @@ function drawGlobalTrend() {
   const maxV = d3.max(posVals) || 1;
   const minV = d3.min(posVals) || 1;
 
-  const xSc = d3.scalePoint().domain(YEARS).range([0, iW]).padding(0.15);
+  const xSc = d3.scalePoint().domain(TREND_YEARS).range([0, iW]).padding(0.15);
   const ySc = S.logScale
     ? d3.scaleLog().domain([Math.max(1, minV * 0.75), maxV * 1.2]).range([iH, 0]).nice()
     : d3.scaleLinear().domain([0, maxV * 1.1]).range([iH, 0]);
@@ -1760,16 +1781,18 @@ function drawYoYChart() {
     return prog === 'immigrant' ? d.immigrant || 0 : prog === 'nonimmigrant' ? d.nonimmigrant || 0 : (d.total || (d.immigrant || 0) + (d.nonimmigrant || 0));
   };
 
-  const pts = YEARS.slice(1).map(y => {
-    const cur = getV(y), prev = getV(String(+y - 1));
-    return { y, pct: prev > 0 ? (cur - prev) / prev * 100 : null, partial: PARTIAL_YEARS.has(y) };
-  }).filter(d => d.pct !== null);
+  // A YoY figure needs twelve months on BOTH sides, so the prior year must be
+  // complete too — otherwise 2018 reads +17% purely because 2017 starts in March.
+  const pts = TREND_YEARS.map(y => {
+    const py = String(+y - 1);
+    if (!DATA.totals_by_year[py] || PARTIAL_YEARS.has(py)) return null;
+    const cur = getV(y), prev = getV(py);
+    return { y, pct: prev > 0 ? (cur - prev) / prev * 100 : null };
+  }).filter(d => d && d.pct !== null);
 
   if (!pts.length) { wrap.innerHTML = '<div class="loading-msg" style="color:var(--muted);font-size:12px">Not enough data</div>'; return; }
 
-  // Exclude partial year from domain scale so its misleading bar doesn't distort the axis
-  const fullPts = pts.filter(d => !d.partial);
-  const absMax = d3.max(fullPts.length ? fullPts : pts, d => Math.abs(d.pct)) || 1;
+  const absMax = d3.max(pts, d => Math.abs(d.pct)) || 1;
   const xSc = d3.scaleBand().domain(pts.map(d => d.y)).range([0, iW]).padding(0.2);
   const ySc = d3.scaleLinear().domain([-absMax * 1.15, absMax * 1.15]).range([iH, 0]).nice();
 
@@ -1797,20 +1820,13 @@ function drawYoYChart() {
     .attr('class', 'yoy-bar')
     .attr('x', d => xSc(d.y))
     .attr('width', xSc.bandwidth())
-    .attr('y', d => {
-      if (d.partial) return ySc(0) - 4; // fixed stub — value is meaningless
-      return d.pct >= 0 ? ySc(d.pct) : ySc(0);
-    })
-    .attr('height', d => {
-      if (d.partial) return 8; // stub only, not proportional
-      return Math.max(1, Math.abs(ySc(d.pct) - ySc(0)));
-    })
-    .attr('fill', d => d.partial ? 'var(--amber)' : d.pct >= 0 ? 'var(--green)' : 'var(--red)')
-    .attr('opacity', d => d.partial ? 0.4 : 0.78)
+    .attr('y', d => d.pct >= 0 ? ySc(d.pct) : ySc(0))
+    .attr('height', d => Math.max(1, Math.abs(ySc(d.pct) - ySc(0))))
+    .attr('fill', d => d.pct >= 0 ? 'var(--green)' : 'var(--red)')
+    .attr('opacity', 0.78)
     .attr('rx', 2)
-    .on('mouseover', (e, d) => showRichTip(e, d.y + (d.partial ? ' ⚠ partial' : ''), d.partial
-      ? [['Status', `Partial year (${partialRange(d.y)} only)`], ['Note', 'YoY not comparable']]
-      : [['YoY Change', (d.pct >= 0 ? '+' : '') + d.pct.toFixed(1) + '%']]))
+    .on('mouseover', (e, d) => showRichTip(e, d.y,
+      [['YoY Change', (d.pct >= 0 ? '+' : '') + d.pct.toFixed(1) + '%']]))
     .on('mouseout', hideTip);
 }
 
@@ -1838,7 +1854,7 @@ function drawProgramMixChart() {
     chartColor = prog === 'immigrant' ? 'var(--violet)' : 'var(--teal)';
     chartLabel = sub + ' share';
     if (mixTitleEl) mixTitleEl.textContent = 'Share Within Category';
-    pts = YEARS.map(y => {
+    pts = TREND_YEARS.map(y => {
       const d = getTrendYearData(y);
       const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
       let subV = 0, catV = 0;
@@ -1853,7 +1869,7 @@ function drawProgramMixChart() {
     chartColor = prog === 'immigrant' ? 'var(--violet)' : 'var(--teal)';
     chartLabel = cat + ' share';
     if (mixTitleEl) mixTitleEl.textContent = 'Share Within Program';
-    pts = YEARS.map(y => {
+    pts = TREND_YEARS.map(y => {
       const d = getTrendYearData(y);
       const progs = prog === 'total' ? ['immigrant', 'nonimmigrant'] : [prog];
       let catV = 0, totV = 0;
@@ -1869,7 +1885,7 @@ function drawProgramMixChart() {
     chartColor = showImmShare ? 'var(--violet)' : 'var(--teal)';
     chartLabel = showImmShare ? 'Immigrant share' : 'Nonimmigrant share';
     if (mixTitleEl) mixTitleEl.textContent = showImmShare ? 'Immigrant Share Over Time' : 'Nonimmigrant Share Over Time';
-    pts = YEARS.map(y => {
+    pts = TREND_YEARS.map(y => {
       const d = getTrendYearData(y);
       const tot = (d.nonimmigrant || 0) + (d.immigrant || 0);
       const share = tot > 0

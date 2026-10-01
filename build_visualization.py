@@ -15,10 +15,11 @@ def main():
     df["year"] = df["year"].astype(str)
     df["month"] = pd.to_numeric(df["month"], errors="coerce")
 
-    # month_count per year — used by the dashboard to detect partial years (< 12).
+    # Which months each year actually covers — the dashboard uses the count to detect
+    # partial years (< 12) and the list to label them (2017 runs Mar-Dec, not Jan-Oct).
     months_by_year = (
         df.groupby("year")["month"]
-        .apply(lambda s: s.dropna().astype(int).nunique(), include_groups=False)
+        .apply(lambda s: sorted(set(s.dropna().astype(int))), include_groups=False)
     )
 
     # --- totals_by_year ---
@@ -44,7 +45,8 @@ def main():
             "nonimmigrant": int(row.get("nonimmigrant", 0)),
             "total": int(row["total"]),
             "program_types": prog_types,
-            "month_count": int(months_by_year.get(year, 0)),
+            "month_count": len(months_by_year.get(year, [])),
+            "months": months_by_year.get(year, []),
         }
 
     # --- country_data ---
