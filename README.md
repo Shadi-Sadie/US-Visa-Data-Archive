@@ -8,7 +8,7 @@ An interactive dashboard and open dataset tracking US visa issuance by applicant
 
 ## What you can explore
 
-The dashboard covers immigrant and nonimmigrant visas broken down by applicant's country of birth across 205 countries and territories, spanning 237 distinct visa types grouped into meaningful categories. Note: the data reflects country of birth, not the consulate or post where the visa was issued.
+The dashboard covers immigrant and nonimmigrant visas broken down by applicant's country of birth across 204 countries and territories, spanning 237 distinct visa types grouped into meaningful categories. Note: the data reflects country of birth, not the consulate or post where the visa was issued.
 
 **Overview**
 See global issuance totals for any year, mapped by country. Switch between absolute counts and per-100K population to compare countries of vastly different sizes. A ranked list of the top 10 nationalities updates with every filter change.
@@ -30,7 +30,7 @@ Place up to five countries side by side to compare absolute issuance or per-100K
 |---|---|
 | Source | US Department of State monthly reports (PDF, and `.xlsx` from FY2026 onward) |
 | Coverage | March 2017 through February 2026 |
-| Countries (by birth) | 205 countries and territories |
+| Countries (by birth) | 204 countries and territories |
 | Visa types | 237 types across immigrant and nonimmigrant programs |
 | Update cadence | Manual — see [Automation](#automation) |
 

@@ -119,6 +119,7 @@ TERRITORY_MAP = {
   "Hong Kong-BNO": "Hong Kong",
   "Marshall Islands, Republic of the": "Marshall Islands",
   "Northern Ireland (DV only)": "United Kingdom",
+  "Northern Ireland": "United Kingdom",  # FY2026 releases dropped the "(DV only)" suffix
   "Pitcairn": "United Kingdom",
   "Republic of Palau": "Palau",
   "St Lucia": "Saint Lucia",
