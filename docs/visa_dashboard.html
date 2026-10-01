@@ -961,10 +961,11 @@ async function init() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     DATA = await r.json();
     YEARS = Object.keys(DATA.totals_by_year).sort();
-    // Default to last complete year — only the final year can be partial (still collecting)
-    const _last = YEARS[YEARS.length - 1], _prev = YEARS[YEARS.length - 2];
-    const _isPartial = _prev && (DATA.totals_by_year[_last]?.total || 0) < (DATA.totals_by_year[_prev]?.total || 0) * 0.6;
-    S.year = _isPartial ? _prev : _last;
+    // Default to the most recent complete year. Read month_count rather than
+    // inferring from the total: a year at 8 of 12 months still clears any
+    // sensible ratio against the prior year while being clearly incomplete.
+    const _complete = YEARS.filter(y => (DATA.totals_by_year[y]?.month_count ?? 12) >= 12);
+    S.year = _complete.length ? _complete[_complete.length - 1] : YEARS[YEARS.length - 1];
     for (const e of DATA.country_data) {
       if (!CYM[e.country]) CYM[e.country] = {};
       CYM[e.country][e.year] = e;
